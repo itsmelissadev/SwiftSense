@@ -35,6 +35,12 @@ The Accessibility Service is used exclusively to optimize touch interactions. Sw
 
 ---
 
+### ⚠️ Installation Note
+
+If **Play Protect** prevents the installation of the app, please temporarily disable it in the Play Store settings to complete the setup. SwiftSense is a secure, open-source tool, but its deep system optimizations may trigger false alerts.
+
+---
+
 ### 🚧 Contributing
 
 Due to the current development phase of the project, Pull Requests (PR) and Merge Requests are **not being accepted at this time.** Please use the Issues section to report bugs or suggestions.
