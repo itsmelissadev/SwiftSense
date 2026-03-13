@@ -1,0 +1,122 @@
+<resources>
+    <string name="app_name">SwiftSense</string>
+    <string name="onboarding_title_1">Privacy and Trust</string>
+    <string name="onboarding_desc_1">SwiftSense is fully open-source. Your privacy is my priority, which is why the app never connects to the internet. All your data stays safely on your device.</string>
+    <string name="onboarding_title_2">Advanced Tools</string>
+    <string name="onboarding_desc_2">I\'ve gathered tools to optimize sensor rates and improve touch response in one place. Let\'s see what your hardware is truly capable of.</string>
+    <string name="get_started">Get Started</string>
+    <string name="next">Next</string>
+    <string name="skip">Skip</string>
+
+    <string name="permission_title">A Quick Setup</string>
+    <string name="permission_desc">To give you the best performance, I need a few permissions. Don\'t worry, I only ask for what\'s absolutely necessary.</string>
+    <string name="notification_permission">Notification Permission</string>
+    <string name="notification_permission_desc">Required so I can work smoothly in the background and keep you updated on the status.</string>
+    <string name="accessibility_permission">Accessibility Service</string>
+    <string name="accessibility_permission_desc">This service plays a key role in reducing touch latency, making your screen feel much more fluid.</string>
+    <string name="battery_permission">Battery Settings</string>
+    <string name="battery_permission_desc">We don\'t want the system to slow SwiftSense down. I recommend removing battery restrictions for the best experience.</string>
+    <string name="allow">Allow</string>
+    <string name="granted">Done</string>
+
+    <string name="tab_status">Status</string>
+    <string name="tab_sensors">Sensors</string>
+    <string name="tab_touch">Touch</string>
+    <string name="start_service">Start</string>
+    <string name="stop_service">Stop</string>
+    <string name="status_running">Active</string>
+    <string name="status_stopped">Stopped</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="appearance_header">Appearance</string>
+    <string name="language_header">Language</string>
+    <string name="theme_option">Theme</string>
+    <string name="language_option">App Language</string>
+    <string name="theme_system">System Default</string>
+    <string name="theme_light">Light Theme</string>
+    <string name="theme_dark">Dark Theme</string>
+    <string name="lang_en">English</string>
+    <string name="lang_tr">Türkçe</string>
+
+    <string name="accessibility_desc">SwiftSense uses the Accessibility Service to improve touch response and reduce screen lag. This service is only used to make your interactions smoother; it never accesses, collects, or shares any of your personal data. Your privacy means everything to me.</string>
+    <string name="sensor_speed_label">Speed: %s</string>
+
+    <string name="rate_very_slow">Very Slow (1 Hz)</string>
+    <string name="rate_slow">Slow (10 Hz)</string>
+    <string name="rate_medium">Medium (30 Hz)</string>
+    <string name="rate_fast">Fast (60 Hz)</string>
+    <string name="rate_very_fast">Maximum Performance</string>
+
+    <string name="badge_very_slow">VS</string>
+    <string name="badge_slow">S</string>
+    <string name="badge_medium">M</string>
+    <string name="badge_fast">F</string>
+    <string name="badge_very_fast">MP</string>
+
+    <string name="status_on">ON</string>
+    <string name="status_off">OFF</string>
+
+    <string name="live_hz_label">Current: %d Hz</string>
+    <string name="notification_title">SwiftSense is Running</string>
+    <string name="notification_text">System optimizations are currently active.</string>
+    <string name="notification_channel_service">Service Info</string>
+    <string name="notification_channel_optimization">Optimization Engine</string>
+
+    <string name="advanced_header">Advanced</string>
+    <string name="show_live_hz_option">Live Frequency Monitor</string>
+    <string name="show_live_hz_desc">Allows you to track the real-time speed (Hz) of each sensor.</string>
+
+    <string name="sensor_gyroscope">Gyroscope</string>
+    <string name="sensor_accelerometer">Accelerometer</string>
+    <string name="sensor_magnetic_field">Magnetic Field</string>
+    <string name="sensor_rotation_vector">Rotation Vector</string>
+    <string name="sensor_gravity">Gravity</string>
+    <string name="sensor_linear_acceleration">Linear Acceleration</string>
+    <string name="sensor_unknown">Unknown Sensor</string>
+
+    <string name="touch_boost_title">Touch Booster</string>
+    <string name="touch_boost_desc">Reduces software lag so the screen responds to your touch faster. Results may vary depending on your device\'s hardware.</string>
+    <string name="accessibility_service_status">Service Status</string>
+    <string name="accessibility_service_on">Active</string>
+    <string name="accessibility_service_off">Inactive</string>
+    <string name="setup_accessibility">Check Settings</string>
+
+    <string name="feature_boost_sensors">Sensor Optimization</string>
+    <string name="feature_boost_sensors_desc">Improves accuracy by processing sensor data at higher rates.</string>
+    <string name="feature_app_manager">App Manager</string>
+    <string name="feature_app_manager_desc">Helps you easily manage system and user applications.</string>
+    <string name="feature_boost_touch">Touch Enhancement</string>
+    <string name="feature_boost_touch_desc">Lowers response time for a much smoother experience.</string>
+
+    <string name="shizuku_not_installed">Shizuku doesn\'t seem to be installed</string>
+    <string name="shizuku_not_running">Shizuku isn\'t running right now</string>
+    <string name="shizuku_not_authorized">Shizuku is not authorized</string>
+    <string name="shizuku_authorized">Shizuku is ready</string>
+
+    <string name="menu_import_export">Import or Export</string>
+    <string name="import_title">Import Packages</string>
+    <string name="export_title">Export Packages</string>
+    <string name="import_hint">Enter package names, one per line…</string>
+    <string name="action_import">Import</string>
+    <string name="action_export">Export</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="toast_import_success">%d new packages added to the list.</string>
+    <string name="search_apps">Search apps…</string>
+
+    <string name="action_enable">Enable</string>
+    <string name="action_disable">Disable</string>
+    <string name="action_enabling">Updating…</string>
+    <string name="action_disabling">Updating…</string>
+    <string name="toast_process_complete">%d apps updated successfully.</string>
+    <string name="app_type_system">System</string>
+    <string name="app_type_user">User</string>
+    <string name="app_status_enabled">Enabled</string>
+    <string name="app_status_disabled">Disabled</string>
+    <string name="installed_apps">Installed Apps</string>
+    <string name="common_selected">Selected</string>
+
+    <string name="app_manager_warning_title">A Little Warning</string>
+    <string name="app_manager_warning_text">Please be careful when disabling system apps. Disabling a critical app might cause your device to become unstable.</string>
+
+    <string name="touch_boost_info_text">Touch Boost uses the Accessibility Service to improve how the screen responds to your touch. This only affects touch performance.</string>
+</resources>

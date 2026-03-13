@@ -1,0 +1,122 @@
+<resources>
+    <string name="app_name">SwiftSense</string>
+    <string name="onboarding_title_1">Şeffaf ve Güvenli</string>
+    <string name="onboarding_desc_1">SwiftSense tamamen açık kaynaklı bir proje. En başından beri önceliğim gizliliğin; bu yüzden uygulama hiçbir şekilde internete bağlanmıyor. Tüm işlemler sadece senin cihazında kalıyor.</string>
+    <string name="onboarding_title_2">Neler Yapabilirsin?</string>
+    <string name="onboarding_desc_2">Cihazındaki sensör hızlarını optimize eden ve dokunmatik tepki süresini iyileştiren araçları tek bir yerde topladım. Donanımının kapasitesini tam anlamıyla hissetmen için buradayız.</string>
+    <string name="get_started">Başlayalım</string>
+    <string name="next">İlerle</string>
+    <string name="skip">Atla</string>
+
+    <string name="permission_title">Küçük Bir Hazırlık</string>
+    <string name="permission_desc">Uygulamanın tam kapasite çalışabilmesi ve farkı hissetmen için birkaç izne ihtiyacım var. Merak etme, sadece gerekli olanları istiyorum.</string>
+    <string name="notification_permission">Bildirim İzni</string>
+    <string name="notification_permission_desc">Arka planda kesintisiz çalışabilmem ve sana anlık bilgi verebilmem için bu izne ihtiyacım var.</string>
+    <string name="accessibility_permission">Erişilebilirlik Hizmeti</string>
+    <string name="accessibility_permission_desc">Dokunmatik ekran gecikmesini azaltmak için bu servis kilit bir rol oynuyor; ekranın çok daha akıcı hissettirmesini sağlıyor.</string>
+    <string name="battery_permission">Pil Ayarları</string>
+    <string name="battery_permission_desc">Sistemin SwiftSense\'i durdurup hızını kesmesini istemeyiz. Kesintisiz bir deneyim için pil kısıtlamalarını kaldırmanı öneririm.</string>
+    <string name="allow">İzin Ver</string>
+    <string name="granted">Tamamdır</string>
+
+    <string name="tab_status">Genel Durum</string>
+    <string name="tab_sensors">Sensör Ayarları</string>
+    <string name="tab_touch">Dokunma Ayarları</string>
+    <string name="start_service">Çalıştır</string>
+    <string name="stop_service">Durdur</string>
+    <string name="status_running">Şu an aktif</string>
+    <string name="status_stopped">Şu an durduruldu</string>
+
+    <string name="settings_title">Ayarlar</string>
+    <string name="appearance_header">Görünüm Seçenekleri</string>
+    <string name="language_header">Dil Tercihi</string>
+    <string name="theme_option">Tema Seçimi</string>
+    <string name="language_option">Uygulama Dili</string>
+    <string name="theme_system">Sistem Varsayılanı</string>
+    <string name="theme_light">Açık Tema</string>
+    <string name="theme_dark">Koyu Tema</string>
+    <string name="lang_en">English</string>
+    <string name="lang_tr">Türkçe</string>
+
+    <string name="accessibility_desc">SwiftSense, dokunmatik tepki süresini iyileştirmek ve ekran gecikmesini azaltmak için Erişilebilirlik Hizmetini kullanır. Bu hizmet sadece dokunuşlarını daha akıcı hale getirmek içindir; hiçbir kişisel verine erişmez, toplamaz veya paylaşmaz. Gizliliğin benim için her şeyden önemli.</string>
+    <string name="sensor_speed_label">Hız Ayarı: %s</string>
+
+    <string name="rate_very_slow">Çok Yavaş (1 Hz)</string>
+    <string name="rate_slow">Yavaş (10 Hz)</string>
+    <string name="rate_medium">Orta (30 Hz)</string>
+    <string name="rate_fast">Hızlı (60 Hz)</string>
+    <string name="rate_very_fast">Maksimum Performans</string>
+
+    <string name="badge_very_slow">ÇY</string>
+    <string name="badge_slow">Y</string>
+    <string name="badge_medium">O</string>
+    <string name="badge_fast">H</string>
+    <string name="badge_very_fast">MP</string>
+
+    <string name="status_on">AÇIK</string>
+    <string name="status_off">KAPALI</string>
+
+    <string name="live_hz_label">Anlık Değer: %d Hz</string>
+    <string name="notification_title">SwiftSense Çalışıyor</string>
+    <string name="notification_text">Sistem optimizasyonları şu an devrede.</string>
+    <string name="notification_channel_service">Servis Bilgisi</string>
+    <string name="notification_channel_optimization">Hızlandırma Motoru</string>
+
+    <string name="advanced_header">Detaylı Ayarlar</string>
+    <string name="show_live_hz_option">Canlı Frekans Monitörü</string>
+    <string name="show_live_hz_desc">Her sensörün o anki gerçek hızını takip etmeni sağlar.</string>
+
+    <string name="sensor_gyroscope">Jiroskop</string>
+    <string name="sensor_accelerometer">İvmeölçer</string>
+    <string name="sensor_magnetic_field">Manyetik Alan</string>
+    <string name="sensor_rotation_vector">Dönüş Vektörü</string>
+    <string name="sensor_gravity">Yerçekimi</string>
+    <string name="sensor_linear_acceleration">Doğrusal İvme</string>
+    <string name="sensor_unknown">Bilinmeyen Sensör</string>
+
+    <string name="touch_boost_title">Dokunma Hızlandırıcı</string>
+    <string name="touch_boost_desc">Yazılımsal gecikmeleri azaltarak ekranın dokunuşlarına daha hızlı cevap vermesini sağlar. Sonuçlar cihazın donanım kapasitesine göre değişebilir.</string>
+    <string name="accessibility_service_status">Servis Durumu</string>
+    <string name="accessibility_service_on">Şu an aktif</string>
+    <string name="accessibility_service_off">Şu an kapalı</string>
+    <string name="setup_accessibility">Ayarlara Göz At</string>
+
+    <string name="feature_boost_sensors">Sensör Optimizasyonu</string>
+    <string name="feature_boost_sensors_desc">Sensör verilerini en yüksek hızda işleyerek hassasiyeti artırır.</string>
+    <string name="feature_app_manager">Uygulama Yöneticisi</string>
+    <string name="feature_app_manager_desc">Sistem ve kullanıcı uygulamalarını kolayca yönetmenize yardımcı olur.</string>
+    <string name="feature_boost_touch">Dokunmatik İyileştirme</string>
+    <string name="feature_boost_touch_desc">Ekranın tepki süresini düşürerek daha akıcı bir deneyim sağlar.</string>
+
+    <string name="shizuku_not_installed">Shizuku yüklü görünmüyor</string>
+    <string name="shizuku_not_running">Shizuku şu an çalışmıyor</string>
+    <string name="shizuku_not_authorized">Shizuku için yetki verilmedi</string>
+    <string name="shizuku_authorized">Shizuku yetkisi tamam</string>
+
+    <string name="menu_import_export">İçe veya Dışa Aktar</string>
+    <string name="import_title">Paketleri İçe Aktar</string>
+    <string name="export_title">Paketleri Dışa Aktar</string>
+    <string name="import_hint">Paket isimlerini her satıra bir tane gelecek şekilde ekleyin…</string>
+    <string name="action_import">İçe Aktar</string>
+    <string name="action_export">Dışa Aktar</string>
+    <string name="action_cancel">İptal</string>
+    <string name="toast_import_success">%d yeni paket listeye eklendi.</string>
+    <string name="search_apps">Uygulama ara…</string>
+
+    <string name="action_enable">Etkinleştir</string>
+    <string name="action_disable">Devre Dışı Bırak</string>
+    <string name="action_enabling">Güncelleniyor…</string>
+    <string name="action_disabling">Güncelleniyor…</string>
+    <string name="toast_process_complete">%d uygulama başarıyla güncellendi.</string>
+    <string name="app_type_system">Sistem</string>
+    <string name="app_type_user">Kullanıcı</string>
+    <string name="app_status_enabled">Etkin</string>
+    <string name="app_status_disabled">Devre Dışı</string>
+    <string name="installed_apps">Yüklü Uygulamalar</string>
+    <string name="common_selected">Seçilen</string>
+
+    <string name="app_manager_warning_title">Küçük Bir Uyarı</string>
+    <string name="app_manager_warning_text">Sistem uygulamalarını devre dışı bırakırken lütfen dikkatli ol. Kritik bir uygulamayı kapatmak cihazının kararsız çalışmasına neden olabilir.</string>
+
+    <string name="touch_boost_info_text">Touch Boost, Erişilebilirlik Hizmetini kullanarak ekranın dokunuşlarına verdiği tepkiyi iyileştirir. Bu özellik sadece dokunma performansını etkiler.</string>
+</resources>
