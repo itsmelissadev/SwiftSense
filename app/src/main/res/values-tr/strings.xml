@@ -191,4 +191,11 @@
     <string name="edit_setting">Ayarı Düzenle</string>
     <string name="new_value">Yeni Değer</string>
     <string name="toast_setting_updated">Ayar başarıyla düzenlendi.</string>
+
+    <string name="tab_viewer">Tablo Görüntüleyici</string>
+    <string name="select_table">Tablo Seç</string>
+    <string name="search_table">Tabloda ara…</string>
+    <string name="app_version">Versiyon %1$s (%2$d)</string>
+    <string name="swift_settings">Swift Ayarları</string>
+    <string name="add_new_setting">Yeni Ayar Ekle</string>
 </resources>

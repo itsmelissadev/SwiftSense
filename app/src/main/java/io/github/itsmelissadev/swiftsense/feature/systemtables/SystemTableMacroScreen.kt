@@ -105,7 +105,7 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
     val preferenceManager = remember { PreferenceManager(context) }
     
     var selectedTabIndex by remember { mutableIntStateOf(0) }
-    val tabs = listOf(stringResource(R.string.macros), "Table Viewer")
+    val tabs = listOf(stringResource(R.string.macros), stringResource(R.string.tab_viewer))
     
     var selectedTable by remember { mutableStateOf(SystemTable.SYSTEM) }
     var searchQuery by remember { mutableStateOf("") }
@@ -241,7 +241,7 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                 value = selectedTable.name,
                                 onValueChange = {},
                                 readOnly = true,
-                                label = { Text("Select Table") },
+                                label = { Text(stringResource(R.string.select_table)) },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                                 modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                                 colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
@@ -268,7 +268,7 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                             value = searchQuery,
                             onValueChange = { searchQuery = it },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("Search in table...") },
+                            placeholder = { Text(stringResource(R.string.search_table)) },
                             leadingIcon = { Icon(Icons.Default.Search, null) },
                             singleLine = true,
                             shape = MaterialTheme.shapes.medium
@@ -452,7 +452,7 @@ fun AddMacroDialog(
                 
                 item {
                     Column(modifier = Modifier.fillMaxWidth().padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Add New Setting", style = MaterialTheme.typography.labelLarge)
+                        Text(stringResource(R.string.add_new_setting), style = MaterialTheme.typography.labelLarge)
                         
                         var expanded by remember { mutableStateOf(false) }
                         ExposedDropdownMenuBox(
@@ -500,7 +500,7 @@ fun AddMacroDialog(
                             modifier = Modifier.align(Alignment.End)
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null)
-                            Text("Add Setting")
+                            Text(stringResource(R.string.add_new_setting))
                         }
                     }
                 }

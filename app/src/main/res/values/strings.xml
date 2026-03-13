@@ -191,4 +191,11 @@
     <string name="edit_setting">Edit Setting</string>
     <string name="new_value">New Value</string>
     <string name="toast_setting_updated">Setting updated successfully.</string>
+
+    <string name="tab_viewer">Table Viewer</string>
+    <string name="select_table">Select Table</string>
+    <string name="search_table">Search in table…</string>
+    <string name="app_version">Version %1$s (%2$d)</string>
+    <string name="swift_settings">Swift Settings</string>
+    <string name="add_new_setting">Add New Setting</string>
 </resources>

@@ -122,7 +122,7 @@ fun BoostTouchScreen(onNavigateBack: () -> Unit) {
 
             item {
                 Text(
-                    text = "Swift Settings",
+                    text = stringResource(R.string.swift_settings),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.secondary,

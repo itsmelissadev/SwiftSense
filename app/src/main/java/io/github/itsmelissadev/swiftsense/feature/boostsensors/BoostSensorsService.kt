@@ -27,17 +27,17 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 class BoostSensorsService : Service(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
     private lateinit var preferenceManager: PreferenceManager
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var observationJob: Job? = null
+    private var liveHzJob: Job? = null
 
     private var sensorThread: HandlerThread? = null
     private var sensorHandler: Handler? = null
@@ -46,6 +46,9 @@ class BoostSensorsService : Service(), SensorEventListener {
 
     private val eventCounts = SparseIntArray()
     private val lastTimestamps = SparseLongArray()
+
+    @Volatile
+    private var showLiveHz = false
 
     companion object {
         private const val CHANNEL_ID = "boost_sensors_channel"
@@ -71,6 +74,21 @@ class BoostSensorsService : Service(), SensorEventListener {
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, createNotification(""))
         observeSensorChanges()
+        observeLiveHzPreference()
+    }
+
+    private fun observeLiveHzPreference() {
+        liveHzJob?.cancel()
+        liveHzJob = serviceScope.launch {
+            preferenceManager.showLiveHz.collectLatest { show ->
+                showLiveHz = show
+                if (!show) {
+                    liveHz.clear()
+                    eventCounts.clear()
+                    lastTimestamps.clear()
+                }
+            }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -142,30 +160,22 @@ class BoostSensorsService : Service(), SensorEventListener {
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
-        if (event == null) return
+        if (event == null || !showLiveHz) return
 
-        val showLiveHz = runBlocking {
-            preferenceManager.showLiveHz.first()
-        }
+        val type = event.sensor.type
+        val timestamp = event.timestamp
 
-        if (showLiveHz) {
-            val type = event.sensor.type
-            val timestamp = event.timestamp
+        val currentCount = eventCounts.get(type, 0) + 1
+        eventCounts.put(type, currentCount)
 
-            val currentCount = eventCounts.get(type, 0) + 1
-            eventCounts.put(type, currentCount)
+        val lastTime = lastTimestamps.get(type, 0L)
 
-            val lastTime = lastTimestamps.get(type, 0L)
-
-            if (timestamp - lastTime >= 1_000_000_000L) {
-                if (lastTime != 0L) {
-                    liveHz[type] = currentCount
-                }
-                eventCounts.put(type, 0)
-                lastTimestamps.put(type, timestamp)
+        if (timestamp - lastTime >= 1_000_000_000L) {
+            if (lastTime != 0L) {
+                liveHz[type] = currentCount
             }
-        } else {
-            return
+            eventCounts.put(type, 0)
+            lastTimestamps.put(type, timestamp)
         }
     }
 
@@ -228,6 +238,7 @@ class BoostSensorsService : Service(), SensorEventListener {
     override fun onDestroy() {
         isServiceRunning = false
         observationJob?.cancel()
+        liveHzJob?.cancel()
         sensorManager.unregisterListener(this)
         sensorThread?.quitSafely()
         serviceScope.cancel()
