@@ -1,49 +1,72 @@
 # SwiftSense
 
-SwiftSense is a **privacy-focused** optimization toolkit designed to boost gaming performance and minimize system latency, especially on older Android devices.
+SwiftSense is an **open-source, privacy-focused** optimization toolkit designed to enhance Android
+performance, minimize system latency, and provide advanced system tools.
 
 ---
 
 ### 🎮 Key Features
 
-* **200+ Hz Sensor Refresh:** Boosts sensor sampling rates to their hardware limits, reaching 200 Hz and beyond. This significantly reduces latency in games that rely on gyroscope and accelerometer input.
-* **Fast App Manager:** Allows you to maintain a list of resource-heavy apps that cause high CPU load. You can disable these apps with a single tap before starting a game to free up processor resources, and re-enable them just as quickly afterward.
-* **Touch Enhancement:** Targets software-side delays to help provide a more stable and responsive touch experience.
-* **Total Privacy:** Requires no internet access; all your processes and app lists are handled locally on your device.
+* **🚀 Sensor Optimization:** Boosts sensor sampling rates (Gyroscope, Accelerometer, etc.) to their
+  hardware limits. Includes a **Live Frequency Monitor** to track real-time sensor speeds in Hz.
+* **⚡ Touch Enhancement:** Reduces software-side touch latency using an Accessibility Service for a
+  more fluid and responsive screen experience.
+* **📱 Advanced App Manager:** Easily enable or disable system and user applications via **Shizuku**.
+  Perfect for freezing resource-heavy apps before gaming.
+* **🖥️ Screen Resolution Tuner:** Modify your device's display resolution and DPI. Create and save *
+  *Resolution Plans** for different scenarios (e.g., Gaming vs. Battery Saving).
+* **🧹 Cache Cleaner & App Stopper:** Reclaim storage by clearing system caches and free up RAM by
+  force-stopping background applications.
+* **📊 System Table Macros:** View and modify Android's `System`, `Secure`, and `Global` settings
+  tables. Create **Macros** to apply multiple system tweaks with a single tap.
+* **🔒 Total Privacy:** SwiftSense **never** connects to the internet. All data, app lists, and
+  optimizations stay strictly on your device.
 
 ---
 
-### 🛠️ Technical Details & Usage
+### 🛠️ Technical Details & Requirements
 
-| Feature | Requirement | Purpose |
-| --- | --- | --- |
-| **Sensor Boost** | Android 8.0+ | Low-latency gaming |
-| **App Management** | Shizuku Service | Reducing CPU load |
-| **Touch Boost** | Accessibility Permission | More responsive input |
+| Feature                | Requirement           | Purpose                       |
+|:-----------------------|:----------------------|:------------------------------|
+| **Sensor Boost**       | Android 8.0+          | Low-latency data processing   |
+| **Touch Boost**        | Accessibility Service | Improved touch response       |
+| **App & System Tools** | **Shizuku**           | Advanced system-level control |
+| **Resolution/Tables**  | **Shizuku**           | Display and System tweaks     |
 
 ---
 
 ### 💡 Why SwiftSense?
 
-SwiftSense aims to give a second life to older generation devices struggling with modern mobile games. Instead of manually managing background processes, it provides the tools you need to optimize your gaming experience through a simple and effective interface.
+SwiftSense is built for power users who want to squeeze every bit of performance out of their
+hardware. Whether you're a competitive mobile gamer or someone looking to breathe new life into an
+older device, SwiftSense provides a clean, effective, and secure interface for deep system
+optimization.
 
 ---
 
-### 🔒 Security Note
+### 🛡️ Security & Privacy
 
-The Accessibility Service is used exclusively to optimize touch interactions. SwiftSense does not monitor, collect, or transmit any user data outside the device. Application management tasks are performed through a secure bridge via Shizuku.
+* **Accessibility Service:** Used solely to prioritize touch event processing. It **never**
+  accesses, collects, or shares personal data.
+* **Shizuku Integration:** Performs system-level tasks (like disabling apps or changing resolution)
+  through a secure, user-authorized bridge.
+* **No Analytics:** We don't track you. Period.
 
 ---
 
 ### ⚠️ Installation Note
 
-If **Play Protect** prevents the installation of the app, please temporarily disable it in the Play Store settings to complete the setup. SwiftSense is a secure, open-source tool, but its deep system optimizations may trigger false alerts.
+Since SwiftSense performs deep system optimizations, **Google Play Protect** may occasionally flag
+the installation. This is a common false positive for tools requiring Shizuku or Accessibility
+permissions. SwiftSense is fully open-source and safe to use.
 
 ---
 
 ### 🚧 Contributing
 
-Due to the current development phase of the project, Pull Requests (PR) and Merge Requests are **not being accepted at this time.** Please use the Issues section to report bugs or suggestions.
+The project is currently in active development. While we are not accepting Pull Requests at this
+very moment, we highly value your feedback! Please use the **Issues** section to report bugs or
+suggest new features.
 
 ---
 
