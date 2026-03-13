@@ -27,7 +27,6 @@ import io.github.itsmelissadev.swiftsense.data.PreferenceManager
 import io.github.itsmelissadev.swiftsense.feature.appmanager.AppManagerScreen
 import io.github.itsmelissadev.swiftsense.feature.appstopper.AppStopperScreen
 import io.github.itsmelissadev.swiftsense.feature.boostsensors.BoostSensorsScreen
-import io.github.itsmelissadev.swiftsense.feature.boosttouch.BoostTouchScreen
 import io.github.itsmelissadev.swiftsense.feature.cachecleaner.CacheCleanerScreen
 import io.github.itsmelissadev.swiftsense.feature.screenresolution.ScreenResolutionScreen
 import io.github.itsmelissadev.swiftsense.feature.systemtables.SystemTableMacroScreen
@@ -116,7 +115,6 @@ class MainActivity : ComponentActivity() {
                                 MainScreen(
                                     onNavigateToBoostSensors = { navController.navigate("boost_sensors") },
                                     onNavigateToAppManager = { navController.navigate("app_manager") },
-                                    onNavigateToBoostTouch = { navController.navigate("boost_touch") },
                                     onNavigateToScreenResolution = { navController.navigate("screen_resolution") },
                                     onNavigateToAppStopper = { navController.navigate("app_stopper") },
                                     onNavigateToCacheCleaner = { navController.navigate("cache_cleaner") },
@@ -129,9 +127,6 @@ class MainActivity : ComponentActivity() {
                             }
                             composable("app_manager") {
                                 AppManagerScreen(onNavigateBack = { navController.popBackStack() })
-                            }
-                            composable("boost_touch") {
-                                BoostTouchScreen(onNavigateBack = { navController.popBackStack() })
                             }
                             composable("screen_resolution") {
                                 ScreenResolutionScreen(onNavigateBack = { navController.popBackStack() })

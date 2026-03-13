@@ -9,14 +9,13 @@ performance, minimize system latency, and provide advanced system tools.
 
 * **🚀 Sensor Optimization:** Boosts sensor sampling rates (Gyroscope, Accelerometer, etc.) to their
   hardware limits. Includes a **Live Frequency Monitor** to track real-time sensor speeds in Hz.
-* **⚡ Touch Enhancement:** Reduces software-side touch latency using an Accessibility Service for a
-  more fluid and responsive screen experience.
 * **📱 Advanced App Manager:** Easily enable or disable system and user applications via **Shizuku**.
   Perfect for freezing resource-heavy apps before gaming.
 * **🖥️ Screen Resolution Tuner:** Modify your device's display resolution and DPI. Create and save *
   *Resolution Plans** for different scenarios (e.g., Gaming vs. Battery Saving).
-* **🧹 Cache Cleaner & App Stopper:** Reclaim storage by clearing system caches and free up RAM by
-  force-stopping background applications.
+* **🧹 Cache Cleaner:** Reclaim storage by clearing system and app caches via Shizuku.
+* **🛡️ Background Killer:** Free up RAM and reduce CPU usage by force-stopping background
+  applications.
 * **📊 System Table Macros:** View and modify Android's `System`, `Secure`, and `Global` settings
   tables. Create **Macros** to apply multiple system tweaks with a single tap.
 * **🔒 Total Privacy:** SwiftSense **never** connects to the internet. All data, app lists, and
@@ -26,12 +25,12 @@ performance, minimize system latency, and provide advanced system tools.
 
 ### 🛠️ Technical Details & Requirements
 
-| Feature                | Requirement           | Purpose                       |
-|:-----------------------|:----------------------|:------------------------------|
-| **Sensor Boost**       | Android 8.0+          | Low-latency data processing   |
-| **Touch Boost**        | Accessibility Service | Improved touch response       |
-| **App & System Tools** | **Shizuku**           | Advanced system-level control |
-| **Resolution/Tables**  | **Shizuku**           | Display and System tweaks     |
+| Feature                | Requirement  | Purpose                       |
+|:-----------------------|:-------------|:------------------------------|
+| **Sensor Boost**       | Android 8.0+ | Low-latency data processing   |
+| **App & System Tools** | **Shizuku**  | Advanced system-level control |
+| **Resolution/Tables**  | **Shizuku**  | Display and System tweaks     |
+| **Cache/Killer**       | **Shizuku**  | Storage and RAM optimization  |
 
 ---
 
@@ -46,10 +45,11 @@ optimization.
 
 ### 🛡️ Security & Privacy
 
-* **Accessibility Service:** Used solely to prioritize touch event processing. It **never**
-  accesses, collects, or shares personal data.
-* **Shizuku Integration:** Performs system-level tasks (like disabling apps or changing resolution)
+* **Shizuku Integration:** Performs system-level tasks (like disabling apps, changing resolution, or
+  clearing cache)
   through a secure, user-authorized bridge.
+* **No Internet Access:** The app does not request internet permission. Your data never leaves the
+  device.
 * **No Analytics:** We don't track you. Period.
 
 ---
@@ -57,16 +57,8 @@ optimization.
 ### ⚠️ Installation Note
 
 Since SwiftSense performs deep system optimizations, **Google Play Protect** may occasionally flag
-the installation. This is a common false positive for tools requiring Shizuku or Accessibility
+the installation. This is a common false positive for tools requiring Shizuku or advanced
 permissions. SwiftSense is fully open-source and safe to use.
-
----
-
-### 🚧 Contributing
-
-The project is currently in active development. While we are not accepting Pull Requests at this
-very moment, we highly value your feedback! Please use the **Issues** section to report bugs or
-suggest new features.
 
 ---
 

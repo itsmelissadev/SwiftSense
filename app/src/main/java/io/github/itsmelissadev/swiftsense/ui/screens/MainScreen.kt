@@ -1,11 +1,28 @@
 package io.github.itsmelissadev.swiftsense.ui.screens
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.AspectRatio
+import androidx.compose.material.icons.filled.CleaningServices
+import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.TableChart
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -18,7 +35,6 @@ import io.github.itsmelissadev.swiftsense.ui.components.FeatureCard
 fun MainScreen(
     onNavigateToBoostSensors: () -> Unit,
     onNavigateToAppManager: () -> Unit,
-    onNavigateToBoostTouch: () -> Unit,
     onNavigateToScreenResolution: () -> Unit,
     onNavigateToAppStopper: () -> Unit,
     onNavigateToCacheCleaner: () -> Unit,
@@ -74,15 +90,6 @@ fun MainScreen(
                     description = stringResource(R.string.feature_boost_sensors_desc),
                     icon = Icons.Default.Speed,
                     onClick = onNavigateToBoostSensors
-                )
-            }
-
-            item {
-                FeatureCard(
-                    title = stringResource(R.string.feature_boost_touch),
-                    description = stringResource(R.string.feature_boost_touch_desc),
-                    icon = Icons.Default.TouchApp,
-                    onClick = onNavigateToBoostTouch
                 )
             }
 
