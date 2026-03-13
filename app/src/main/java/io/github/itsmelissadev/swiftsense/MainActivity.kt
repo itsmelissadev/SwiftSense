@@ -27,6 +27,7 @@ import io.github.itsmelissadev.swiftsense.data.PreferenceManager
 import io.github.itsmelissadev.swiftsense.feature.appmanager.AppManagerScreen
 import io.github.itsmelissadev.swiftsense.feature.boostsensors.BoostSensorsScreen
 import io.github.itsmelissadev.swiftsense.feature.boosttouch.BoostTouchScreen
+import io.github.itsmelissadev.swiftsense.feature.screenresolution.ScreenResolutionScreen
 import io.github.itsmelissadev.swiftsense.ui.screens.MainScreen
 import io.github.itsmelissadev.swiftsense.ui.screens.OnboardingScreen
 import io.github.itsmelissadev.swiftsense.ui.screens.PermissionScreen
@@ -113,6 +114,7 @@ class MainActivity : ComponentActivity() {
                                     onNavigateToBoostSensors = { navController.navigate("boost_sensors") },
                                     onNavigateToAppManager = { navController.navigate("app_manager") },
                                     onNavigateToBoostTouch = { navController.navigate("boost_touch") },
+                                    onNavigateToScreenResolution = { navController.navigate("screen_resolution") },
                                     onNavigateToSettings = { navController.navigate("settings") }
                                 )
                             }
@@ -124,6 +126,9 @@ class MainActivity : ComponentActivity() {
                             }
                             composable("boost_touch") {
                                 BoostTouchScreen(onNavigateBack = { navController.popBackStack() })
+                            }
+                            composable("screen_resolution") {
+                                ScreenResolutionScreen(onNavigateBack = { navController.popBackStack() })
                             }
                             composable("settings") {
                                 SettingsScreen(

@@ -19,21 +19,26 @@ fun MainScreen(
     onNavigateToBoostSensors: () -> Unit,
     onNavigateToAppManager: () -> Unit,
     onNavigateToBoostTouch: () -> Unit,
+    onNavigateToScreenResolution: () -> Unit,
     onNavigateToSettings: () -> Unit
 ) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { 
+                title = {
                     Text(
-                        stringResource(R.string.app_name), 
+                        stringResource(R.string.app_name),
                         fontWeight = FontWeight.Black,
                         style = MaterialTheme.typography.titleLarge
-                    ) 
+                    )
                 },
                 actions = {
                     IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Icon(
+                            Icons.Default.Settings,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -50,13 +55,42 @@ fun MainScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item { Spacer(modifier = Modifier.height(8.dp)) }
-            
+
+            item {
+                Text(
+                    text = stringResource(R.string.category_performance),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                )
+            }
+
             item {
                 FeatureCard(
                     title = stringResource(R.string.feature_boost_sensors),
                     description = stringResource(R.string.feature_boost_sensors_desc),
                     icon = Icons.Default.Speed,
                     onClick = onNavigateToBoostSensors
+                )
+            }
+
+            item {
+                FeatureCard(
+                    title = stringResource(R.string.feature_boost_touch),
+                    description = stringResource(R.string.feature_boost_touch_desc),
+                    icon = Icons.Default.TouchApp,
+                    onClick = onNavigateToBoostTouch
+                )
+            }
+
+            item { Spacer(modifier = Modifier.height(12.dp)) }
+
+            item {
+                Text(
+                    text = stringResource(R.string.category_tools),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                 )
             }
 
@@ -71,13 +105,13 @@ fun MainScreen(
 
             item {
                 FeatureCard(
-                    title = stringResource(R.string.feature_boost_touch),
-                    description = stringResource(R.string.feature_boost_touch_desc),
-                    icon = Icons.Default.TouchApp,
-                    onClick = onNavigateToBoostTouch
+                    title = stringResource(R.string.feature_screen_resolution),
+                    description = stringResource(R.string.feature_screen_resolution_desc),
+                    icon = Icons.Default.AspectRatio,
+                    onClick = onNavigateToScreenResolution
                 )
             }
-            
+
             item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }

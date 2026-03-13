@@ -21,6 +21,7 @@ class PreferenceManager(private val context: Context) {
         val SHIZUKU_SENSOR_BOOST = booleanPreferencesKey("shizuku_sensor_boost")
         const val SENSOR_STATES_PREFIX = "sensor_state_"
         private val DISABLED_APPS = stringSetPreferencesKey("disabled_apps")
+        private val RESOLUTION_PLANS = stringSetPreferencesKey("resolution_plans")
     }
 
     val preferences: Flow<Preferences> = context.dataStore.data
@@ -63,6 +64,22 @@ class PreferenceManager(private val context: Context) {
             } else {
                 prefs[DISABLED_APPS] = current + packageName
             }
+        }
+    }
+
+    val resolutionPlans: Flow<Set<String>> = preferences.map { it[RESOLUTION_PLANS] ?: emptySet() }
+    
+    suspend fun addResolutionPlan(planJson: String) {
+        context.dataStore.edit { prefs ->
+            val current = prefs[RESOLUTION_PLANS] ?: emptySet()
+            prefs[RESOLUTION_PLANS] = current + planJson
+        }
+    }
+
+    suspend fun deleteResolutionPlan(planJson: String) {
+        context.dataStore.edit { prefs ->
+            val current = prefs[RESOLUTION_PLANS] ?: emptySet()
+            prefs[RESOLUTION_PLANS] = current - planJson
         }
     }
 

@@ -81,12 +81,17 @@
     <string name="accessibility_service_off">Inactive</string>
     <string name="setup_accessibility">Check Settings</string>
 
+    <string name="category_performance">Performance</string>
     <string name="feature_boost_sensors">Sensor Optimization</string>
     <string name="feature_boost_sensors_desc">Improves accuracy by processing sensor data at higher rates.</string>
-    <string name="feature_app_manager">App Manager</string>
-    <string name="feature_app_manager_desc">Helps you easily manage system and user applications.</string>
     <string name="feature_boost_touch">Touch Enhancement</string>
     <string name="feature_boost_touch_desc">Lowers response time for a much smoother experience.</string>
+
+    <string name="category_tools">System Tools</string>
+    <string name="feature_app_manager">App Manager</string>
+    <string name="feature_app_manager_desc">Helps you easily manage system and user applications.</string>
+    <string name="feature_screen_resolution">Screen Resolution</string>
+    <string name="feature_screen_resolution_desc">Adjust your device\'s display resolution and density.</string>
 
     <string name="shizuku_not_installed">Shizuku doesn\'t seem to be installed</string>
     <string name="shizuku_not_running">Shizuku isn\'t running right now</string>
@@ -119,4 +124,31 @@
     <string name="app_manager_warning_text">Please be careful when disabling system apps. Disabling a critical app might cause your device to become unstable.</string>
 
     <string name="touch_boost_info_text">Touch Boost uses the Accessibility Service to improve how the screen responds to your touch. This only affects touch performance.</string>
+
+    <string name="resolution_width">Width</string>
+    <string name="resolution_height">Height</string>
+    <string name="resolution_dpi">DPI (Density)</string>
+    <string name="maintain_aspect_ratio">Maintain Aspect Ratio</string>
+    <string name="free_adjustment">Free Adjustment</string>
+    <string name="current_resolution">Current: %1$d x %2$d, %3$d DPI</string>
+    <string name="physical_resolution">Physical: %1$d x %2$d, %3$d DPI</string>
+    <string name="action_apply">Apply</string>
+    <string name="action_reset">Reset to Default</string>
+    <string name="shizuku_required_desc">This feature requires Shizuku to modify system settings.</string>
+    <string name="toast_resolution_applied">Resolution updated successfully.</string>
+    <string name="toast_invalid_input">Please enter valid values.</string>
+
+    <string name="confirm_resolution_title">Keep these display settings?</string>
+    <string name="confirm_resolution_desc">The display settings have been changed. Reverting to original settings in %d seconds.</string>
+    <string name="action_keep_changes">Keep Changes</string>
+    <string name="action_revert">Revert</string>
+
+    <string name="resolution_plans">Resolution Plans</string>
+    <string name="add_plan">Add Plan</string>
+    <string name="plan_name">Plan Name</string>
+    <string name="save_plan">Save Plan</string>
+    <string name="no_plans">No plans saved yet.</string>
+    <string name="toast_plan_saved">Plan saved successfully.</string>
+    <string name="toast_plan_deleted">Plan deleted.</string>
+    <string name="action_delete">Delete</string>
 </resources>

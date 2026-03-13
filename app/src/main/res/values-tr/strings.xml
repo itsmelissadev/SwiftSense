@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">SwiftSense</string>
     <string name="onboarding_title_1">Şeffaf ve Güvenli</string>
-    <string name="onboarding_desc_1">SwiftSense tamamen açık kaynaklı bir proje. En başından beri önceliğim gizliliğin; bu yüzden uygulama hiçbir şekilde internete bağlanmıyor. Tüm işlemler sadece senin cihazında kalıyor.</string>
+    <string name="onboarding_desc_1">SwiftSense tamamen açık kaynaklı bir project. En başından beri önceliğim gizliliğin; bu yüzden uygulama hiçbir şekilde internete bağlanmıyor. Tüm işlemler sadece senin cihazında kalıyor.</string>
     <string name="onboarding_title_2">Neler Yapabilirsin?</string>
     <string name="onboarding_desc_2">Cihazındaki sensör hızlarını optimize eden ve dokunmatik tepki süresini iyileştiren araçları tek bir yerde topladım. Donanımının kapasitesini tam anlamıyla hissetmen için buradayız.</string>
     <string name="get_started">Başlayalım</string>
@@ -81,12 +81,17 @@
     <string name="accessibility_service_off">Şu an kapalı</string>
     <string name="setup_accessibility">Ayarlara Göz At</string>
 
+    <string name="category_performance">Performans</string>
     <string name="feature_boost_sensors">Sensör Optimizasyonu</string>
     <string name="feature_boost_sensors_desc">Sensör verilerini en yüksek hızda işleyerek hassasiyeti artırır.</string>
-    <string name="feature_app_manager">Uygulama Yöneticisi</string>
-    <string name="feature_app_manager_desc">Sistem ve kullanıcı uygulamalarını kolayca yönetmenize yardımcı olur.</string>
     <string name="feature_boost_touch">Dokunmatik İyileştirme</string>
     <string name="feature_boost_touch_desc">Ekranın tepki süresini düşürerek daha akıcı bir deneyim sağlar.</string>
+
+    <string name="category_tools">Sistem Araçları</string>
+    <string name="feature_app_manager">Uygulama Yöneticisi</string>
+    <string name="feature_app_manager_desc">Sistem ve kullanıcı uygulamalarını kolayca yönetmenize yardımcı olur.</string>
+    <string name="feature_screen_resolution">Ekran Çözünürlüğü</string>
+    <string name="feature_screen_resolution_desc">Cihazınızın ekran çözünürlüğünü ve yoğunluğunu ayarlayın.</string>
 
     <string name="shizuku_not_installed">Shizuku yüklü görünmüyor</string>
     <string name="shizuku_not_running">Shizuku şu an çalışmıyor</string>
@@ -119,4 +124,31 @@
     <string name="app_manager_warning_text">Sistem uygulamalarını devre dışı bırakırken lütfen dikkatli ol. Kritik bir uygulamayı kapatmak cihazının kararsız çalışmasına neden olabilir.</string>
 
     <string name="touch_boost_info_text">Touch Boost, Erişilebilirlik Hizmetini kullanarak ekranın dokunuşlarına verdiği tepkiyi iyileştirir. Bu özellik sadece dokunma performansını etkiler.</string>
+
+    <string name="resolution_width">Genişlik</string>
+    <string name="resolution_height">Yükseklik</string>
+    <string name="resolution_dpi">DPI (Yoğunluk)</string>
+    <string name="maintain_aspect_ratio">En Boy Oranını Koru</string>
+    <string name="free_adjustment">Serbest Ayarlama</string>
+    <string name="current_resolution">Mevcut: %1$d x %2$d, %3$d DPI</string>
+    <string name="physical_resolution">Fiziksel: %1$d x %2$d, %3$d DPI</string>
+    <string name="action_apply">Uygula</string>
+    <string name="action_reset">Varsayılana Sıfırla</string>
+    <string name="shizuku_required_desc">Bu özellik, sistem ayarlarını değiştirmek için Shizuku gerektirir.</string>
+    <string name="toast_resolution_applied">Çözünürlük başarıyla güncellendi.</string>
+    <string name="toast_invalid_input">Lütfen geçerli değerler girin.</string>
+
+    <string name="confirm_resolution_title">Bu ekran ayarları kalsın mı?</string>
+    <string name="confirm_resolution_desc">Ekran ayarları değiştirildi. %d saniye içinde onaylanmazsa eski ayarlara dönülecek.</string>
+    <string name="action_keep_changes">Değişiklikleri Koru</string>
+    <string name="action_revert">Geri Al</string>
+
+    <string name="resolution_plans">Çözünürlük Planları</string>
+    <string name="add_plan">Plan Ekle</string>
+    <string name="plan_name">Plan Adı</string>
+    <string name="save_plan">Planı Kaydet</string>
+    <string name="no_plans">Henüz kaydedilmiş plan yok.</string>
+    <string name="toast_plan_saved">Plan başarıyla kaydedildi.</string>
+    <string name="toast_plan_deleted">Plan silindi.</string>
+    <string name="action_delete">Sil</string>
 </resources>
