@@ -25,9 +25,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import io.github.itsmelissadev.swiftsense.data.PreferenceManager
 import io.github.itsmelissadev.swiftsense.feature.appmanager.AppManagerScreen
+import io.github.itsmelissadev.swiftsense.feature.appstopper.AppStopperScreen
 import io.github.itsmelissadev.swiftsense.feature.boostsensors.BoostSensorsScreen
 import io.github.itsmelissadev.swiftsense.feature.boosttouch.BoostTouchScreen
+import io.github.itsmelissadev.swiftsense.feature.cachecleaner.CacheCleanerScreen
 import io.github.itsmelissadev.swiftsense.feature.screenresolution.ScreenResolutionScreen
+import io.github.itsmelissadev.swiftsense.feature.systemtables.SystemTableMacroScreen
 import io.github.itsmelissadev.swiftsense.ui.screens.MainScreen
 import io.github.itsmelissadev.swiftsense.ui.screens.OnboardingScreen
 import io.github.itsmelissadev.swiftsense.ui.screens.PermissionScreen
@@ -115,6 +118,9 @@ class MainActivity : ComponentActivity() {
                                     onNavigateToAppManager = { navController.navigate("app_manager") },
                                     onNavigateToBoostTouch = { navController.navigate("boost_touch") },
                                     onNavigateToScreenResolution = { navController.navigate("screen_resolution") },
+                                    onNavigateToAppStopper = { navController.navigate("app_stopper") },
+                                    onNavigateToCacheCleaner = { navController.navigate("cache_cleaner") },
+                                    onNavigateToSystemTables = { navController.navigate("system_tables") },
                                     onNavigateToSettings = { navController.navigate("settings") }
                                 )
                             }
@@ -129,6 +135,15 @@ class MainActivity : ComponentActivity() {
                             }
                             composable("screen_resolution") {
                                 ScreenResolutionScreen(onNavigateBack = { navController.popBackStack() })
+                            }
+                            composable("app_stopper") {
+                                AppStopperScreen(onNavigateBack = { navController.popBackStack() })
+                            }
+                            composable("cache_cleaner") {
+                                CacheCleanerScreen(onNavigateBack = { navController.popBackStack() })
+                            }
+                            composable("system_tables") {
+                                SystemTableMacroScreen(onNavigateBack = { navController.popBackStack() })
                             }
                             composable("settings") {
                                 SettingsScreen(

@@ -21,7 +21,9 @@ class PreferenceManager(private val context: Context) {
         val SHIZUKU_SENSOR_BOOST = booleanPreferencesKey("shizuku_sensor_boost")
         const val SENSOR_STATES_PREFIX = "sensor_state_"
         private val DISABLED_APPS = stringSetPreferencesKey("disabled_apps")
+        private val STOPPER_APPS = stringSetPreferencesKey("stopper_apps")
         private val RESOLUTION_PLANS = stringSetPreferencesKey("resolution_plans")
+        private val SYSTEM_MACROS = stringSetPreferencesKey("system_macros")
     }
 
     val preferences: Flow<Preferences> = context.dataStore.data
@@ -64,6 +66,39 @@ class PreferenceManager(private val context: Context) {
             } else {
                 prefs[DISABLED_APPS] = current + packageName
             }
+        }
+    }
+
+    val stopperApps: Flow<Set<String>> = preferences.map { it[STOPPER_APPS] ?: emptySet() }
+    
+    suspend fun setStopperApps(apps: Set<String>) {
+        context.dataStore.edit { it[STOPPER_APPS] = apps }
+    }
+
+    suspend fun toggleStopperApp(packageName: String) {
+        context.dataStore.edit { prefs ->
+            val current = prefs[STOPPER_APPS] ?: emptySet()
+            if (current.contains(packageName)) {
+                prefs[STOPPER_APPS] = current - packageName
+            } else {
+                prefs[STOPPER_APPS] = current + packageName
+            }
+        }
+    }
+
+    val systemMacros: Flow<Set<String>> = preferences.map { it[SYSTEM_MACROS] ?: emptySet() }
+
+    suspend fun addSystemMacro(macroJson: String) {
+        context.dataStore.edit { prefs ->
+            val current = prefs[SYSTEM_MACROS] ?: emptySet()
+            prefs[SYSTEM_MACROS] = current + macroJson
+        }
+    }
+
+    suspend fun removeSystemMacro(macroJson: String) {
+        context.dataStore.edit { prefs ->
+            val current = prefs[SYSTEM_MACROS] ?: emptySet()
+            prefs[SYSTEM_MACROS] = current - macroJson
         }
     }
 

@@ -92,6 +92,8 @@
     <string name="feature_app_manager_desc">Sistem ve kullanıcı uygulamalarını kolayca yönetmenize yardımcı olur.</string>
     <string name="feature_screen_resolution">Ekran Çözünürlüğü</string>
     <string name="feature_screen_resolution_desc">Cihazınızın ekran çözünürlüğünü ve yoğunluğunu ayarlayın.</string>
+    <string name="feature_system_tables">Sistem Tablo Makroları</string>
+    <string name="feature_system_tables_desc">Android sistem ayarları tablolarını makrolar ile görüntüleyin ve düzenleyin.</string>
 
     <string name="shizuku_not_installed">Shizuku yüklü görünmüyor</string>
     <string name="shizuku_not_running">Shizuku şu an çalışmıyor</string>
@@ -151,4 +153,42 @@
     <string name="toast_plan_saved">Plan başarıyla kaydedildi.</string>
     <string name="toast_plan_deleted">Plan silindi.</string>
     <string name="action_delete">Sil</string>
+
+    <string name="feature_app_stopper">Arkaplan Durdurucu</string>
+    <string name="feature_app_stopper_desc">Belleği boşaltmak ve CPU kullanımını azaltmak için arkaplan uygulamalarını kapatın.</string>
+    <string name="feature_cache_cleaner">Önbellek Temizleyici</string>
+    <string name="feature_cache_cleaner_desc">Depolama alanını boşaltmak için sistem ve uygulama önbelleğini temizleyin.</string>
+
+    <string name="stop_now">Uygulamaları Durdur</string>
+    <string name="clean_now">Önbelleği Temizle</string>
+    <string name="closing_apps">Arkaplan uygulamaları kapatılıyor…</string>
+    <string name="clearing_cache">Sistem önbelleği temizleniyor…</string>
+    <string name="optimization_complete">Optimizasyon tamamlandı!</string>
+    <string name="apps_closed">%d uygulama kapatıldı.</string>
+    <string name="freed_space">Yaklaşık %d MB alan boşaltıldı</string>
+
+    <string name="stop_mode">Durdurma Modu</string>
+    <string name="mode_simple">Basit</string>
+    <string name="mode_force">Durmaya Zorla</string>
+    <string name="select_all">Hepsini Seç</string>
+    <string name="deselect_all">Tüm Seçimleri Kaldır</string>
+    <string name="selected_count">%d uygulama seçildi</string>
+    <string name="no_apps_found">Uygulama bulunamadı.</string>
+
+    <string name="table_system">Sistem</string>
+    <string name="table_secure">Güvenli</string>
+    <string name="table_global">Global</string>
+    <string name="add_macro">Makro Ekle</string>
+    <string name="macro_name">Makro Adı</string>
+    <string name="setting_key">Ayar Anahtarı (Key)</string>
+    <string name="default_value">Varsayılan Değer</string>
+    <string name="target_value">Hedef Değer</string>
+    <string name="action_revert_macro">Geri Al</string>
+    <string name="toast_macro_applied">Makro uygulandı.</string>
+    <string name="toast_macro_reverted">İşlem geri alındı.</string>
+    <string name="macros">Makrolar</string>
+    <string name="no_macros">Henüz makro oluşturulmadı.</string>
+    <string name="edit_setting">Ayarı Düzenle</string>
+    <string name="new_value">Yeni Değer</string>
+    <string name="toast_setting_updated">Ayar başarıyla düzenlendi.</string>
 </resources>

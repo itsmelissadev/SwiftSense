@@ -92,6 +92,8 @@
     <string name="feature_app_manager_desc">Helps you easily manage system and user applications.</string>
     <string name="feature_screen_resolution">Screen Resolution</string>
     <string name="feature_screen_resolution_desc">Adjust your device\'s display resolution and density.</string>
+    <string name="feature_system_tables">System Table Macros</string>
+    <string name="feature_system_tables_desc">View and modify Android system settings tables with macros.</string>
 
     <string name="shizuku_not_installed">Shizuku doesn\'t seem to be installed</string>
     <string name="shizuku_not_running">Shizuku isn\'t running right now</string>
@@ -151,4 +153,42 @@
     <string name="toast_plan_saved">Plan saved successfully.</string>
     <string name="toast_plan_deleted">Plan deleted.</string>
     <string name="action_delete">Delete</string>
+
+    <string name="feature_app_stopper">Background Killer</string>
+    <string name="feature_app_stopper_desc">Close background applications to free up memory and reduce CPU usage.</string>
+    <string name="feature_cache_cleaner">Cache Cleaner</string>
+    <string name="feature_cache_cleaner_desc">Clear system and app cache to free up storage space.</string>
+
+    <string name="stop_now">Kill Apps</string>
+    <string name="clean_now">Clear Cache</string>
+    <string name="closing_apps">Closing background apps…</string>
+    <string name="clearing_cache">Clearing system cache…</string>
+    <string name="optimization_complete">Optimization complete!</string>
+    <string name="apps_closed">%d apps closed.</string>
+    <string name="freed_space">Freed up approximately %d MB</string>
+
+    <string name="stop_mode">Stop Mode</string>
+    <string name="mode_simple">Simple Kill</string>
+    <string name="mode_force">Force Stop</string>
+    <string name="select_all">Select All</string>
+    <string name="deselect_all">Deselect All</string>
+    <string name="selected_count">%d apps selected</string>
+    <string name="no_apps_found">No apps found.</string>
+
+    <string name="table_system">System</string>
+    <string name="table_secure">Secure</string>
+    <string name="table_global">Global</string>
+    <string name="add_macro">Add Macro</string>
+    <string name="macro_name">Macro Name</string>
+    <string name="setting_key">Setting Key</string>
+    <string name="default_value">Default Value</string>
+    <string name="target_value">Target Value</string>
+    <string name="action_revert_macro">Revert</string>
+    <string name="toast_macro_applied">Macro applied.</string>
+    <string name="toast_macro_reverted">Macro reverted.</string>
+    <string name="macros">Macros</string>
+    <string name="no_macros">No macros created yet.</string>
+    <string name="edit_setting">Edit Setting</string>
+    <string name="new_value">New Value</string>
+    <string name="toast_setting_updated">Setting updated successfully.</string>
 </resources>

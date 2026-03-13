@@ -20,6 +20,9 @@ fun MainScreen(
     onNavigateToAppManager: () -> Unit,
     onNavigateToBoostTouch: () -> Unit,
     onNavigateToScreenResolution: () -> Unit,
+    onNavigateToAppStopper: () -> Unit,
+    onNavigateToCacheCleaner: () -> Unit,
+    onNavigateToSystemTables: () -> Unit,
     onNavigateToSettings: () -> Unit
 ) {
     Scaffold(
@@ -83,6 +86,24 @@ fun MainScreen(
                 )
             }
 
+            item {
+                FeatureCard(
+                    title = stringResource(R.string.feature_app_stopper),
+                    description = stringResource(R.string.feature_app_stopper_desc),
+                    icon = Icons.Default.PowerSettingsNew,
+                    onClick = onNavigateToAppStopper
+                )
+            }
+
+            item {
+                FeatureCard(
+                    title = stringResource(R.string.feature_cache_cleaner),
+                    description = stringResource(R.string.feature_cache_cleaner_desc),
+                    icon = Icons.Default.CleaningServices,
+                    onClick = onNavigateToCacheCleaner
+                )
+            }
+
             item { Spacer(modifier = Modifier.height(12.dp)) }
 
             item {
@@ -109,6 +130,15 @@ fun MainScreen(
                     description = stringResource(R.string.feature_screen_resolution_desc),
                     icon = Icons.Default.AspectRatio,
                     onClick = onNavigateToScreenResolution
+                )
+            }
+
+            item {
+                FeatureCard(
+                    title = stringResource(R.string.feature_system_tables),
+                    description = stringResource(R.string.feature_system_tables_desc),
+                    icon = Icons.Default.TableChart,
+                    onClick = onNavigateToSystemTables
                 )
             }
 
