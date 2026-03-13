@@ -1,17 +1,27 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
 }
 
+val keystorePropertiesFile: File? = rootProject.file("local.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile!!.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
 android {
     signingConfigs {
         create("release") {
-            storeFile = file("your_store_file_path")
-            storePassword = "your_store_file_password"
-            keyAlias = "your_store_file_alias"
-            keyPassword = "your_store_file_alias_password"
+            storeFile = file(keystoreProperties["SIGNING_STORE_FILE"] as String)
+            storePassword = keystoreProperties["SIGNING_STORE_PASSWORD"] as String
+            keyAlias = keystoreProperties["SIGNING_KEY_ALIAS"] as String
+            keyPassword = keystoreProperties["SIGNING_KEY_PASSWORD"] as String
         }
     }
+
     namespace = "io.github.itsmelissadev.swiftsense"
     compileSdk = 36
 
@@ -29,12 +39,23 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
-            isShrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            isDebuggable = false
+            isJniDebuggable = false
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            signingConfig = signingConfigs.getByName("release")
+        }
+        debug {
+            isMinifyEnabled = false
+            isShrinkResources = false
+            isDebuggable = true
+            isJniDebuggable = true
 
             signingConfig = signingConfigs.getByName("release")
         }
