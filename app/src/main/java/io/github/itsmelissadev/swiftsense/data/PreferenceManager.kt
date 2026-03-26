@@ -2,7 +2,13 @@ package io.github.itsmelissadev.swiftsense.data
 
 import android.content.Context
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.*
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -24,6 +30,13 @@ class PreferenceManager(private val context: Context) {
         private val STOPPER_APPS = stringSetPreferencesKey("stopper_apps")
         private val RESOLUTION_PLANS = stringSetPreferencesKey("resolution_plans")
         private val SYSTEM_MACROS = stringSetPreferencesKey("system_macros")
+        val AMOLED_INTENSITY = floatPreferencesKey("amoled_intensity")
+        val AMOLED_FILTER_TYPE = stringPreferencesKey("amoled_filter_type")
+        val AMOLED_SHIFT_SPEED = intPreferencesKey("amoled_shift_speed")
+        val AMOLED_OPACITY = floatPreferencesKey("amoled_opacity")
+        val AMOLED_REFRESH_MODE = stringPreferencesKey("amoled_refresh_mode")
+        val AMOLED_WARNING_DISMISSED = booleanPreferencesKey("amoled_warning_dismissed")
+        val AMOLED_REGIONS = stringSetPreferencesKey("amoled_regions")
     }
 
     val preferences: Flow<Preferences> = context.dataStore.data
@@ -102,6 +115,13 @@ class PreferenceManager(private val context: Context) {
         }
     }
 
+    suspend fun updateSystemMacro(oldMacroJson: String, newMacroJson: String) {
+        context.dataStore.edit { prefs ->
+            val current = prefs[SYSTEM_MACROS] ?: emptySet()
+            prefs[SYSTEM_MACROS] = current - oldMacroJson + newMacroJson
+        }
+    }
+
     val resolutionPlans: Flow<Set<String>> = preferences.map { it[RESOLUTION_PLANS] ?: emptySet() }
     
     suspend fun addResolutionPlan(planJson: String) {
@@ -123,5 +143,53 @@ class PreferenceManager(private val context: Context) {
     }
     suspend fun setSensorState(sensorType: Int, enabled: Boolean) {
         context.dataStore.edit { it[booleanPreferencesKey(SENSOR_STATES_PREFIX + sensorType)] = enabled }
+    }
+
+    // Intensity (Density) Level 0.0 - 1.0 (Default: 1.0 - Highest)
+    val amoledIntensity: Flow<Float> = preferences.map { it[AMOLED_INTENSITY] ?: 1.0f }
+    suspend fun setAmoledIntensity(intensity: Float) {
+        context.dataStore.edit { it[AMOLED_INTENSITY] = intensity }
+    }
+
+    // Filter Type (Default: checker_grid)
+    val amoledFilterType: Flow<String> =
+        preferences.map { it[AMOLED_FILTER_TYPE] ?: "checker_grid" }
+
+    suspend fun setAmoledFilterType(type: String) {
+        context.dataStore.edit { it[AMOLED_FILTER_TYPE] = type }
+    }
+
+    // Cycle duration in seconds (1 to 600)
+    val amoledShiftSpeed: Flow<Int> = preferences.map { it[AMOLED_SHIFT_SPEED] ?: 30 }
+    suspend fun setAmoledShiftSpeed(speed: Int) {
+        context.dataStore.edit { it[AMOLED_SHIFT_SPEED] = speed }
+    }
+
+    // Opacity (Default: 1.0 - 100%)
+    val amoledOpacity: Flow<Float> = preferences.map { it[AMOLED_OPACITY] ?: 1.0f }
+    suspend fun setAmoledOpacity(opacity: Float) {
+        context.dataStore.edit { it[AMOLED_OPACITY] = opacity }
+    }
+
+    // Refresh Mode: "smooth" vs "jump" (Default: "jump")
+    val amoledRefreshMode: Flow<String> = preferences.map { it[AMOLED_REFRESH_MODE] ?: "jump" }
+    suspend fun setAmoledRefreshMode(mode: String) {
+        context.dataStore.edit { it[AMOLED_REFRESH_MODE] = mode }
+    }
+
+    // Health warning dismissal state
+    val amoledWarningDismissed: Flow<Boolean> =
+        preferences.map { it[AMOLED_WARNING_DISMISSED] ?: false }
+
+    suspend fun setAmoledWarningDismissed(dismissed: Boolean) {
+        context.dataStore.edit { it[AMOLED_WARNING_DISMISSED] = dismissed }
+    }
+
+    // Regions: "full_screen", "status_bar", "navigation_bar"
+    val amoledRegions: Flow<Set<String>> =
+        preferences.map { it[AMOLED_REGIONS] ?: setOf("full_screen") }
+
+    suspend fun setAmoledRegions(regions: Set<String>) {
+        context.dataStore.edit { it[AMOLED_REGIONS] = regions }
     }
 }

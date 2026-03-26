@@ -54,6 +54,19 @@
                 android:value="Sensor sampling rate optimization for low latency data processing" />
         </service>
 
+        <service
+            android:name=".feature.amoledscreenprotect.AmoledProtectService"
+            android:exported="true"
+            android:label="@string/amoled_service_name"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/amoled_service_config" />
+        </service>
+
     </application>
 
 </manifest>

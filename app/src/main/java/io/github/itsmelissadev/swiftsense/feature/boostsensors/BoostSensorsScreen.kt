@@ -36,6 +36,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -47,6 +48,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -91,14 +93,22 @@ fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier.padding(8.dp).clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent
+                )
             )
         }
     ) { innerPadding ->
@@ -106,7 +116,10 @@ fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
+            contentPadding = PaddingValues(
+                horizontal = 20.dp,
+                vertical = 24.dp
+            ), // Increased vertical padding for expressive look
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
@@ -127,9 +140,9 @@ fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
                         }
                     },
                     containerColor = if (isServiceRunning)
-                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+                        MaterialTheme.colorScheme.primaryContainer
                     else
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                 )
             }
 
@@ -146,10 +159,10 @@ fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
             item {
                 Text(
                     text = stringResource(R.string.tab_sensors),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.headlineSmall, // Increased from titleMedium
                     fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.padding(top = 8.dp)
+                    color = MaterialTheme.colorScheme.primary, // Increased contrast
+                    modifier = Modifier.padding(top = 16.dp, bottom = 8.dp) // Spacing
                 )
             }
 
@@ -175,7 +188,7 @@ fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
                         { ThrottledLiveHzText(sensor.type) }
                     } else null,
                     containerColor = if (isEnabled)
-                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.25f)
+                        MaterialTheme.colorScheme.secondaryContainer
                     else
                         MaterialTheme.colorScheme.surface
                 )
@@ -195,17 +208,17 @@ fun ThrottledLiveHzText(sensorType: Int) {
     }
 
     Surface(
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.primaryContainer, // Changed to primaryContainer instead of transparent alpha box
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(100), // Pill shape
         modifier = Modifier.padding(start = 8.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .size(6.dp)
+                    .size(8.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primary)
             )
@@ -214,7 +227,7 @@ fun ThrottledLiveHzText(sensorType: Int) {
                 text = "$displayHz Hz",
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
     }

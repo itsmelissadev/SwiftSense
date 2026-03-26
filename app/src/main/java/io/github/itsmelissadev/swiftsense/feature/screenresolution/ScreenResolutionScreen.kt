@@ -4,7 +4,9 @@ import android.content.Context
 import android.util.DisplayMetrics
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,7 +14,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -22,19 +27,21 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -47,6 +54,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -152,36 +161,44 @@ fun ScreenResolutionScreen(
     if (showSavePlanDialog) {
         AlertDialog(
             onDismissRequest = { showSavePlanDialog = false },
-            title = { Text(stringResource(R.string.save_plan)) },
+            title = { Text(stringResource(R.string.save_plan), fontWeight = FontWeight.Bold) },
             text = {
                 OutlinedTextField(
                     value = planNameInput,
                     onValueChange = { planNameInput = it },
                     label = { Text(stringResource(R.string.plan_name)) },
-                    singleLine = true
+                    singleLine = true,
+                    shape = RoundedCornerShape(100)
                 )
             },
+            shape = RoundedCornerShape(32.dp),
             confirmButton = {
-                Button(onClick = {
-                    val planJson = JSONObject().apply {
-                        put("name", planNameInput)
-                        put("width", inputWidth)
-                        put("height", inputHeight)
-                        put("dpi", inputDpi)
-                    }.toString()
-                    scope.launch {
-                        preferenceManager.addResolutionPlan(planJson)
-                        showSavePlanDialog = false
-                        planNameInput = ""
-                        Toast.makeText(context, R.string.toast_plan_saved, Toast.LENGTH_SHORT)
-                            .show()
-                    }
-                }) {
+                Button(
+                    onClick = {
+                        val planJson = JSONObject().apply {
+                            put("name", planNameInput)
+                            put("width", inputWidth)
+                            put("height", inputHeight)
+                            put("dpi", inputDpi)
+                        }.toString()
+                        scope.launch {
+                            preferenceManager.addResolutionPlan(planJson)
+                            showSavePlanDialog = false
+                            planNameInput = ""
+                            Toast.makeText(context, R.string.toast_plan_saved, Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                    },
+                    shape = RoundedCornerShape(100)
+                ) {
                     Text(stringResource(R.string.save_plan))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showSavePlanDialog = false }) {
+                TextButton(
+                    onClick = { showSavePlanDialog = false },
+                    shape = RoundedCornerShape(100)
+                ) {
                     Text(stringResource(R.string.action_cancel))
                 }
             }
@@ -195,22 +212,33 @@ fun ScreenResolutionScreen(
                 dismissOnBackPress = false,
                 dismissOnClickOutside = false
             ),
-            title = { Text(stringResource(R.string.confirm_resolution_title)) },
-            text = { Text(stringResource(R.string.confirm_resolution_desc, countdown)) },
+            shape = RoundedCornerShape(32.dp),
+            title = {
+                Text(
+                    stringResource(R.string.confirm_resolution_title),
+                    fontWeight = FontWeight.Black
+                )
+            },
+            text = {
+                Text(
+                    stringResource(R.string.confirm_resolution_desc, countdown),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            },
             confirmButton = {
                 Button(onClick = {
                     showConfirmationDialog = false
                     refreshDisplayInfo()
-                }) {
-                    Text(stringResource(R.string.action_keep_changes))
+                }, shape = RoundedCornerShape(100), modifier = Modifier.height(48.dp)) {
+                    Text(stringResource(R.string.action_keep_changes), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
-                OutlinedButton(onClick = {
+                FilledTonalButton(onClick = {
                     resetResolution(context)
                     showConfirmationDialog = false
                     refreshDisplayInfo()
-                }) {
+                }, shape = RoundedCornerShape(100), modifier = Modifier.height(48.dp)) {
                     Text(stringResource(R.string.action_revert))
                 }
             }
@@ -223,19 +251,39 @@ fun ScreenResolutionScreen(
                 title = {
                     Text(
                         stringResource(R.string.feature_screen_resolution),
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.ExtraBold
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier.padding(8.dp).clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
                 },
                 actions = {
-                    IconButton(onClick = { refreshDisplayInfo() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = null)
+                    IconButton(
+                        onClick = { refreshDisplayInfo() },
+                        modifier = Modifier.padding(end = 8.dp).clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f))
+                    ) {
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent
+                )
             )
         }
     ) { innerPadding ->
@@ -243,21 +291,20 @@ fun ScreenResolutionScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp)
+                .padding(horizontal = 20.dp)
                 .verticalScroll(scrollState),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            Spacer(modifier = Modifier.height(8.dp))
             ShizukuStatusWidget()
 
-            Card(
+            Surface(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                        alpha = 0.5f
-                    )
-                )
+                shape = RoundedCornerShape(32.dp),
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f),
+                contentColor = MaterialTheme.colorScheme.onSurface
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(24.dp)) {
                     Text(
                         text = stringResource(
                             R.string.current_resolution,
@@ -265,98 +312,135 @@ fun ScreenResolutionScreen(
                             currentHeight,
                             currentDpi
                         ),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.primary
                     )
-                    Text(
-                        text = stringResource(
-                            R.string.physical_resolution,
-                            physicalWidth,
-                            physicalHeight,
-                            physicalDpi
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Surface(
+                        shape = RoundedCornerShape(100),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                    ) {
+                        Text(
+                            text = stringResource(
+                                R.string.physical_resolution,
+                                physicalWidth,
+                                physicalHeight,
+                                physicalDpi
+                            ),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                        )
+                    }
                 }
             }
 
-            Row(
+            Surface(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                shape = RoundedCornerShape(32.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = if (maintainAspectRatio) stringResource(R.string.maintain_aspect_ratio) else stringResource(
-                            R.string.free_adjustment
-                        ),
-                        style = MaterialTheme.typography.titleMedium
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = if (maintainAspectRatio) stringResource(R.string.maintain_aspect_ratio) else stringResource(
+                                R.string.free_adjustment
+                            ),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Switch(
+                            checked = maintainAspectRatio,
+                            onCheckedChange = { maintainAspectRatio = it }
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = inputWidth,
+                            onValueChange = { newValue ->
+                                if (newValue.all { it.isDigit() }) {
+                                    inputWidth = newValue
+                                    if (maintainAspectRatio && newValue.isNotEmpty() && physicalWidth > 0) {
+                                        val ratio =
+                                            physicalHeight.toFloat() / physicalWidth.toFloat()
+                                        inputHeight = (newValue.toInt() * ratio).toInt().toString()
+                                        val dpiRatio = newValue.toFloat() / physicalWidth.toFloat()
+                                        inputDpi = (physicalDpi * dpiRatio).toInt().toString()
+                                    }
+                                }
+                            },
+                            label = { Text(stringResource(R.string.resolution_width)) },
+                            modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            shape = RoundedCornerShape(100),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                            )
+                        )
+
+                        OutlinedTextField(
+                            value = inputHeight,
+                            onValueChange = { newValue ->
+                                if (newValue.all { it.isDigit() }) {
+                                    inputHeight = newValue
+                                    if (maintainAspectRatio && newValue.isNotEmpty() && physicalHeight > 0) {
+                                        val ratio =
+                                            physicalWidth.toFloat() / physicalHeight.toFloat()
+                                        inputWidth = (newValue.toInt() * ratio).toInt().toString()
+                                        val dpiRatio = newValue.toFloat() / physicalHeight.toFloat()
+                                        inputDpi = (physicalDpi * dpiRatio).toInt().toString()
+                                    }
+                                }
+                            },
+                            label = { Text(stringResource(R.string.resolution_height)) },
+                            modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            shape = RoundedCornerShape(100),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                            )
+                        )
+                    }
+
+                    OutlinedTextField(
+                        value = inputDpi,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) inputDpi = it },
+                        label = { Text(stringResource(R.string.resolution_dpi)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        shape = RoundedCornerShape(100),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                        )
                     )
                 }
-                Switch(
-                    checked = maintainAspectRatio,
-                    onCheckedChange = { maintainAspectRatio = it })
             }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = inputWidth,
-                    onValueChange = { newValue ->
-                        if (newValue.all { it.isDigit() }) {
-                            inputWidth = newValue
-                            if (maintainAspectRatio && newValue.isNotEmpty() && physicalWidth > 0) {
-                                val ratio = physicalHeight.toFloat() / physicalWidth.toFloat()
-                                inputHeight = (newValue.toInt() * ratio).toInt().toString()
-                                val dpiRatio = newValue.toFloat() / physicalWidth.toFloat()
-                                inputDpi = (physicalDpi * dpiRatio).toInt().toString()
-                            }
-                        }
-                    },
-                    label = { Text(stringResource(R.string.resolution_width)) },
-                    modifier = Modifier.weight(1f),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true
-                )
-
-                OutlinedTextField(
-                    value = inputHeight,
-                    onValueChange = { newValue ->
-                        if (newValue.all { it.isDigit() }) {
-                            inputHeight = newValue
-                            if (maintainAspectRatio && newValue.isNotEmpty() && physicalHeight > 0) {
-                                val ratio = physicalWidth.toFloat() / physicalHeight.toFloat()
-                                inputWidth = (newValue.toInt() * ratio).toInt().toString()
-                                val dpiRatio = newValue.toFloat() / physicalHeight.toFloat()
-                                inputDpi = (physicalDpi * dpiRatio).toInt().toString()
-                            }
-                        }
-                    },
-                    label = { Text(stringResource(R.string.resolution_height)) },
-                    modifier = Modifier.weight(1f),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true
-                )
-            }
-
-            OutlinedTextField(
-                value = inputDpi,
-                onValueChange = { if (it.all { char -> char.isDigit() }) inputDpi = it },
-                label = { Text(stringResource(R.string.resolution_dpi)) },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true
-            )
 
             val isShizukuReady =
                 Shizuku.pingBinder() && Shizuku.checkSelfPermission() == android.content.pm.PackageManager.PERMISSION_GRANTED
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Button(
                     onClick = {
@@ -364,44 +448,72 @@ fun ScreenResolutionScreen(
                             countdown = 10; showConfirmationDialog = true
                         }
                     },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).height(64.dp),
+                    shape = RoundedCornerShape(100),
                     enabled = isShizukuReady
-                ) { Text(stringResource(R.string.action_apply)) }
+                ) {
+                    Text(
+                        stringResource(R.string.action_apply),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
 
                 IconButton(
                     onClick = { showSavePlanDialog = true },
-                    modifier = Modifier.padding(top = 4.dp)
+                    modifier = Modifier.size(64.dp).clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.secondaryContainer)
                 ) {
                     Icon(
                         Icons.Default.Save,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
+                        modifier = Modifier.size(28.dp),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
             }
 
-            OutlinedButton(
+            FilledTonalButton(
                 onClick = { resetResolution(context); refreshDisplayInfo() },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = isShizukuReady
-            ) { Text(stringResource(R.string.action_reset)) }
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(100),
+                enabled = isShizukuReady,
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                )
+            ) {
+                Text(
+                    stringResource(R.string.action_reset),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
 
             Text(
                 text = stringResource(R.string.resolution_plans),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(top = 8.dp)
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Black,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 16.dp)
             )
 
             if (savedPlans.isEmpty()) {
-                Text(
-                    text = stringResource(R.string.no_plans),
-                    style = MaterialTheme.typography.bodySmall
-                )
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.no_plans),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             } else {
                 savedPlans.forEach { planJson ->
                     val plan = JSONObject(planJson)
-                    Card(
+                    Surface(
                         modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(24.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                         onClick = {
                             inputWidth = plan.getString("width")
                             inputHeight = plan.getString("height")
@@ -409,31 +521,41 @@ fun ScreenResolutionScreen(
                         }
                     ) {
                         Row(
-                            modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                            modifier = Modifier.padding(16.dp).fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Column {
-                                Text(text = plan.getString("name"), fontWeight = FontWeight.Bold)
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = plan.getString("name"),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = "${plan.getString("width")}x${plan.getString("height")} - ${
                                         plan.getString(
                                             "dpi"
                                         )
                                     } DPI",
-                                    style = MaterialTheme.typography.bodySmall
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            IconButton(onClick = {
-                                scope.launch {
-                                    preferenceManager.deleteResolutionPlan(planJson)
-                                    Toast.makeText(
-                                        context,
-                                        R.string.toast_plan_deleted,
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                            }) {
+                            IconButton(
+                                onClick = {
+                                    scope.launch {
+                                        preferenceManager.deleteResolutionPlan(planJson)
+                                        Toast.makeText(
+                                            context,
+                                            R.string.toast_plan_deleted,
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                },
+                                modifier = Modifier.clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f))
+                            ) {
                                 Icon(
                                     Icons.Default.Delete,
                                     contentDescription = null,
@@ -446,14 +568,21 @@ fun ScreenResolutionScreen(
             }
 
             if (!isShizukuReady) {
-                Text(
-                    text = stringResource(R.string.shizuku_required_desc),
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
+                Surface(
+                    shape = RoundedCornerShape(24.dp),
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
+                ) {
+                    Text(
+                        text = stringResource(R.string.shizuku_required_desc),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(48.dp))
         }
     }
 }

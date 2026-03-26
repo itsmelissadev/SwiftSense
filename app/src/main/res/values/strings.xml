@@ -80,7 +80,7 @@
     <string name="action_import">Import</string>
     <string name="action_export">Export</string>
     <string name="action_cancel">Cancel</string>
-    <string name="toast_import_success">%d new packages added to the list.</string>
+    <string name="toast_import_success">%d items added to the list.</string>
     <string name="search_apps">Search apps…</string>
 
     <string name="action_enable">Enable</string>
@@ -150,6 +150,7 @@
     <string name="table_secure">Secure</string>
     <string name="table_global">Global</string>
     <string name="add_macro">Add Macro</string>
+    <string name="edit_macro">Edit Macro</string>
     <string name="macro_name">Macro Name</string>
     <string name="setting_key">Setting Key</string>
     <string name="default_value">Default Value</string>
@@ -169,4 +170,74 @@
     <string name="app_version">Version %1$s (%2$d)</string>
     <string name="swift_settings">Swift Settings</string>
     <string name="add_new_setting">Add New Setting</string>
+    <string name="settings">Settings</string>
+
+    <string name="import_macros">Import Macros</string>
+    <string name="export_macros">Export Macros</string>
+    <string name="import_json_hint">Paste the macro JSON here…</string>
+    <string name="copy_to_clipboard">Copy to Clipboard</string>
+    <string name="toast_copied">Copied to clipboard.</string>
+    <string name="toast_import_invalid">Invalid JSON format.</string>
+    <string name="macro_settings_count">%1$d Settings</string>
+
+    <string name="feature_amoled_protect">AMOLED Screen Protect</string>
+    <string name="feature_amoled_protect_desc">Prevents screen burn-in and limits static pixels using a subtle overlay mesh.</string>
+    <string name="service_status">Service Status</string>
+    <string name="open_accessibility_settings">Open Accessibility Settings</string>
+    <string name="amoled_protect_service_desc">Applies an overlay pixel mesh to prevent screen burn-in extending the lifespan of AMOLED displays.</string>
+    <string name="filter_intensity">Filter Intensity</string>
+    <string name="amoled_on">Protection Active</string>
+    <string name="amoled_off">Protection Disabled</string>
+
+    <string name="amoled_filter_type">Filter Effect</string>
+    <string name="amoled_filter_dots">Dots</string>
+    <string name="amoled_filter_horizontal">Horizontal Lines</string>
+    <string name="amoled_filter_vertical">Vertical Lines</string>
+    <string name="amoled_filter_grid">Grid</string>
+    <string name="amoled_filter_diagonal">Diagonal</string>
+    <string name="amoled_filter_noise">Noise</string>
+    <string name="amoled_filter_checker_grid">Checker Grid</string>
+    <string name="amoled_filter_pixel_shift">Pixel Shift</string>
+
+    <string name="amoled_pixel_density">Pixel Density</string>
+    <string name="amoled_pixel_density_desc">Controls the size and number of filter pixels. Higher density means more, smaller pixels.</string>
+    <string name="amoled_density_low">Low</string>
+    <string name="amoled_density_high">High</string>
+
+    <string name="amoled_filter_opacity">Filter Opacity</string>
+    <string name="amoled_filter_opacity_desc">Controls the transparency of the filter overlay.</string>
+
+    <string name="amoled_cycle_duration">Cycle Duration</string>
+    <string name="amoled_cycle_duration_desc">Time for a full diagonal shift cycle. The filter moves right+down then back left+up.</string>
+
+    <string name="amoled_refresh_mode">Refresh Mode</string>
+    <string name="amoled_mode_smooth">Smooth</string>
+    <string name="amoled_mode_jump">Jump</string>
+    <string name="amoled_mode_smooth_desc">The filter moves continuously and smoothly in a diagonal loop based on the duration.</string>
+    <string name="amoled_mode_jump_desc">The filter stays static for the duration and then suddenly jumps to a new position.</string>
+
+    <string name="amoled_service_name">SwiftSense: AMOLED Screen Protection</string>
+    <string name="amoled_service_description">This service is used ONLY to draw a protective pixel overlay on your screen to prevent AMOLED burn-in. It DOES NOT collect, store or transmit any of your personal data, screen content, or keystrokes. It only requires overlay permission to extend your display\'s lifespan.</string>
+
+    <string name="amoled_health_warning_title">Usage Recommendation</string>
+    <string name="amoled_health_warning_desc">Fast filter movements (less than 1 minute) or very high pixel density may cause eye fatigue or discomfort during prolonged use. For the best experience, we recommend using durations of 1 minute or longer.</string>
+    <string name="amoled_health_warning_dismiss">Don\'t show again</string>
+
+    <string name="amoled_duration_10s">10s</string>
+    <string name="amoled_duration_30s">30s</string>
+    <string name="amoled_duration_1m">1m</string>
+    <string name="amoled_duration_2m">2m</string>
+    <string name="amoled_duration_3m">3m</string>
+    <string name="amoled_duration_4m">4m</string>
+    <string name="amoled_duration_5m">5m</string>
+    <string name="amoled_duration_10m">10m</string>
+
+    <string name="amoled_shift_speed">Shift Speed</string>
+    <string name="amoled_shift_speed_desc">How often the filter pattern shifts position to prevent burn-in.</string>
+
+    <string name="amoled_active_regions">Active Regions</string>
+    <string name="amoled_active_regions_desc">Choose which areas of the screen the filter should cover.</string>
+    <string name="amoled_region_fullscreen">Full Screen</string>
+    <string name="amoled_region_statusbar">Status Bar</string>
+    <string name="amoled_region_navbar">Navigation Bar</string>
 </resources>

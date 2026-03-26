@@ -80,7 +80,7 @@
     <string name="action_import">İçe Aktar</string>
     <string name="action_export">Dışa Aktar</string>
     <string name="action_cancel">İptal</string>
-    <string name="toast_import_success">%d yeni paket listeye eklendi.</string>
+    <string name="toast_import_success">%d öğe listeye eklendi.</string>
     <string name="search_apps">Uygulama ara…</string>
 
     <string name="action_enable">Etkinleştir</string>
@@ -169,4 +169,75 @@
     <string name="app_version">Versiyon %1$s (%2$d)</string>
     <string name="swift_settings">Swift Ayarları</string>
     <string name="add_new_setting">Yeni Ayar Ekle</string>
+    <string name="edit_macro">Makroyu Düzenle</string>
+    <string name="settings">Ayarlar</string>
+
+    <string name="import_macros">Makroları İçe Aktar</string>
+    <string name="export_macros">Makroları Dışa Aktar</string>
+    <string name="import_json_hint">Makro JSON kodunu buraya yapıştırın…</string>
+    <string name="copy_to_clipboard">Panoya Kopyala</string>
+    <string name="toast_copied">Panoya kopyalandı.</string>
+    <string name="toast_import_invalid">Geçersiz JSON formatı.</string>
+    <string name="macro_settings_count">%1$d Ayar</string>
+
+    <string name="feature_amoled_protect">AMOLED Ekran Koruması</string>
+    <string name="feature_amoled_protect_desc">Hafif bir piksel filtresi döşeyerek, ekranda sabit kalan kareleri böler ve ekran yanmasını (burn-in) önler.</string>
+    <string name="service_status">Servis Durumu</string>
+    <string name="open_accessibility_settings">Erişilebilirlik Ayarlarını Aç</string>
+    <string name="amoled_protect_service_desc">Ekran yanmasını önlemek ve AMOLED panellerin ömrünü uzatmak için şeffaf bir piksel ağı filtresi uygular.</string>
+    <string name="filter_intensity">Filtre Yoğunluğu</string>
+    <string name="amoled_on">Koruma Aktif</string>
+    <string name="amoled_off">Koruma Devre Dışı</string>
+
+    <string name="amoled_filter_type">Filtre Efekti</string>
+    <string name="amoled_filter_dots">Noktalar</string>
+    <string name="amoled_filter_horizontal">Yatay Çizgiler</string>
+    <string name="amoled_filter_vertical">Dikey Çizgiler</string>
+    <string name="amoled_filter_grid">Izgara</string>
+    <string name="amoled_filter_diagonal">Çapraz</string>
+    <string name="amoled_filter_noise">Gürültü</string>
+    <string name="amoled_filter_checker_grid">Kare Izgara</string>
+    <string name="amoled_filter_pixel_shift">Piksel Kaydırma</string>
+
+    <string name="amoled_pixel_density">Piksel Yoğunluğu</string>
+    <string name="amoled_pixel_density_desc">Filtre piksellerinin boyutunu ve sayısını kontrol eder. Yüksek yoğunluk daha fazla, daha küçük piksel anlamına gelir.</string>
+    <string name="amoled_density_low">Düşük</string>
+    <string name="amoled_density_high">Yüksek</string>
+
+    <string name="amoled_filter_opacity">Filtre Şeffaflığı</string>
+    <string name="amoled_filter_opacity_desc">Filtre katmanının şeffaflığını kontrol eder.</string>
+
+    <string name="amoled_cycle_duration">Döngü Süresi</string>
+    <string name="amoled_cycle_duration_desc">Tam çapraz kayma döngüsünün süresi. Filtre sağ+aşağı hareket eder, sonra geri sol+yukarı döner.</string>
+
+    <string name="amoled_refresh_mode">Yenileme Modu</string>
+    <string name="amoled_mode_smooth">Döngü</string>
+    <string name="amoled_mode_jump">Düz</string>
+    <string name="amoled_mode_smooth_desc">Filtre, süre boyunca çapraz bir döngüde sürekli ve pürüzsüz bir şekilde hareket eder.</string>
+    <string name="amoled_mode_jump_desc">Filtre süre boyunca sabit durur ve süre sonunda aniden yeni bir konuma zıplar.</string>
+
+    <string name="amoled_service_name">SwiftSense: AMOLED Ekran Koruması</string>
+    <string name="amoled_service_description">Bu servis YALNIZCA AMOLED ekran yanmalarını önlemek amacıyla ekranınızda koruyucu bir piksel katmanı oluşturmak için kullanılır. Kişisel verilerinizi, ekran içeriğinizi veya tuş vuruşlarınızı kesinlikle toplamaz, saklamaz veya paylaşmaz. Sadece ekran ömrünü uzatmak için katman iznine ihtiyaç duyar.</string>
+
+    <string name="amoled_health_warning_title">Kullanım Önerisi</string>
+    <string name="amoled_health_warning_desc">Hızlı filtre hareketleri (1 dakikadan kısa) veya çok yüksek piksel yoğunluğu, uzun süreli kullanımda göz yorgunluğuna veya rahatsızlığa neden olabilir. En iyi deneyim için 1 dakika veya daha uzun süreleri kullanmanızı öneririz.</string>
+    <string name="amoled_health_warning_dismiss">Tekrar gösterme</string>
+
+    <string name="amoled_duration_10s">10sn</string>
+    <string name="amoled_duration_30s">30sn</string>
+    <string name="amoled_duration_1m">1dk</string>
+    <string name="amoled_duration_2m">2dk</string>
+    <string name="amoled_duration_3m">3dk</string>
+    <string name="amoled_duration_4m">4dk</string>
+    <string name="amoled_duration_5m">5dk</string>
+    <string name="amoled_duration_10m">10dk</string>
+
+    <string name="amoled_shift_speed">Kayma Hızı</string>
+    <string name="amoled_shift_speed_desc">Filtre deseninin yanığı önlemek için ne sıklıkta pozisyon değiştireceğini belirler.</string>
+
+    <string name="amoled_active_regions">Aktif Bölgeler</string>
+    <string name="amoled_active_regions_desc">Filtrenin ekranın hangi bölgelerinde görünmesi gerektiğini seçin.</string>
+    <string name="amoled_region_fullscreen">Tam Ekran</string>
+    <string name="amoled_region_statusbar">Durum Çubuğu</string>
+    <string name="amoled_region_navbar">Navigasyon Barı</string>
 </resources>
