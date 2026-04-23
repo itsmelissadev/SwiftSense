@@ -27,18 +27,15 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -47,19 +44,16 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -72,7 +66,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -80,10 +73,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
 import io.github.itsmelissadev.swiftsense.R
 import io.github.itsmelissadev.swiftsense.data.PreferenceManager
 import io.github.itsmelissadev.swiftsense.service.shizuku.ShizukuShellRunner
+import io.github.itsmelissadev.swiftsense.ui.components.ShadcnDialog
+import io.github.itsmelissadev.swiftsense.ui.components.ShadcnDialogButton
 import io.github.itsmelissadev.swiftsense.ui.components.ShizukuStatusWidget
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -175,37 +171,42 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 12.dp),
+                        .padding(horizontal = 12.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
-                    TextField(
+                    OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
                         placeholder = {
                             Text(
-                                stringResource(R.string.search_apps),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                stringResource(R.string.search_apps).uppercase(),
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 1.sp
+                                ),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                             )
                         },
                         modifier = Modifier
                             .weight(1f)
                             .padding(horizontal = 8.dp)
-                            .height(56.dp),
+                            .height(48.dp),
                         singleLine = true,
-                        shape = CircleShape,
+                        shape = RoundedCornerShape(8.dp),
                         leadingIcon = {
                             Icon(
                                 Icons.Default.Search,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
                         trailingIcon = {
@@ -214,23 +215,23 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                                     Icon(
                                         Icons.Default.Clear,
                                         contentDescription = null,
+                                        modifier = Modifier.size(18.dp),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
                         },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(
-                                alpha = 0.9f
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                                alpha = 0.3f
                             ),
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(
-                                alpha = 0.6f
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                                alpha = 0.3f
                             ),
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            disabledIndicatorColor = Color.Transparent,
-                            cursorColor = MaterialTheme.colorScheme.primary
-                        )
+                            focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
+                        ),
+                        textStyle = MaterialTheme.typography.bodyMedium
                     )
 
                     var showMenu by remember { mutableStateOf(false) }
@@ -275,30 +276,32 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                         if (isProcessing) {
                             Column(modifier = Modifier.padding(bottom = 20.dp)) {
                                 Text(
-                                    text = "$processingAction: $currentProcessingApp",
-                                    style = MaterialTheme.typography.labelMedium,
+                                    text = "$processingAction: $currentProcessingApp".uppercase(),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Black,
+                                        letterSpacing = 1.sp
+                                    ),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                     color = MaterialTheme.colorScheme.primary
                                 )
-                                Spacer(modifier = Modifier.height(10.dp))
+                                Spacer(modifier = Modifier.height(12.dp))
                                 LinearProgressIndicator(
                                     progress = { processingProgress },
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(10.dp)
-                                        .clip(CircleShape),
+                                        .height(4.dp),
                                     color = MaterialTheme.colorScheme.primary,
-                                    trackColor = MaterialTheme.colorScheme.primaryContainer
+                                    trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
                                 )
                             }
                         }
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            FilledTonalButton(
+                            OutlinedButton(
                                 onClick = {
                                     scope.launch {
                                         isProcessing = true
@@ -316,15 +319,24 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                                     }
                                 },
                                 enabled = !isProcessing && isShizukuReady.value,
-                                shape = RoundedCornerShape(100),
+                                shape = RoundedCornerShape(8.dp),
+                                border = androidx.compose.foundation.BorderStroke(
+                                    1.dp,
+                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                                ),
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(56.dp)
+                                    .height(48.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.onSurface
+                                )
                             ) {
                                 Text(
-                                    stringResource(R.string.action_enable),
-                                    fontWeight = FontWeight.ExtraBold,
-                                    style = MaterialTheme.typography.titleMedium
+                                    stringResource(R.string.action_enable).uppercase(),
+                                    style = MaterialTheme.typography.labelLarge.copy(
+                                        fontWeight = FontWeight.Black,
+                                        letterSpacing = 1.2.sp
+                                    )
                                 )
                             }
 
@@ -350,15 +362,17 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                                     contentColor = MaterialTheme.colorScheme.onError
                                 ),
                                 enabled = !isProcessing && isShizukuReady.value,
-                                shape = RoundedCornerShape(100),
+                                shape = RoundedCornerShape(8.dp),
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(56.dp)
+                                    .height(48.dp)
                             ) {
                                 Text(
-                                    stringResource(R.string.action_disable),
-                                    fontWeight = FontWeight.ExtraBold,
-                                    style = MaterialTheme.typography.titleMedium
+                                    stringResource(R.string.action_disable).uppercase(),
+                                    style = MaterialTheme.typography.labelLarge.copy(
+                                        fontWeight = FontWeight.Black,
+                                        letterSpacing = 1.2.sp
+                                    )
                                 )
                             }
                         }
@@ -371,44 +385,46 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item { ShizukuStatusWidget() }
 
             item {
                 Surface(
-                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f),
-                    shape = MaterialTheme.shapes.extraLarge,
+                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.05f),
+                    shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.fillMaxWidth(),
                     border = androidx.compose.foundation.BorderStroke(
                         1.dp,
-                        MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
+                        MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
                     )
                 ) {
                     Row(
-                        modifier = Modifier.padding(20.dp),
+                        modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             Icons.Default.Warning,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(28.dp)
+                            modifier = Modifier.size(20.dp)
                         )
-                        Spacer(modifier = Modifier.width(16.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                stringResource(R.string.app_manager_warning_title),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold,
+                                stringResource(R.string.app_manager_warning_title).uppercase(),
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 1.2.sp
+                                ),
                                 color = MaterialTheme.colorScheme.error
                             )
-                            Spacer(Modifier.height(2.dp))
+                            Spacer(Modifier.height(4.dp))
                             Text(
                                 stringResource(R.string.app_manager_warning_text),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onErrorContainer
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                             )
                         }
                     }
@@ -455,13 +471,18 @@ fun AppItem(app: RichAppInfo, isSelected: Boolean, onToggleSelect: () -> Unit) {
 
     Surface(
         onClick = onToggleSelect,
-        shape = RoundedCornerShape(32.dp),
-        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+        shape = RoundedCornerShape(8.dp),
+        color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
+        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+            else MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+        ),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(14.dp),
+            modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             var icon by remember(app.packageName) { mutableStateOf(iconCache[app.packageName]) }
@@ -479,15 +500,20 @@ fun AppItem(app: RichAppInfo, isSelected: Boolean, onToggleSelect: () -> Unit) {
 
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(MaterialTheme.shapes.medium)
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(4.dp))
                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)),
                 contentAlignment = Alignment.Center
             ) {
                 if (icon != null) {
                     Image(bitmap = icon!!, contentDescription = null, modifier = Modifier.fillMaxSize())
                 } else {
-                    Icon(Icons.Default.Android, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Icon(
+                        Icons.Default.Android,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
             }
 
@@ -496,9 +522,9 @@ fun AppItem(app: RichAppInfo, isSelected: Boolean, onToggleSelect: () -> Unit) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = app.label,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -509,28 +535,30 @@ fun AppItem(app: RichAppInfo, isSelected: Boolean, onToggleSelect: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (app.isEnabled) stringResource(R.string.app_status_enabled)
-                        else stringResource(R.string.app_status_disabled),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.9f)
-                        else if (app.isEnabled) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.error
+                        text = if (app.isEnabled) stringResource(R.string.app_status_enabled).uppercase()
+                        else stringResource(R.string.app_status_disabled).uppercase(),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.sp
+                        ),
+                        color = if (app.isEnabled) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
                     )
 
                     Text(
                         text = "•",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                        else MaterialTheme.colorScheme.outline
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                     )
 
                     Text(
-                        text = if (app.isSystem) stringResource(R.string.app_type_system)
-                        else stringResource(R.string.app_type_user),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                        else MaterialTheme.colorScheme.onSurfaceVariant
+                        text = (if (app.isSystem) stringResource(R.string.app_type_system)
+                        else stringResource(R.string.app_type_user)).uppercase(),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.5.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                 }
             }
@@ -539,8 +567,9 @@ fun AppItem(app: RichAppInfo, isSelected: Boolean, onToggleSelect: () -> Unit) {
                 checked = isSelected,
                 onCheckedChange = null,
                 colors = CheckboxDefaults.colors(
-                    checkedColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    checkmarkColor = MaterialTheme.colorScheme.primaryContainer
+                    checkedColor = MaterialTheme.colorScheme.primary,
+                    checkmarkColor = MaterialTheme.colorScheme.onPrimary,
+                    uncheckedColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                 )
             )
         }
@@ -555,55 +584,41 @@ fun ImportExportDialog(
 ) {
     var text by remember { mutableStateOf(currentList.joinToString("\n")) }
 
-    AlertDialog(
+    ShadcnDialog(
         onDismissRequest = onDismiss,
-        title = {
-            Text(
-                stringResource(R.string.menu_import_export),
-                fontWeight = FontWeight.Black,
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-        },
-        text = {
+        title = stringResource(R.string.menu_import_export),
+        description = stringResource(R.string.import_hint),
+        content = {
             OutlinedTextField(
                 value = text,
                 onValueChange = { text = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(300.dp),
-                placeholder = { Text(stringResource(R.string.import_hint)) },
-                shape = RoundedCornerShape(24.dp),
+                    .height(250.dp),
+                shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
                 )
             )
         },
         confirmButton = {
-            Button(
+            ShadcnDialogButton(
+                text = stringResource(R.string.action_import),
                 onClick = {
                     val newList =
                         text.split("\n").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
                     onImport(newList)
-                },
-                shape = RoundedCornerShape(100)
-            ) {
-                Icon(Icons.Default.Save, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.action_import))
-            }
+                }
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(
-                    stringResource(R.string.action_cancel),
-                    color = MaterialTheme.colorScheme.outline
-                )
-            }
-        },
-        shape = RoundedCornerShape(32.dp),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+            ShadcnDialogButton(
+                text = stringResource(R.string.action_cancel),
+                isPrimary = false,
+                onClick = onDismiss
+            )
+        }
     )
 }
 

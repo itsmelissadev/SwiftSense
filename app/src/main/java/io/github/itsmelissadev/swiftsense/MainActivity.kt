@@ -31,10 +31,10 @@ import io.github.itsmelissadev.swiftsense.feature.boostsensors.BoostSensorsScree
 import io.github.itsmelissadev.swiftsense.feature.cachecleaner.CacheCleanerScreen
 import io.github.itsmelissadev.swiftsense.feature.screenresolution.ScreenResolutionScreen
 import io.github.itsmelissadev.swiftsense.feature.systemtables.SystemTableMacroScreen
-import io.github.itsmelissadev.swiftsense.ui.screens.MainScreen
 import io.github.itsmelissadev.swiftsense.ui.screens.OnboardingScreen
 import io.github.itsmelissadev.swiftsense.ui.screens.PermissionScreen
 import io.github.itsmelissadev.swiftsense.ui.screens.SettingsScreen
+import io.github.itsmelissadev.swiftsense.ui.screens.mainScreen
 import io.github.itsmelissadev.swiftsense.ui.theme.SwiftSenseTheme
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -113,7 +113,7 @@ class MainActivity : ComponentActivity() {
                                 })
                             }
                             composable("main") {
-                                MainScreen(
+                                mainScreen(
                                     onNavigateToBoostSensors = { navController.navigate("boost_sensors") },
                                     onNavigateToAppManager = { navController.navigate("app_manager") },
                                     onNavigateToScreenResolution = { navController.navigate("screen_resolution") },

@@ -37,6 +37,17 @@ class PreferenceManager(private val context: Context) {
         val AMOLED_REFRESH_MODE = stringPreferencesKey("amoled_refresh_mode")
         val AMOLED_WARNING_DISMISSED = booleanPreferencesKey("amoled_warning_dismissed")
         val AMOLED_REGIONS = stringSetPreferencesKey("amoled_regions")
+        val GYRO_SIM_ENABLED = booleanPreferencesKey("gyro_sim_enabled")
+        val GYRO_SIM_SENSITIVITY = floatPreferencesKey("gyro_sim_sensitivity")
+        val GYRO_SIM_INVERT_X = booleanPreferencesKey("gyro_sim_invert_x")
+        val GYRO_SIM_INVERT_Y = booleanPreferencesKey("gyro_sim_invert_y")
+        val GYRO_SIM_CONTROL_X = intPreferencesKey("gyro_sim_control_x")
+        val GYRO_SIM_CONTROL_Y = intPreferencesKey("gyro_sim_control_y")
+        val GYRO_SIM_AREA_X = intPreferencesKey("gyro_sim_area_x")
+        val GYRO_SIM_AREA_Y = intPreferencesKey("gyro_sim_area_y")
+        val GYRO_SIM_AREA_WIDTH = intPreferencesKey("gyro_sim_area_width")
+        val GYRO_SIM_AREA_HEIGHT = intPreferencesKey("gyro_sim_area_height")
+        val GYRO_SIM_LOCKED = booleanPreferencesKey("gyro_sim_locked")
     }
 
     val preferences: Flow<Preferences> = context.dataStore.data
@@ -191,5 +202,57 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun setAmoledRegions(regions: Set<String>) {
         context.dataStore.edit { it[AMOLED_REGIONS] = regions }
+    }
+
+    val gyroSimEnabled: Flow<Boolean> = preferences.map { it[GYRO_SIM_ENABLED] ?: false }
+    suspend fun setGyroSimEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[GYRO_SIM_ENABLED] = enabled }
+    }
+
+    val gyroSimSensitivity: Flow<Float> = preferences.map { it[GYRO_SIM_SENSITIVITY] ?: 1.0f }
+    suspend fun setGyroSimSensitivity(sensitivity: Float) {
+        context.dataStore.edit { it[GYRO_SIM_SENSITIVITY] = sensitivity }
+    }
+
+    val gyroSimInvertX: Flow<Boolean> = preferences.map { it[GYRO_SIM_INVERT_X] ?: false }
+    suspend fun setGyroSimInvertX(invert: Boolean) {
+        context.dataStore.edit { it[GYRO_SIM_INVERT_X] = invert }
+    }
+
+    val gyroSimInvertY: Flow<Boolean> = preferences.map { it[GYRO_SIM_INVERT_Y] ?: false }
+    suspend fun setGyroSimInvertY(invert: Boolean) {
+        context.dataStore.edit { it[GYRO_SIM_INVERT_Y] = invert }
+    }
+
+    val gyroSimControlX: Flow<Int> = preferences.map { it[GYRO_SIM_CONTROL_X] ?: 100 }
+    val gyroSimControlY: Flow<Int> = preferences.map { it[GYRO_SIM_CONTROL_Y] ?: 100 }
+    suspend fun setGyroSimControlPos(x: Int, y: Int) {
+        context.dataStore.edit {
+            it[GYRO_SIM_CONTROL_X] = x
+            it[GYRO_SIM_CONTROL_Y] = y
+        }
+    }
+
+    val gyroSimAreaX: Flow<Int> = preferences.map { it[GYRO_SIM_AREA_X] ?: 0 }
+    val gyroSimAreaY: Flow<Int> = preferences.map { it[GYRO_SIM_AREA_Y] ?: 0 }
+    suspend fun setGyroSimAreaPos(x: Int, y: Int) {
+        context.dataStore.edit {
+            it[GYRO_SIM_AREA_X] = x
+            it[GYRO_SIM_AREA_Y] = y
+        }
+    }
+
+    val gyroSimAreaWidth: Flow<Int> = preferences.map { it[GYRO_SIM_AREA_WIDTH] ?: 150 }
+    val gyroSimAreaHeight: Flow<Int> = preferences.map { it[GYRO_SIM_AREA_HEIGHT] ?: 150 }
+    suspend fun setGyroSimAreaSize(width: Int, height: Int) {
+        context.dataStore.edit {
+            it[GYRO_SIM_AREA_WIDTH] = width
+            it[GYRO_SIM_AREA_HEIGHT] = height
+        }
+    }
+
+    val gyroSimLocked: Flow<Boolean> = preferences.map { it[GYRO_SIM_LOCKED] ?: false }
+    suspend fun setGyroSimLocked(locked: Boolean) {
+        context.dataStore.edit { it[GYRO_SIM_LOCKED] = locked }
     }
 }

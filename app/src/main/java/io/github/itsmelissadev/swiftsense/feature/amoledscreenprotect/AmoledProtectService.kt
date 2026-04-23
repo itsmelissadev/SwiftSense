@@ -1,7 +1,14 @@
 package io.github.itsmelissadev.swiftsense.feature.amoledscreenprotect
 
 import android.accessibilityservice.AccessibilityService
+import android.annotation.SuppressLint
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.graphics.Bitmap
 import android.graphics.BitmapShader
 import android.graphics.Canvas
@@ -11,11 +18,18 @@ import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.graphics.PixelFormat
 import android.graphics.Shader
+import android.os.Build
 import android.util.DisplayMetrics
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
+import androidx.core.app.NotificationCompat
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.set
+import androidx.core.graphics.withTranslation
+import io.github.itsmelissadev.swiftsense.MainActivity
+import io.github.itsmelissadev.swiftsense.R
 import io.github.itsmelissadev.swiftsense.data.PreferenceManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +40,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
+@SuppressLint("AccessibilityPolicy")
 class AmoledProtectService : AccessibilityService() {
     private val overlayViews = mutableMapOf<String, AmoledFilterView>()
     private var windowManager: WindowManager? = null
@@ -41,6 +56,9 @@ class AmoledProtectService : AccessibilityService() {
         var isServiceRunning = false
             private set
 
+        private const val CHANNEL_ID = "amoled_protect_channel"
+        private const val NOTIFICATION_ID = 2002
+
         const val REGION_FULL_SCREEN = "full_screen"
         const val REGION_STATUS_BAR = "status_bar"
         const val REGION_NAVIGATION_BAR = "navigation_bar"
@@ -51,12 +69,28 @@ class AmoledProtectService : AccessibilityService() {
     override fun onCreate() {
         super.onCreate()
         preferenceManager = PreferenceManager(this)
+        createNotificationChannel()
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return START_STICKY
     }
 
     override fun onServiceConnected() {
         super.onServiceConnected()
         isServiceRunning = true
-        windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(
+                NOTIFICATION_ID,
+                createNotification(),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            )
+        } else {
+            startForeground(NOTIFICATION_ID, createNotification())
+        }
+
+        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
 
         preferenceJob = scope.launch {
             launch {
@@ -143,8 +177,14 @@ class AmoledProtectService : AccessibilityService() {
                     PixelFormat.TRANSLUCENT
                 ).apply {
                     gravity = Gravity.TOP or Gravity.START
-                    layoutInDisplayCutoutMode =
-                        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        layoutInDisplayCutoutMode =
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                            } else {
+                                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                            }
+                    }
                 }
             }
 
@@ -161,8 +201,14 @@ class AmoledProtectService : AccessibilityService() {
                     PixelFormat.TRANSLUCENT
                 ).apply {
                     gravity = Gravity.BOTTOM or Gravity.START
-                    layoutInDisplayCutoutMode =
-                        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        layoutInDisplayCutoutMode =
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                            } else {
+                                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                            }
+                    }
                 }
             }
 
@@ -178,18 +224,26 @@ class AmoledProtectService : AccessibilityService() {
                     PixelFormat.TRANSLUCENT
                 ).apply {
                     gravity = Gravity.TOP or Gravity.START
-                    layoutInDisplayCutoutMode =
-                        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        layoutInDisplayCutoutMode =
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                            } else {
+                                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                            }
+                    }
                 }
             }
         }
     }
 
+    @SuppressLint("InternalInsetResource", "DiscouragedApi")
     private fun getStatusBarHeight(): Int {
         val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
         return if (resourceId > 0) resources.getDimensionPixelSize(resourceId) else (24 * resources.displayMetrics.density).toInt()
     }
 
+    @SuppressLint("InternalInsetResource", "DiscouragedApi")
     private fun getNavigationBarHeight(): Int {
         val resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android")
         return if (resourceId > 0) resources.getDimensionPixelSize(resourceId) else (48 * resources.displayMetrics.density).toInt()
@@ -232,6 +286,33 @@ class AmoledProtectService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
     override fun onInterrupt() {}
 
+    private fun createNotification(): Notification {
+        val mainPI = PendingIntent.getActivity(
+            this,
+            0,
+            Intent(this, MainActivity::class.java),
+            PendingIntent.FLAG_IMMUTABLE
+        )
+
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle(getString(R.string.feature_amoled_protect))
+            .setContentText(getString(R.string.amoled_on))
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setContentIntent(mainPI)
+            .setOngoing(true)
+            .build()
+    }
+
+    private fun createNotificationChannel() {
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            getString(R.string.feature_amoled_protect),
+            NotificationManager.IMPORTANCE_LOW
+        )
+        getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         isServiceRunning = false
@@ -246,7 +327,7 @@ class AmoledProtectService : AccessibilityService() {
         overlayViews.clear()
     }
 
-    private inner class AmoledFilterView(context: Context) : View(context) {
+    private class AmoledFilterView(context: Context) : View(context) {
         private var shiftX = 0f
         private var shiftY = 0f
         private val paint = Paint()
@@ -284,6 +365,7 @@ class AmoledProtectService : AccessibilityService() {
             invalidate()
         }
 
+        @SuppressLint("UseKtx")
         fun rebuildPattern() {
             val alpha = (currentOpacity * 255).toInt().coerceIn(0, 255)
             val dm: DisplayMetrics = resources.displayMetrics
@@ -393,18 +475,18 @@ class AmoledProtectService : AccessibilityService() {
 
                 "vertical_lines" -> {
                     val ts = (sizePx * 2).coerceAtLeast(2)
-                    bitmap = Bitmap.createBitmap(ts, 1, Bitmap.Config.ARGB_8888)
+                    bitmap = createBitmap(ts, 1)
                     for (x in 0 until ts) {
-                        if (x < sizePx) bitmap.setPixel(x, 0, Color.argb(alpha, 0, 0, 0))
+                        if (x < sizePx) bitmap[x, 0] = Color.argb(alpha, 0, 0, 0)
                     }
                 }
 
                 "grid" -> {
                     val ts = (sizePx * 3).coerceAtLeast(3)
-                    bitmap = Bitmap.createBitmap(ts, ts, Bitmap.Config.ARGB_8888)
+                    bitmap = createBitmap(ts, ts)
                     for (i in 0 until ts) {
                         for (j in 0 until sizePx.coerceAtMost(ts)) {
-                            bitmap.setPixel(i, j, Color.argb(alpha, 0, 0, 0))
+                            bitmap[i, j] = Color.argb(alpha, 0, 0, 0)
                             bitmap.setPixel(j, i, Color.argb(alpha, 0, 0, 0))
                         }
                     }
@@ -464,10 +546,9 @@ class AmoledProtectService : AccessibilityService() {
         override fun onDraw(canvas: Canvas) {
             super.onDraw(canvas)
             if (useShaderDraw) {
-                canvas.save()
-                canvas.translate(shiftX, shiftY)
-                canvas.drawRect(-shiftX, -shiftY, width.toFloat(), height.toFloat(), paint)
-                canvas.restore()
+                canvas.withTranslation(shiftX, shiftY) {
+                    drawRect(-shiftX, -shiftY, width.toFloat(), height.toFloat(), paint)
+                }
             } else {
                 canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), pixelShiftPaint)
             }

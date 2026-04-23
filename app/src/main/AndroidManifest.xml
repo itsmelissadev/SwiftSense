@@ -24,7 +24,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SwiftSense">
 
-    <provider
+        <provider
             android:name="rikka.shizuku.ShizukuProvider"
             android:authorities="${applicationId}.shizuku"
             android:enabled="true"
@@ -57,14 +57,19 @@
         <service
             android:name=".feature.amoledscreenprotect.AmoledProtectService"
             android:exported="true"
+            android:foregroundServiceType="specialUse"
             android:label="@string/amoled_service_name"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            tools:ignore="AccessibilityPolicy">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
             <meta-data
                 android:name="android.accessibilityservice"
                 android:resource="@xml/amoled_service_config" />
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBPROJECT"
+                android:value="Overlay service for screen protection and longevity" />
         </service>
 
     </application>

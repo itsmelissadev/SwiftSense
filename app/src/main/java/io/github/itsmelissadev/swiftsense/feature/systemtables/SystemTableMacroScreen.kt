@@ -6,6 +6,7 @@ import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -32,7 +34,6 @@ import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -46,12 +47,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -66,14 +69,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import io.github.itsmelissadev.swiftsense.R
 import io.github.itsmelissadev.swiftsense.data.PreferenceManager
 import io.github.itsmelissadev.swiftsense.service.shizuku.ShizukuShellRunner
+import io.github.itsmelissadev.swiftsense.ui.components.ShadcnDialog
+import io.github.itsmelissadev.swiftsense.ui.components.ShadcnDialogButton
 import io.github.itsmelissadev.swiftsense.ui.components.ShizukuStatusWidget
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -240,13 +245,18 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                         TopAppBar(
                             title = {
                                 Text(
-                                    stringResource(R.string.feature_system_tables),
-                                    fontWeight = FontWeight.ExtraBold
+                                    stringResource(R.string.feature_system_tables).uppercase(),
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        fontWeight = FontWeight.Black,
+                                        letterSpacing = 1.5.sp
+                                    )
                                 )
                             },
                             colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = Color.Transparent,
-                                scrolledContainerColor = Color.Transparent
+                                containerColor = MaterialTheme.colorScheme.background,
+                                titleContentColor = MaterialTheme.colorScheme.onSurface,
+                                navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                                actionIconContentColor = MaterialTheme.colorScheme.onSurface
                             ),
                             navigationIcon = {
                                 IconButton(onClick = onNavigateBack) {
@@ -309,12 +319,42 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                 }
                             }
                         )
-                        TabRow(selectedTabIndex = selectedTabIndex) {
+                        TabRow(
+                            selectedTabIndex = selectedTabIndex,
+                            containerColor = MaterialTheme.colorScheme.background,
+                            contentColor = MaterialTheme.colorScheme.primary,
+                            indicator = { tabPositions ->
+                                if (selectedTabIndex < tabPositions.size) {
+                                    TabRowDefaults.SecondaryIndicator(
+                                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        height = 2.dp
+                                    )
+                                }
+                            },
+                            divider = {
+                                androidx.compose.material3.HorizontalDivider(
+                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                                )
+                            }
+                        ) {
                             tabs.forEachIndexed { index, title ->
                                 Tab(
                                     selected = selectedTabIndex == index,
                                     onClick = { selectedTabIndex = index },
-                                    text = { Text(title) }
+                                    text = {
+                                        Text(
+                                            title.uppercase(),
+                                            style = MaterialTheme.typography.labelMedium.copy(
+                                                fontWeight = if (selectedTabIndex == index) FontWeight.Black else FontWeight.Bold,
+                                                letterSpacing = 1.sp
+                                            )
+                                        )
+                                    },
+                                    selectedContentColor = MaterialTheme.colorScheme.onSurface,
+                                    unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                        alpha = 0.6f
+                                    )
                                 )
                             }
                         }
@@ -416,10 +456,23 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     OutlinedTextField(
-                                        value = selectedTable.name,
+                                        value = stringResource(
+                                            when (selectedTable) {
+                                                SystemTable.SYSTEM -> R.string.table_system
+                                                SystemTable.SECURE -> R.string.table_secure
+                                                SystemTable.GLOBAL -> R.string.table_global
+                                            }
+                                        ),
                                         onValueChange = {},
                                         readOnly = true,
-                                        label = { Text(stringResource(R.string.select_table)) },
+                                        label = {
+                                            Text(
+                                                stringResource(R.string.select_table).uppercase(),
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontWeight = FontWeight.Black
+                                                )
+                                            )
+                                        },
                                         trailingIcon = {
                                             ExposedDropdownMenuDefaults.TrailingIcon(
                                                 expanded = expanded
@@ -427,15 +480,38 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                         },
                                         modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                                             .fillMaxWidth(),
-                                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(
+                                                alpha = 0.1f
+                                            )
+                                        ),
+                                        textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                            fontWeight = FontWeight.Bold
+                                        )
                                     )
                                     ExposedDropdownMenu(
                                         expanded = expanded,
-                                        onDismissRequest = { expanded = false }
+                                        onDismissRequest = { expanded = false },
+                                        modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                                     ) {
                                         SystemTable.entries.forEach { table ->
                                             DropdownMenuItem(
-                                                text = { Text(table.name) },
+                                                text = {
+                                                    Text(
+                                                        stringResource(
+                                                            when (table) {
+                                                                SystemTable.SYSTEM -> R.string.table_system
+                                                                SystemTable.SECURE -> R.string.table_secure
+                                                                SystemTable.GLOBAL -> R.string.table_global
+                                                            }
+                                                        ),
+                                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                                            fontWeight = FontWeight.Bold
+                                                        )
+                                                    )
+                                                },
                                                 onClick = {
                                                     selectedTable = table
                                                     expanded = false
@@ -445,19 +521,52 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(12.dp))
 
                                 OutlinedTextField(
                                     value = searchQuery,
                                     onValueChange = { searchQuery = it },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    placeholder = { Text(stringResource(R.string.search_table)) },
-                                    leadingIcon = { Icon(Icons.Default.Search, null) },
+                                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                                    placeholder = {
+                                        Text(
+                                            stringResource(R.string.search_table).uppercase(),
+                                            style = MaterialTheme.typography.labelMedium.copy(
+                                                fontWeight = FontWeight.Black,
+                                                letterSpacing = 1.sp
+                                            ),
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                                alpha = 0.5f
+                                            )
+                                        )
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Default.Search,
+                                            null,
+                                            modifier = Modifier.size(18.dp),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    },
                                     singleLine = true,
-                                    shape = MaterialTheme.shapes.medium
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                                            alpha = 0.3f
+                                        ),
+                                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                                            alpha = 0.3f
+                                        ),
+                                        focusedBorderColor = MaterialTheme.colorScheme.primary.copy(
+                                            alpha = 0.5f
+                                        ),
+                                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(
+                                            alpha = 0.1f
+                                        ),
+                                    ),
+                                    textStyle = MaterialTheme.typography.bodyMedium
                                 )
 
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(16.dp))
 
                                 if (isLoading) {
                                     Box(
@@ -473,27 +582,37 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                             ignoreCase = true
                                         ) || it.second.contains(searchQuery, ignoreCase = true)
                                     }
-                                    LazyColumn(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                                    LazyColumn(
+                                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
                                         items(filteredData) { (key, value) ->
                                             Surface(
                                                 modifier = Modifier.fillMaxWidth()
-                                                    .padding(vertical = 4.dp).clickable {
+                                                    .clickable {
                                                         editingSetting = key to value
                                                     },
-                                                shape = MaterialTheme.shapes.small,
+                                                shape = RoundedCornerShape(8.dp),
                                                 color = MaterialTheme.colorScheme.surfaceVariant.copy(
-                                                    alpha = 0.3f
+                                                    alpha = 0.2f
+                                                ),
+                                                border = androidx.compose.foundation.BorderStroke(
+                                                    1.dp,
+                                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
                                                 )
                                             ) {
                                                 Column(modifier = Modifier.padding(12.dp)) {
                                                     Text(
                                                         key,
                                                         style = MaterialTheme.typography.bodyMedium,
-                                                        fontWeight = FontWeight.Bold
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.onSurface
                                                     )
+                                                    Spacer(modifier = Modifier.height(4.dp))
                                                     Text(
                                                         value,
                                                         style = MaterialTheme.typography.bodySmall,
+                                                        fontWeight = FontWeight.Medium,
                                                         color = MaterialTheme.colorScheme.primary
                                                     )
                                                 }
@@ -511,43 +630,36 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
 
     if (showImportDialog) {
         var jsonInput by remember { mutableStateOf("") }
-        AlertDialog(
+        ShadcnDialog(
             onDismissRequest = { showImportDialog = false },
-            title = { Text(stringResource(R.string.import_macros)) },
-            text = {
+            title = stringResource(R.string.import_macros),
+            content = {
                 OutlinedTextField(
                     value = jsonInput,
                     onValueChange = { jsonInput = it },
                     modifier = Modifier.fillMaxWidth().height(200.dp),
                     placeholder = { Text(stringResource(R.string.import_json_hint)) },
-                    shape = MaterialTheme.shapes.medium
+                    shape = RoundedCornerShape(8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                    ),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
                 )
             },
             confirmButton = {
-                Button(onClick = {
-                    try {
-                        val array = JSONArray(jsonInput)
-                        scope.launch {
-                            for (i in 0 until array.length()) {
-                                val macroObj = array.getJSONObject(i)
-                                val macroString = macroObj.toString()
-                                SystemMacro.fromJson(macroString) // Validate
-                                preferenceManager.addSystemMacro(macroString)
-                            }
-                            showImportDialog = false
-                            Toast.makeText(
-                                context,
-                                R.string.toast_import_success,
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    } catch (e: Exception) {
+                ShadcnDialogButton(
+                    text = stringResource(R.string.action_import),
+                    onClick = {
                         try {
-                            val obj = JSONObject(jsonInput)
-                            val macroString = obj.toString()
-                            SystemMacro.fromJson(macroString) // Validate
+                            val array = JSONArray(jsonInput)
                             scope.launch {
-                                preferenceManager.addSystemMacro(macroString)
+                                for (i in 0 until array.length()) {
+                                    val macroObj = array.getJSONObject(i)
+                                    val macroString = macroObj.toString()
+                                    SystemMacro.fromJson(macroString) // Validate
+                                    preferenceManager.addSystemMacro(macroString)
+                                }
                                 showImportDialog = false
                                 Toast.makeText(
                                     context,
@@ -555,22 +667,37 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
-                        } catch (e2: Exception) {
-                            Toast.makeText(
-                                context,
-                                R.string.toast_import_invalid,
-                                Toast.LENGTH_SHORT
-                            ).show()
+                        } catch (e: Exception) {
+                            try {
+                                val obj = JSONObject(jsonInput)
+                                val macroString = obj.toString()
+                                SystemMacro.fromJson(macroString) // Validate
+                                scope.launch {
+                                    preferenceManager.addSystemMacro(macroString)
+                                    showImportDialog = false
+                                    Toast.makeText(
+                                        context,
+                                        R.string.toast_import_success,
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            } catch (e2: Exception) {
+                                Toast.makeText(
+                                    context,
+                                    R.string.toast_import_invalid,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         }
                     }
-                }) {
-                    Text(stringResource(R.string.action_import))
-                }
+                )
             },
             dismissButton = {
-                TextButton(onClick = { showImportDialog = false }) {
-                    Text(stringResource(R.string.action_cancel))
-                }
+                ShadcnDialogButton(
+                    text = stringResource(R.string.action_cancel),
+                    isPrimary = false,
+                    onClick = { showImportDialog = false }
+                )
             }
         )
     }
@@ -587,73 +714,104 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
             jsonArray.toString(4)
         }
 
-        AlertDialog(
+        ShadcnDialog(
             onDismissRequest = { showExportDialog = false },
-            title = { Text(stringResource(R.string.export_macros)) },
-            text = {
+            title = stringResource(R.string.export_macros),
+            content = {
                 OutlinedTextField(
                     value = allMacrosJson,
                     onValueChange = {},
                     readOnly = true,
                     modifier = Modifier.fillMaxWidth().height(200.dp),
-                    shape = MaterialTheme.shapes.medium
+                    shape = RoundedCornerShape(8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                    ),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
                 )
             },
             confirmButton = {
-                Button(onClick = {
-                    val clipboard =
-                        context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    val clip = ClipData.newPlainText("Macros JSON", allMacrosJson)
-                    clipboard.setPrimaryClip(clip)
-                    Toast.makeText(context, R.string.toast_copied, Toast.LENGTH_SHORT).show()
-                    showExportDialog = false
-                }) {
-                    Text(stringResource(R.string.copy_to_clipboard))
-                }
+                ShadcnDialogButton(
+                    text = stringResource(R.string.copy_to_clipboard),
+                    onClick = {
+                        val clipboard =
+                            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val clip = ClipData.newPlainText("Macros JSON", allMacrosJson)
+                        clipboard.setPrimaryClip(clip)
+                        Toast.makeText(context, R.string.toast_copied, Toast.LENGTH_SHORT).show()
+                        showExportDialog = false
+                    }
+                )
             },
             dismissButton = {
-                TextButton(onClick = { showExportDialog = false }) {
-                    Text(stringResource(R.string.action_cancel))
-                }
+                ShadcnDialogButton(
+                    text = stringResource(R.string.action_cancel),
+                    isPrimary = false,
+                    onClick = { showExportDialog = false }
+                )
             }
         )
     }
 
     editingSetting?.let { (key, value) ->
         var newValue by remember { mutableStateOf(value) }
-        AlertDialog(
+        ShadcnDialog(
             onDismissRequest = { editingSetting = null },
-            title = { Text(stringResource(R.string.edit_setting)) },
-            text = {
+            title = stringResource(R.string.edit_setting),
+            content = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(key, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        key,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                     OutlinedTextField(
                         value = newValue,
                         onValueChange = { newValue = it },
-                        label = { Text(stringResource(R.string.new_value)) },
-                        modifier = Modifier.fillMaxWidth()
+                        label = {
+                            Text(
+                                stringResource(R.string.new_value).uppercase(),
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black)
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                        ),
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
                     )
                 }
             },
             confirmButton = {
-                Button(onClick = {
-                    scope.launch {
-                        val cmd = "settings put ${selectedTable.key} $key $newValue"
-                        val result = ShizukuShellRunner.runCommand(cmd)
-                        if (result.isSuccess) {
-                            Toast.makeText(context, R.string.toast_setting_updated, Toast.LENGTH_SHORT).show()
-                            refreshTable()
+                ShadcnDialogButton(
+                    text = stringResource(R.string.action_apply),
+                    onClick = {
+                        scope.launch {
+                            val cmd = "settings put ${selectedTable.key} $key $newValue"
+                            val result = ShizukuShellRunner.runCommand(cmd)
+                            if (result.isSuccess) {
+                                Toast.makeText(
+                                    context,
+                                    R.string.toast_setting_updated,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                refreshTable()
+                            }
+                            editingSetting = null
                         }
-                        editingSetting = null
                     }
-                }) {
-                    Text(stringResource(R.string.action_apply))
-                }
+                )
             },
             dismissButton = {
-                TextButton(onClick = { editingSetting = null }) {
-                    Text(stringResource(R.string.action_cancel))
-                }
+                ShadcnDialogButton(
+                    text = stringResource(R.string.action_cancel),
+                    isPrimary = false,
+                    onClick = { editingSetting = null }
+                )
             }
         )
     }
@@ -669,20 +827,38 @@ fun MacroItem(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(32.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+        )
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(macro.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                     Text(
-                        stringResource(R.string.macro_settings_count, macro.settings.size),
-                        style = MaterialTheme.typography.labelSmall
+                        macro.name.uppercase(),
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.2.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        stringResource(
+                            R.string.macro_settings_count,
+                            macro.settings.size
+                        ).uppercase(),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = 1.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                 }
                 Row {
@@ -690,40 +866,89 @@ fun MacroItem(
                         Icon(
                             Icons.Default.Edit,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     IconButton(onClick = onDelete) {
                         Icon(
                             Icons.Default.Delete,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
                         )
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             macro.settings.forEach { setting ->
-                Text(
-                    "${setting.table.name}: ${setting.key} \u2192 ${setting.targetValue}",
-                    style = MaterialTheme.typography.labelSmall
-                )
+                Row(
+                    modifier = Modifier.padding(vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(4.dp)
+                            .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(1.dp))
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        stringResource(
+                            R.string.macro_setting_format,
+                            stringResource(
+                                when (setting.table) {
+                                    SystemTable.SYSTEM -> R.string.table_system
+                                    SystemTable.SECURE -> R.string.table_secure
+                                    SystemTable.GLOBAL -> R.string.table_global
+                                }
+                            ),
+                            setting.key,
+                            setting.targetValue
+                        ),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Medium,
+                            letterSpacing = 0.5.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
                     onClick = onApply,
-                    modifier = Modifier.weight(1f).height(56.dp),
-                    shape = RoundedCornerShape(100)
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp),
+                    shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text(stringResource(R.string.action_apply), fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(R.string.action_apply).uppercase(),
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.sp
+                        )
+                    )
                 }
                 OutlinedButton(
                     onClick = onRevert,
-                    modifier = Modifier.weight(1f).height(56.dp),
-                    shape = RoundedCornerShape(100)
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                    )
                 ) {
-                    Text(stringResource(R.string.action_revert_macro), fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(R.string.action_revert_macro).uppercase(),
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
             }
         }
@@ -751,14 +976,20 @@ fun MacroEditorPage(
             TopAppBar(
                 title = {
                     Text(
-                        if (macro == null) stringResource(R.string.add_macro) else stringResource(
+                        (if (macro == null) stringResource(R.string.add_macro) else stringResource(
                             R.string.edit_macro
-                        ), fontWeight = FontWeight.ExtraBold
+                        )).uppercase(),
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.5.sp
+                        )
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = Color.Transparent
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 navigationIcon = {
                     IconButton(onClick = onDismiss) {
@@ -788,29 +1019,46 @@ fun MacroEditorPage(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text(stringResource(R.string.macro_name)) },
+                    label = {
+                        Text(
+                            stringResource(R.string.macro_name).uppercase(),
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black)
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp)
+                    shape = RoundedCornerShape(8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                    ),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
                 )
             }
 
             item {
                 Text(
-                    text = stringResource(R.string.settings),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    text = stringResource(R.string.settings).uppercase(),
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
             }
 
             items(settings) { setting ->
                 Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                    )
                 ) {
                     Row(
                         modifier = Modifier.padding(12.dp),
@@ -823,12 +1071,28 @@ fun MacroEditorPage(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                "${setting.table.name}: ${setting.defaultValue} \u2192 ${setting.targetValue}",
-                                style = MaterialTheme.typography.labelSmall
+                                stringResource(
+                                    R.string.macro_setting_format,
+                                    stringResource(
+                                        when (setting.table) {
+                                            SystemTable.SYSTEM -> R.string.table_system
+                                            SystemTable.SECURE -> R.string.table_secure
+                                            SystemTable.GLOBAL -> R.string.table_global
+                                        }
+                                    ),
+                                    setting.defaultValue,
+                                    setting.targetValue
+                                ),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                         IconButton(onClick = { settings.remove(setting) }) {
-                            Icon(Icons.Default.Close, contentDescription = null)
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
                         }
                     }
                 }
@@ -836,18 +1100,24 @@ fun MacroEditorPage(
 
             item {
                 Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    shape = RoundedCornerShape(32.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                    )
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            stringResource(R.string.add_new_setting),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
+                            stringResource(R.string.add_new_setting).uppercase(),
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 1.sp
+                            )
                         )
                         
                         var expanded by remember { mutableStateOf(false) }
@@ -857,20 +1127,54 @@ fun MacroEditorPage(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             OutlinedTextField(
-                                value = currentTable.name,
+                                value = stringResource(
+                                    when (currentTable) {
+                                        SystemTable.SYSTEM -> R.string.table_system
+                                        SystemTable.SECURE -> R.string.table_secure
+                                        SystemTable.GLOBAL -> R.string.table_global
+                                    }
+                                ),
                                 onValueChange = {},
                                 readOnly = true,
-                                label = { Text(stringResource(R.string.select_table)) },
+                                label = {
+                                    Text(
+                                        stringResource(R.string.select_table).uppercase(),
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black)
+                                    )
+                                },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth()
+                                modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                                    .fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(
+                                        alpha = 0.1f
+                                    )
+                                ),
+                                textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
                             )
                             ExposedDropdownMenu(
                                 expanded = expanded,
-                                onDismissRequest = { expanded = false }
+                                onDismissRequest = { expanded = false },
+                                modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                             ) {
                                 SystemTable.entries.forEach { t ->
                                     DropdownMenuItem(
-                                        text = { Text(t.name) },
+                                        text = {
+                                            Text(
+                                                stringResource(
+                                                    when (t) {
+                                                        SystemTable.SYSTEM -> R.string.table_system
+                                                        SystemTable.SECURE -> R.string.table_secure
+                                                        SystemTable.GLOBAL -> R.string.table_global
+                                                    }
+                                                ),
+                                                style = MaterialTheme.typography.bodyMedium.copy(
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            )
+                                        },
                                         onClick = {
                                             currentTable = t
                                             expanded = false
@@ -879,10 +1183,58 @@ fun MacroEditorPage(
                                 }
                             }
                         }
-                        
-                        OutlinedTextField(value = currentKey, onValueChange = { currentKey = it }, label = { Text(stringResource(R.string.setting_key)) }, modifier = Modifier.fillMaxWidth())
-                        OutlinedTextField(value = currentDefaultValue, onValueChange = { currentDefaultValue = it }, label = { Text(stringResource(R.string.default_value)) }, modifier = Modifier.fillMaxWidth())
-                        OutlinedTextField(value = currentTargetValue, onValueChange = { currentTargetValue = it }, label = { Text(stringResource(R.string.target_value)) }, modifier = Modifier.fillMaxWidth())
+
+                        OutlinedTextField(
+                            value = currentKey,
+                            onValueChange = { currentKey = it },
+                            label = {
+                                Text(
+                                    stringResource(R.string.setting_key).uppercase(),
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black)
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                            ),
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                        OutlinedTextField(
+                            value = currentDefaultValue,
+                            onValueChange = { currentDefaultValue = it },
+                            label = {
+                                Text(
+                                    stringResource(R.string.default_value).uppercase(),
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black)
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                            ),
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                        OutlinedTextField(
+                            value = currentTargetValue,
+                            onValueChange = { currentTargetValue = it },
+                            label = {
+                                Text(
+                                    stringResource(R.string.target_value).uppercase(),
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black)
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                            ),
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                        )
                         
                         Button(
                             onClick = {
@@ -893,14 +1245,23 @@ fun MacroEditorPage(
                                     currentTargetValue = ""
                                 }
                             },
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
-                            shape = RoundedCornerShape(100)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            shape = RoundedCornerShape(8.dp)
                         ) {
-                            Icon(Icons.Default.Add, contentDescription = null)
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                stringResource(R.string.add_new_setting),
-                                fontWeight = FontWeight.Bold
+                                stringResource(R.string.add_new_setting).uppercase(),
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 1.sp
+                                )
                             )
                         }
                     }

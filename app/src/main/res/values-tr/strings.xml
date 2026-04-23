@@ -179,6 +179,7 @@
     <string name="toast_copied">Panoya kopyalandı.</string>
     <string name="toast_import_invalid">Geçersiz JSON formatı.</string>
     <string name="macro_settings_count">%1$d Ayar</string>
+    <string name="macro_setting_format">%1$s: %2$s \u2192 %3$s</string>
 
     <string name="feature_amoled_protect">AMOLED Ekran Koruması</string>
     <string name="feature_amoled_protect_desc">Hafif bir piksel filtresi döşeyerek, ekranda sabit kalan kareleri böler ve ekran yanmasını (burn-in) önler.</string>
@@ -240,4 +241,9 @@
     <string name="amoled_region_fullscreen">Tam Ekran</string>
     <string name="amoled_region_statusbar">Durum Çubuğu</string>
     <string name="amoled_region_navbar">Navigasyon Barı</string>
+    <string name="status_locked">KİLİTLİ</string>
+    <string name="status_unlocked">KİLİT AÇIK</string>
+    <string name="resolution_plan_format">%1$s x %2$s • %3$d DPI</string>
+    <string name="hz_unit">%d HZ</string>
+    <string name="dpi_unit">%d DPI</string>
 </resources>

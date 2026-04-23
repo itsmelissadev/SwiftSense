@@ -5,46 +5,17 @@ import android.content.Intent
 import android.hardware.Sensor
 import android.hardware.SensorManager
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.DirectionsRun
-import androidx.compose.material.icons.rounded.Analytics
-import androidx.compose.material.icons.rounded.PowerSettingsNew
-import androidx.compose.material.icons.rounded.RocketLaunch
-import androidx.compose.material.icons.rounded.ScreenRotation
-import androidx.compose.material.icons.rounded.Sensors
-import androidx.compose.material.icons.rounded.South
-import androidx.compose.material.icons.rounded.Speed
-import androidx.compose.material.icons.rounded.ViewInAr
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.rounded.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import io.github.itsmelissadev.swiftsense.R
 import io.github.itsmelissadev.swiftsense.data.PreferenceManager
@@ -88,26 +60,24 @@ fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
             TopAppBar(
                 title = {
                     Text(
-                        stringResource(R.string.feature_boost_sensors),
-                        fontWeight = FontWeight.ExtraBold
+                        stringResource(R.string.feature_boost_sensors).uppercase(),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.5.sp
                     )
                 },
                 navigationIcon = {
-                    IconButton(
-                        onClick = onNavigateBack,
-                        modifier = Modifier.padding(8.dp).clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                    ) {
+                    IconButton(onClick = onNavigateBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                            null,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = Color.Transparent
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.background
                 )
             )
         }
@@ -115,16 +85,16 @@ fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(
-                horizontal = 20.dp,
-                vertical = 24.dp
-            ), // Increased vertical padding for expressive look
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(innerPadding)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             item {
+                Spacer(modifier = Modifier.height(8.dp))
                 FeatureCard(
-                    title = if (isServiceRunning) stringResource(R.string.status_on) else stringResource(R.string.status_off),
+                    title = if (isServiceRunning) stringResource(R.string.status_on).uppercase() else stringResource(
+                        R.string.status_off
+                    ).uppercase(),
                     description = if (isServiceRunning) stringResource(R.string.status_running) else stringResource(R.string.status_stopped),
                     icon = if (isServiceRunning) Icons.Rounded.RocketLaunch else Icons.Rounded.PowerSettingsNew,
                     checked = isServiceRunning,
@@ -138,17 +108,13 @@ fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
                                 context.stopService(intent)
                             }
                         }
-                    },
-                    containerColor = if (isServiceRunning)
-                        MaterialTheme.colorScheme.primaryContainer
-                    else
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    }
                 )
             }
 
             item {
                 FeatureCard(
-                    title = stringResource(R.string.show_live_hz_option),
+                    title = stringResource(R.string.show_live_hz_option).uppercase(),
                     description = stringResource(R.string.show_live_hz_desc),
                     icon = Icons.Rounded.Analytics,
                     checked = showLiveHz,
@@ -158,11 +124,11 @@ fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
 
             item {
                 Text(
-                    text = stringResource(R.string.tab_sensors),
-                    style = MaterialTheme.typography.headlineSmall, // Increased from titleMedium
+                    text = stringResource(R.string.tab_sensors).uppercase(),
+                    style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.primary, // Increased contrast
-                    modifier = Modifier.padding(top = 16.dp, bottom = 8.dp) // Spacing
+                    letterSpacing = 1.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -180,18 +146,18 @@ fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
                 }
 
                 FeatureCard(
-                    title = sensorName,
+                    title = sensorName.uppercase(),
                     icon = sensorIcon,
                     checked = isEnabled,
                     onCheckedChange = { scope.launch { preferenceManager.setSensorState(sensor.type, it) } },
                     trailingContent = if (showLiveHz && isServiceRunning && isEnabled) {
                         { ThrottledLiveHzText(sensor.type) }
-                    } else null,
-                    containerColor = if (isEnabled)
-                        MaterialTheme.colorScheme.secondaryContainer
-                    else
-                        MaterialTheme.colorScheme.surface
+                    } else null
                 )
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
@@ -208,27 +174,16 @@ fun ThrottledLiveHzText(sensorType: Int) {
     }
 
     Surface(
-        color = MaterialTheme.colorScheme.primaryContainer, // Changed to primaryContainer instead of transparent alpha box
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(100), // Pill shape
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+        shape = RoundedCornerShape(4.dp),
         modifier = Modifier.padding(start = 8.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "$displayHz Hz",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-        }
+        Text(
+            text = "$displayHz HZ",
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Black,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }
