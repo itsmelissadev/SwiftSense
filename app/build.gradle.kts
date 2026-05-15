@@ -53,7 +53,7 @@ android {
         }
         debug {
             isMinifyEnabled = false
-            isShrinkResources = true
+            isShrinkResources = false
             isDebuggable = true
             isJniDebuggable = true
 
