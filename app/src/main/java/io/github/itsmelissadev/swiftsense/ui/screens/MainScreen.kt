@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.TableChart
+import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,6 +54,7 @@ fun mainScreen(
     onNavigateToCacheCleaner: () -> Unit,
     onNavigateToSystemTables: () -> Unit,
     onNavigateToAmoledScreenProtect: () -> Unit,
+    onNavigateToScreenRecorder: () -> Unit,
     onNavigateToSettings: () -> Unit
 ) {
     Scaffold(
@@ -156,6 +158,12 @@ fun mainScreen(
                             description = stringResource(R.string.feature_screen_resolution_desc),
                             icon = Icons.Default.AspectRatio,
                             onClick = onNavigateToScreenResolution
+                        )
+                        FeatureCard(
+                            title = stringResource(R.string.feature_screen_recorder),
+                            description = stringResource(R.string.feature_screen_recorder_desc),
+                            icon = Icons.Default.Videocam,
+                            onClick = onNavigateToScreenRecorder
                         )
                         FeatureCard(
                             title = stringResource(R.string.feature_system_tables),

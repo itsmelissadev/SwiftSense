@@ -121,6 +121,7 @@ class MainActivity : ComponentActivity() {
                                     onNavigateToCacheCleaner = { navController.navigate("cache_cleaner") },
                                     onNavigateToSystemTables = { navController.navigate("system_tables") },
                                     onNavigateToAmoledScreenProtect = { navController.navigate("amoled_screen_protect") },
+                                    onNavigateToScreenRecorder = { navController.navigate("screen_recorder") },
                                     onNavigateToSettings = { navController.navigate("settings") }
                                 )
                             }
@@ -144,6 +145,9 @@ class MainActivity : ComponentActivity() {
                             }
                             composable("amoled_screen_protect") {
                                 AmoledScreenProtectScreen(onNavigateBack = { navController.popBackStack() })
+                            }
+                            composable("screen_recorder") {
+                                io.github.itsmelissadev.swiftsense.feature.screenrecorder.ScreenRecorderScreen(onNavigateBack = { navController.popBackStack() })
                             }
                             composable("settings") {
                                 SettingsScreen(
