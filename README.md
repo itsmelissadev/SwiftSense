@@ -14,6 +14,9 @@ performance, minimize system latency, and provide advanced system tools.
   hardware limits. Includes a **Live Frequency Monitor** to track real-time sensor speeds in Hz.
 * **Advanced App Manager:** Easily enable or disable system and user applications via **Shizuku**.
   Perfect for freezing resource-heavy apps before gaming.
+* **Gaming Screen Recorder:** A low-latency, high-performance recording engine. Optimized for games
+  with hardware-accelerated encoding (HEVC/AVC), customizable quality (up to 1080p, 60 FPS, 15 Mbps),
+  and support for internal audio. Includes a Quick Settings Tile for instant access.
 * **Screen Resolution Tuner:** Modify your device's display resolution and DPI. Create and save *
   *Resolution Plans** for different scenarios (e.g., Gaming vs. Battery Saving).
 * **Cache Cleaner:** Reclaim storage by clearing system and app caches via Shizuku.
@@ -36,6 +39,7 @@ performance, minimize system latency, and provide advanced system tools.
 | **App & System Tools** | **Shizuku**  | Advanced system-level control |
 | **Resolution/Tables**  | **Shizuku**  | Display and System tweaks     |
 | **Cache/Killer**       | **Shizuku**  | Storage and RAM optimization  |
+| **Screen Recorder**   | Android 10+  | Gaming-optimized recording    |
 
 ---
 
