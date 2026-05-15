@@ -6,9 +6,9 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
-val keystorePropertiesFile: File? = rootProject.file("local.properties")
+val keystorePropertiesFile: File = rootProject.file("local.properties")
 val keystoreProperties = Properties()
-if (keystorePropertiesFile!!.exists()) {
+if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
@@ -23,12 +23,12 @@ android {
     }
 
     namespace = "io.github.itsmelissadev.swiftsense"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "io.github.itsmelissadev.swiftsense"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 5
         versionName = "1.1.7"
 
@@ -53,7 +53,7 @@ android {
         }
         debug {
             isMinifyEnabled = false
-            isShrinkResources = false
+            isShrinkResources = true
             isDebuggable = true
             isJniDebuggable = true
 
