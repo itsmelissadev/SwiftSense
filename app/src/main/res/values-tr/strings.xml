@@ -279,4 +279,22 @@
     <string name="screen_recorder_bitrate_desc">Yüksek bit hızı görüntü kalitesini artırır ancak dosya boyutunu büyütür.</string>
     <string name="screen_recorder_orientation_desc">Kayıt yönünü zorlar.</string>
     <string name="screen_recorder_audio_desc">Kayıt için ses kaynağını seçin.</string>
+    <string name="screen_recorder_video_saved_path">Video kaydedildi: %s</string>
+
+    <string name="screen_recorder_video_header">Video</string>
+    <string name="screen_recorder_codec">Video Kodek</string>
+    <string name="codec_auto">Otomatik (Önerilen)</string>
+    <string name="codec_avc">H.264 (AVC)</string>
+    <string name="codec_hevc">H.265 (HEVC)</string>
+    <string name="codec_desc_auto">Cihazınız için en uygun donanım kodlayıcıyı otomatik olarak seçer.</string>
+    <string name="codec_desc_avc">H.264, oyunlar için en yüksek uyumluluğu ve gecikmesiz, stabil performansı sunar.</string>
+    <string name="codec_desc_hevc">H.265, düşük dosya boyutunda daha iyi kalite sunar ancak cihaz sıcaklığını artırabilir.</string>
+
+    <string name="screen_recorder_audio_quality">Ses Kalitesi</string>
+    <string name="audio_quality_low">Düşük (64 kbps)</string>
+    <string name="audio_quality_medium">Orta (128 kbps)</string>
+    <string name="audio_quality_high">Yüksek (256 kbps)</string>
+    <string name="audio_quality_desc_low">En düşük dosya boyutu, temel ses kalitesi. Sadece ses (voice) için uygun.</string>
+    <string name="audio_quality_desc_medium">Standart kalite. Netlik ve dosya boyutu arasında iyi bir denge kurar.</string>
+    <string name="audio_quality_desc_high">Yüksek ses kalitesi. Oyun içi detaylı sesleri (ayak sesleri vb.) yakalamak için ideal.</string>
 </resources>

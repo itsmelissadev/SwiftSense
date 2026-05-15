@@ -23,6 +23,7 @@ class ScreenRecorderPromptActivity : ComponentActivity() {
             val resolution = prefs.getString("resolution", "1080p") ?: "1080p"
             val fps = prefs.getInt("fps", 60)
             val bitrate = prefs.getInt("bitrate", 15)
+            val audio = prefs.getInt("audio", 0)
             
             val wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
             val bounds = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -42,6 +43,21 @@ class ScreenRecorderPromptActivity : ComponentActivity() {
             
             val orientationOption = prefs.getString("orientation", orientationAuto) ?: orientationAuto
 
+            val codecOption = prefs.getString("codec", getString(R.string.codec_auto)) ?: getString(R.string.codec_auto)
+            val audioQualityOption = prefs.getString("audio_quality", getString(R.string.audio_quality_medium)) ?: getString(R.string.audio_quality_medium)
+
+            val codecChoice = when(codecOption) {
+                getString(R.string.codec_avc) -> 1
+                getString(R.string.codec_hevc) -> 2
+                else -> 0
+            }
+
+            val audioQualityChoice = when(audioQualityOption) {
+                getString(R.string.audio_quality_low) -> 64000
+                getString(R.string.audio_quality_high) -> 256000
+                else -> 128000
+            }
+
             startRecorderService(
                 context = this,
                 resolution = resolution,
@@ -50,6 +66,9 @@ class ScreenRecorderPromptActivity : ComponentActivity() {
                 fps = fps,
                 bitrate = bitrate,
                 orientationOption = orientationOption,
+                audioOption = audio,
+                codecChoice = codecChoice,
+                audioQualityChoice = audioQualityChoice,
                 autoString = orientationAuto,
                 portraitString = orientationPortrait,
                 landscapeString = orientationLandscape,

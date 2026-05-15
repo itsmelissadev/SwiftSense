@@ -29,8 +29,8 @@ android {
         applicationId = "io.github.itsmelissadev.swiftsense"
         minSdk = 26
         targetSdk = 37
-        versionCode = 5
-        versionName = "1.1.7"
+        versionCode = 6
+        versionName = "1.1.8"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -52,8 +52,6 @@ android {
             signingConfig = signingConfigs.getByName("release")
         }
         debug {
-            isMinifyEnabled = false
-            isShrinkResources = false
             isDebuggable = true
             isJniDebuggable = true
 

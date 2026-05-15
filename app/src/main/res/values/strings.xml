@@ -279,4 +279,22 @@
     <string name="screen_recorder_bitrate_desc">Higher bitrate improves video quality but creates larger files.</string>
     <string name="screen_recorder_orientation_desc">Forces the recording orientation.</string>
     <string name="screen_recorder_audio_desc">Select audio source for the recording.</string>
+    <string name="screen_recorder_video_saved_path">Video saved to: %s</string>
+
+    <string name="screen_recorder_video_header">Video</string>
+    <string name="screen_recorder_codec">Video Codec</string>
+    <string name="codec_auto">Auto (Recommended)</string>
+    <string name="codec_avc">H.264 (AVC)</string>
+    <string name="codec_hevc">H.265 (HEVC)</string>
+    <string name="codec_desc_auto">Automatically selects the best available hardware encoder for your device.</string>
+    <string name="codec_desc_avc">H.264 provides the best compatibility and stable performance for gaming with low latency.</string>
+    <string name="codec_desc_hevc">H.265 provides better visual quality at lower bitrates, but may increase device temperature.</string>
+
+    <string name="screen_recorder_audio_quality">Audio Quality</string>
+    <string name="audio_quality_low">Low (64 kbps)</string>
+    <string name="audio_quality_medium">Medium (128 kbps)</string>
+    <string name="audio_quality_high">High (256 kbps)</string>
+    <string name="audio_quality_desc_low">Smallest file size, basic audio quality. Good for voice.</string>
+    <string name="audio_quality_desc_medium">Standard quality. Good balance of clarity and file size.</string>
+    <string name="audio_quality_desc_high">High fidelity audio. Ideal for capturing detailed game sounds.</string>
 </resources>

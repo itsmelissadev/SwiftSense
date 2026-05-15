@@ -336,7 +336,9 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                                     style = MaterialTheme.typography.labelLarge.copy(
                                         fontWeight = FontWeight.Black,
                                         letterSpacing = 1.2.sp
-                                    )
+                                    ),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
 
@@ -372,7 +374,9 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                                     style = MaterialTheme.typography.labelLarge.copy(
                                         fontWeight = FontWeight.Black,
                                         letterSpacing = 1.2.sp
-                                    )
+                                    ),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
