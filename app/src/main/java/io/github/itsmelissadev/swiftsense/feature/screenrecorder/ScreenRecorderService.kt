@@ -359,45 +359,17 @@ class ScreenRecorderService : Service() {
                     setInteger(MediaFormat.KEY_FRAME_RATE, fps)
                     setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 5)
 
-                    // Operating rate hints the encoder to run at the exact FPS, saving power/heat
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        setInteger(MediaFormat.KEY_OPERATING_RATE, fps)
-                    }
-
-                    // Intra-refresh: spreads I-frame load across multiple frames to avoid CPU/GPU
-                    // spikes
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        setInteger(MediaFormat.KEY_INTRA_REFRESH_PERIOD, fps)
-                    }
                     setInteger(
                             MediaFormat.KEY_BITRATE_MODE,
                             MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_VBR
                     )
 
                     // Repeat previous frame to keep stream alive if game drops frames
-                    // but set a reasonable limit to avoid unnecessary work
                     setLong(MediaFormat.KEY_REPEAT_PREVIOUS_FRAME_AFTER, 1000000L / fps)
 
-                    // Aggressive performance settings for gaming
-                    setInteger(MediaFormat.KEY_PRIORITY, 0) // Real-time priority
-                    setInteger(MediaFormat.KEY_COMPLEXITY, 0) // Lowest complexity for maximum speed
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        setInteger(MediaFormat.KEY_LATENCY, 0)
-                    }
-
-                    // Low-latency encoding is critical for gaming performance
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        setInteger(MediaFormat.KEY_LOW_LATENCY, 1)
-                    }
-
-                    // Disable B-frames for faster encoding (lower latency)
+                    // Instruct the encoder's input surface to drop excess frames
+                    // This is critical when recording a 120Hz display at a lower FPS (e.g. 15 or 30)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        try {
-                            setInteger("max-bframes", 0)
-                        } catch (_: Exception) {
-                            /* Not supported on this codec */
-                        }
                         setFloat(MediaFormat.KEY_MAX_FPS_TO_ENCODER, fps.toFloat())
                     }
 
