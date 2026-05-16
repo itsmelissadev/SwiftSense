@@ -5,6 +5,7 @@ import android.content.Intent
 import android.hardware.Sensor
 import android.hardware.SensorManager
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -38,8 +39,9 @@ fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
     val context = LocalContext.current
     val preferenceManager = remember { PreferenceManager(context) }
     val scope = rememberCoroutineScope()
-    val isServiceRunning by preferenceManager.isServiceRunning.collectAsState(initial = false)
+    val isServiceRunning by BoostSensorsService.isRunning.collectAsState()
     val showLiveHz by preferenceManager.showLiveHz.collectAsState(initial = false)
+    val sensorSpeed by preferenceManager.sensorSpeed.collectAsState(initial = "max")
     val prefs by preferenceManager.preferences.collectAsState(initial = null)
 
     val sensorManager = remember { context.getSystemService(Context.SENSOR_SERVICE) as SensorManager }
@@ -119,6 +121,63 @@ fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
                     icon = Icons.Rounded.Analytics,
                     checked = showLiveHz,
                     onCheckedChange = { scope.launch { preferenceManager.setShowLiveHz(it) } }
+                )
+            }
+
+            item {
+                Text(
+                    text = stringResource(R.string.sensor_speed).uppercase(),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                val speeds = listOf(
+                    "very_slow" to stringResource(R.string.speed_very_slow),
+                    "slow" to stringResource(R.string.speed_slow),
+                    "medium" to stringResource(R.string.speed_medium),
+                    "fast" to stringResource(R.string.speed_fast),
+                    "max" to stringResource(R.string.speed_max)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    speeds.forEach { (key, label) ->
+                        val isSelected = sensorSpeed == key
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    if (isSelected) MaterialTheme.colorScheme.primary 
+                                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                )
+                                .clickable {
+                                    scope.launch { preferenceManager.setSensorSpeed(key) }
+                                }
+                                .padding(vertical = 12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = label.uppercase(),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary 
+                                        else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.sensor_speed_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
             }
 

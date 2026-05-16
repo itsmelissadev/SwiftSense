@@ -1,8 +1,6 @@
 package io.github.itsmelissadev.swiftsense.service.shizuku
 
 import rikka.shizuku.Shizuku
-import java.io.BufferedReader
-import java.io.InputStreamReader
 
 object ShizukuShellRunner {
 

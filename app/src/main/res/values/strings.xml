@@ -59,6 +59,13 @@
     <string name="category_performance">Performance</string>
     <string name="feature_boost_sensors">Sensor Optimization</string>
     <string name="feature_boost_sensors_desc">Improves accuracy by processing sensor data at higher rates.</string>
+    <string name="sensor_speed">Optimization Speed</string>
+    <string name="sensor_speed_desc">Higher speed provides better response but increases battery consumption.</string>
+    <string name="speed_very_slow">Very Slow</string>
+    <string name="speed_slow">Slow</string>
+    <string name="speed_medium">Medium</string>
+    <string name="speed_fast">Fast</string>
+    <string name="speed_max">Max</string>
 
     <string name="category_tools">System Tools</string>
     <string name="feature_app_manager">App Manager</string>

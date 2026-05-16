@@ -59,6 +59,13 @@
     <string name="category_performance">Performans</string>
     <string name="feature_boost_sensors">Sensör Optimizasyonu</string>
     <string name="feature_boost_sensors_desc">Sensör verilerini en yüksek hızda işleyerek hassasiyeti artırır.</string>
+    <string name="sensor_speed">Optimizasyon Hızı</string>
+    <string name="sensor_speed_desc">Daha yüksek hız daha iyi tepki sağlar ancak batarya tüketimini artırır.</string>
+    <string name="speed_very_slow">Çok Yavaş</string>
+    <string name="speed_slow">Yavaş</string>
+    <string name="speed_medium">Orta</string>
+    <string name="speed_fast">Hızlı</string>
+    <string name="speed_max">Max</string>
 
     <string name="category_tools">Sistem Araçları</string>
     <string name="feature_app_manager">Uygulama Yöneticisi</string>

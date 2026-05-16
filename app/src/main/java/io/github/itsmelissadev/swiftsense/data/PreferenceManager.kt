@@ -48,6 +48,7 @@ class PreferenceManager(private val context: Context) {
         val GYRO_SIM_AREA_WIDTH = intPreferencesKey("gyro_sim_area_width")
         val GYRO_SIM_AREA_HEIGHT = intPreferencesKey("gyro_sim_area_height")
         val GYRO_SIM_LOCKED = booleanPreferencesKey("gyro_sim_locked")
+        val SENSOR_SPEED = stringPreferencesKey("sensor_speed")
     }
 
     val preferences: Flow<Preferences> = context.dataStore.data
@@ -254,5 +255,10 @@ class PreferenceManager(private val context: Context) {
     val gyroSimLocked: Flow<Boolean> = preferences.map { it[GYRO_SIM_LOCKED] ?: false }
     suspend fun setGyroSimLocked(locked: Boolean) {
         context.dataStore.edit { it[GYRO_SIM_LOCKED] = locked }
+    }
+
+    val sensorSpeed: Flow<String> = preferences.map { it[SENSOR_SPEED] ?: "max" }
+    suspend fun setSensorSpeed(speed: String) {
+        context.dataStore.edit { it[SENSOR_SPEED] = speed }
     }
 }

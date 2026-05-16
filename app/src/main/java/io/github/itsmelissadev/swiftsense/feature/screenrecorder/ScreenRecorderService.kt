@@ -56,6 +56,7 @@ class ScreenRecorderService : Service() {
 
     private val notificationId = 8472
     private val channelId = "screen_recorder_channel"
+    private val groupKey = "io.github.itsmelissadev.swiftsense.SCREEN_RECORDER"
     private val TAG = "ScreenRecorderService"
 
     private var mediaProjection: MediaProjection? = null
@@ -72,8 +73,8 @@ class ScreenRecorderService : Service() {
     private var outputPfd: ParcelFileDescriptor? = null
     private var outputUri: Uri? = null
 
-
-    @Volatile private var currentState = RecorderState.IDLE
+    @Volatile
+    private var currentState = RecorderState.IDLE
         set(value) {
             field = value
             currentRecorderState = value
@@ -98,8 +99,6 @@ class ScreenRecorderService : Service() {
 
     // Dedicated single-thread dispatcher for encoder operations — keeps encoding off the shared
     // pool
-    // Dedicated single-thread dispatcher for encoder operations with background priority
-    // to ensure the game gets maximum CPU cycles.
     private val recorderDispatcher =
             Executors.newSingleThreadExecutor { runnable ->
                         Thread(runnable, "ScreenRecorderThread").apply {
@@ -109,6 +108,9 @@ class ScreenRecorderService : Service() {
                     .asCoroutineDispatcher()
     private val serviceJob = SupervisorJob()
     private val coroutineScope = CoroutineScope(Dispatchers.IO + serviceJob)
+
+    private var recordingStartTimeUs: Long = 0
+    private var totalSamplesRead: Long = 0
 
     private val projectionCallback =
             object : MediaProjection.Callback() {
@@ -122,6 +124,7 @@ class ScreenRecorderService : Service() {
         const val ACTION_START = "ACTION_START"
         const val ACTION_RECORD = "ACTION_RECORD"
         const val ACTION_STOP = "ACTION_STOP"
+        const val ACTION_SHUTDOWN = "ACTION_SHUTDOWN"
         const val ACTION_PAUSE_RESUME = "ACTION_PAUSE_RESUME"
 
         const val EXTRA_RESULT_CODE = "EXTRA_RESULT_CODE"
@@ -137,7 +140,7 @@ class ScreenRecorderService : Service() {
         @Volatile var isRunning = false
         @Volatile var currentRecorderState = RecorderState.IDLE
     }
-    
+
     enum class RecorderState {
         IDLE,
         RECORDING,
@@ -154,40 +157,38 @@ class ScreenRecorderService : Service() {
         isRunning = true
         when (intent?.action) {
             ACTION_START -> {
-                // ALWAYS call startForeground FIRST to prevent SecurityException in
-                // getMediaProjection
+                configResultCode = intent.getIntExtra(EXTRA_RESULT_CODE, 0)
+                @Suppress("DEPRECATION") configData = intent.getParcelableExtra(EXTRA_DATA)
+                configWidth = intent.getIntExtra(EXTRA_WIDTH, 1080)
+                configHeight = intent.getIntExtra(EXTRA_HEIGHT, 1920)
+                configFps = intent.getIntExtra(EXTRA_FPS, 60)
+                configBitrate = intent.getIntExtra(EXTRA_BITRATE, 15)
+                configAudio = intent.getIntExtra(EXTRA_AUDIO, 0)
+                configCodec = intent.getIntExtra(EXTRA_CODEC, 0)
+                configAudioQuality = intent.getIntExtra(EXTRA_AUDIO_QUALITY, 128000)
+
+                // ALWAYS call startForeground before getMediaProjection to prevent
+                // SecurityException
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    startForeground(
-                            notificationId,
-                            buildNotification(),
-                            ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
-                    )
+                    var type = ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+                    if (configAudio != 0) {
+                        type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+                    }
+                    startForeground(notificationId, buildNotification(), type)
                 } else {
                     startForeground(notificationId, buildNotification())
                 }
 
-                if (currentState == RecorderState.IDLE) {
-                    configResultCode = intent.getIntExtra(EXTRA_RESULT_CODE, 0)
-                    @Suppress("DEPRECATION") configData = intent.getParcelableExtra(EXTRA_DATA)
-                    configWidth = intent.getIntExtra(EXTRA_WIDTH, 1080)
-                    configHeight = intent.getIntExtra(EXTRA_HEIGHT, 1920)
-                    configFps = intent.getIntExtra(EXTRA_FPS, 60)
-                    configBitrate = intent.getIntExtra(EXTRA_BITRATE, 15)
-                    configAudio = intent.getIntExtra(EXTRA_AUDIO, 0)
-                    configCodec = intent.getIntExtra(EXTRA_CODEC, 0)
-                    configAudioQuality = intent.getIntExtra(EXTRA_AUDIO_QUALITY, 128000)
-
-                    if (configResultCode == Activity.RESULT_OK && configData != null) {
-                        try {
-                            val mpManager =
-                                    getSystemService(Context.MEDIA_PROJECTION_SERVICE) as
-                                            MediaProjectionManager
-                            mediaProjection =
-                                    mpManager.getMediaProjection(configResultCode, configData!!)
-                            mediaProjection?.registerCallback(projectionCallback, null)
-                        } catch (e: Exception) {
-                            Log.e(TAG, "Error initializing MediaProjection", e)
-                        }
+                if (configResultCode == Activity.RESULT_OK && configData != null) {
+                    try {
+                        val mpManager =
+                                getSystemService(Context.MEDIA_PROJECTION_SERVICE) as
+                                        MediaProjectionManager
+                        mediaProjection =
+                                mpManager.getMediaProjection(configResultCode, configData!!)
+                        mediaProjection?.registerCallback(projectionCallback, null)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error initializing MediaProjection", e)
                     }
                 }
 
@@ -200,7 +201,8 @@ class ScreenRecorderService : Service() {
                     startRecording()
                 }
             }
-            ACTION_STOP -> stopService()
+            ACTION_STOP -> stopRecording()
+            ACTION_SHUTDOWN -> stopService()
             ACTION_PAUSE_RESUME -> togglePauseResume()
         }
         return START_NOT_STICKY
@@ -225,15 +227,20 @@ class ScreenRecorderService : Service() {
             return
         }
 
-        // Acquire partial wake lock to prevent CPU sleep during recording
-        acquireWakeLock()
-
-        currentState = RecorderState.RECORDING
-        durationSeconds.set(0)
-        updateNotification()
-
         recorderJob =
                 coroutineScope.launch(recorderDispatcher) {
+                    if (currentState != RecorderState.IDLE) return@launch
+
+                    // Update state on main thread for UI consistency
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        acquireWakeLock()
+                        currentState = RecorderState.RECORDING
+                        durationSeconds.set(0)
+                        totalSamplesRead = 0
+                        recordingStartTimeUs = System.nanoTime() / 1000
+                        updateNotification()
+                    }
+
                     try {
                         prepareRecorder(configWidth, configHeight, configFps, configBitrate)
 
@@ -368,7 +375,8 @@ class ScreenRecorderService : Service() {
                     setLong(MediaFormat.KEY_REPEAT_PREVIOUS_FRAME_AFTER, 1000000L / fps)
 
                     // Instruct the encoder's input surface to drop excess frames
-                    // This is critical when recording a 120Hz display at a lower FPS (e.g. 15 or 30)
+                    // This is critical when recording a 120Hz display at a lower FPS (e.g. 15 or
+                    // 30)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         setFloat(MediaFormat.KEY_MAX_FPS_TO_ENCODER, fps.toFloat())
                     }
@@ -442,11 +450,11 @@ class ScreenRecorderService : Service() {
 
     private fun setupAudioRecorder() {
         try {
-            val sampleRate = 44100
-            val channelConfig = AudioFormat.CHANNEL_IN_MONO
+            val sampleRate = 48000 // Games often use 48kHz natively
+            val channelConfig = AudioFormat.CHANNEL_IN_STEREO
             val audioFormat = AudioFormat.ENCODING_PCM_16BIT
             val minBufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)
-            val bufferSize = minBufferSize * 2
+            val bufferSize = minBufferSize * 4 // Larger buffer for high-load games
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
                             configAudio == 1 &&
@@ -457,6 +465,9 @@ class ScreenRecorderService : Service() {
                                 .addMatchingUsage(android.media.AudioAttributes.USAGE_MEDIA)
                                 .addMatchingUsage(android.media.AudioAttributes.USAGE_GAME)
                                 .addMatchingUsage(android.media.AudioAttributes.USAGE_UNKNOWN)
+                                .addMatchingUsage(
+                                        android.media.AudioAttributes.USAGE_ASSISTANCE_SONIFICATION
+                                )
                                 .build()
 
                 val audioFormatObj =
@@ -473,16 +484,21 @@ class ScreenRecorderService : Service() {
                                     .setAudioPlaybackCaptureConfig(config)
                                     .setBufferSizeInBytes(bufferSize)
                                     .build()
-                } catch (e: SecurityException) {
-                    Log.e(TAG, "AudioRecord permission denied", e)
-                    return
+
+                    if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
+                        Log.e(TAG, "AudioRecord failed to initialize")
+                        audioRecord = null
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "AudioRecord creation failed", e)
+                    audioRecord = null
                 }
             } else {
                 return // Audio disabled or unsupported
             }
 
             val format =
-                    MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, 1)
+                    MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, 2)
                             .apply {
                                 setInteger(
                                         MediaFormat.KEY_AAC_PROFILE,
@@ -506,11 +522,11 @@ class ScreenRecorderService : Service() {
     private suspend fun drainAudioEncoder() {
         val bufferInfo = MediaCodec.BufferInfo()
         val timeoutUs = 10000L
-        val sampleRate = 44100
-        val channelConfig = AudioFormat.CHANNEL_IN_MONO
+        val sampleRate = 48000
+        val channelConfig = AudioFormat.CHANNEL_IN_STEREO
         val audioFormat = AudioFormat.ENCODING_PCM_16BIT
         val minBufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)
-        val bufferSize = minBufferSize * 2
+        val bufferSize = minBufferSize * 4
         val audioBuffer = ByteArray(bufferSize)
 
         while (currentState != RecorderState.IDLE) {
@@ -535,8 +551,12 @@ class ScreenRecorderService : Service() {
                         // System.nanoTime()
                         // This avoids audio delay and automatically handles recording pauses
                         // without drift.
-                        val timeForBufferUs = (bytesRead * 1_000_000L) / (44100 * 2) // 16-bit Mono
-                        val presentationTimeUs = (System.nanoTime() / 1000) - timeForBufferUs
+                        // Calculate presentation time based on total samples read to avoid jitter
+                        // Anchored to the same start time as video
+                        val presentationTimeUs =
+                                recordingStartTimeUs + (totalSamplesRead * 1_000_000L / sampleRate)
+                        totalSamplesRead +=
+                                bytesRead / 4 // 16-bit = 2 bytes per sample * 2 channels = 4 bytes
 
                         codec.queueInputBuffer(
                                 inputBufferIndex,
@@ -607,18 +627,25 @@ class ScreenRecorderService : Service() {
                     if (muxer != null && !isMuxerStarted) {
                         val newFormat = codec.outputFormat
                         videoTrackIndex = muxer.addTrack(newFormat)
+
+                        // Wait briefly for audio codec to be ready if audio is enabled
+                        // This ensures audio track has proper CSD (AAC headers)
                         if (audioCodec != null) {
-                            try {
-                                val audioFormat = audioCodec!!.outputFormat
-                                audioTrackIndex = muxer.addTrack(audioFormat)
-                            } catch (e: Exception) {
-                                Log.e(
-                                        TAG,
-                                        "Audio format not ready yet, audio might be out of sync or missing",
-                                        e
-                                )
+                            var attempts = 0
+                            while (audioTrackIndex == -1 && attempts < 10) {
+                                try {
+                                    val audioFormat = audioCodec!!.outputFormat
+                                    // Check if format has CSD (at least one 'csd-0' buffer)
+                                    if (audioFormat.containsKey("csd-0")) {
+                                        audioTrackIndex = muxer.addTrack(audioFormat)
+                                        break
+                                    }
+                                } catch (_: Exception) {}
+                                delay(50)
+                                attempts++
                             }
                         }
+
                         muxer.start()
                         isMuxerStarted = true
                     }
@@ -661,86 +688,36 @@ class ScreenRecorderService : Service() {
         wakeLock = null
     }
 
-    private fun stopService() {
-        if (currentState == RecorderState.IDLE) {
-            isRunning = false
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            stopSelf()
-            return
-        }
-        currentState = RecorderState.IDLE
+    private fun stopRecording() {
+        if (currentState == RecorderState.IDLE) return
 
+        currentState = RecorderState.IDLE
         coroutineScope.launch(recorderDispatcher) {
             durationJob?.cancel()
             recorderJob?.cancel()
 
-            try {
-                mediaCodec?.stop()
-                mediaCodec?.release()
-            } catch (e: Exception) {
-                Log.e(TAG, "Error stopping video codec", e)
-            }
+            releaseRecorderResources(fullShutdown = false)
 
-            try {
-                audioCodec?.stop()
-                audioCodec?.release()
-            } catch (e: Exception) {
-                Log.e(TAG, "Error stopping audio codec", e)
-            }
-
-            try {
-                audioRecord?.stop()
-                audioRecord?.release()
-            } catch (e: Exception) {
-                Log.e(TAG, "Error stopping audio record", e)
-            }
-
-            try {
-                if (isMuxerStarted) {
-                    mediaMuxer?.stop()
-                }
-                mediaMuxer?.release()
-            } catch (e: Exception) {
-                Log.e(TAG, "Error stopping muxer", e)
-            }
-
-            try {
-                encoderInputSurface?.release()
-            } catch (_: Exception) {}
-
-            try {
-                virtualDisplay?.release()
-            } catch (_: Exception) {}
-
-            try {
-                mediaProjection?.unregisterCallback(projectionCallback)
-                mediaProjection?.stop()
-            } catch (_: Exception) {}
-
-            // Finalize MediaStore entry on Android 10+
-            finalizeMediaStoreEntry()
-
-            try {
-                outputPfd?.close()
-            } catch (_: Exception) {}
-
-            mediaCodec = null
-            audioCodec = null
-            audioRecord = null
-            mediaMuxer = null
-            encoderInputSurface = null
-            virtualDisplay = null
-            mediaProjection = null
-            outputPfd = null
-            outputUri = null
-            isMuxerStarted = false
-
-            releaseWakeLock()
-            stopForeground(STOP_FOREGROUND_REMOVE)
             showSavedNotification(configVideoPath)
-            isRunning = false
-            stopSelf()
+            updateNotification()
         }
+    }
+
+    private fun stopService() {
+        if (currentState != RecorderState.IDLE) {
+            val oldState = currentState
+            currentState = RecorderState.IDLE
+            runBlocking(recorderDispatcher) {
+                durationJob?.cancel()
+                recorderJob?.cancel()
+                releaseRecorderResources(fullShutdown = true)
+            }
+        } else {
+            releaseRecorderResources(fullShutdown = true)
+        }
+        isRunning = false
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
     }
 
     private fun finalizeMediaStoreEntry() {
@@ -792,6 +769,8 @@ class ScreenRecorderService : Service() {
                         .setSmallIcon(R.drawable.videocam_24px)
                         .setOngoing(true)
                         .setOnlyAlertOnce(true)
+                        .setGroup(groupKey)
+                        .setGroupSummary(false)
 
         when (currentState) {
             RecorderState.IDLE -> {
@@ -806,6 +785,17 @@ class ScreenRecorderService : Service() {
                                 recordIntent,
                                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                         )
+                val shutdownIntent =
+                        Intent(this, ScreenRecorderService::class.java).apply {
+                            action = ACTION_SHUTDOWN
+                        }
+                val shutdownPendingIntent =
+                        PendingIntent.getService(
+                                this,
+                                4,
+                                shutdownIntent,
+                                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                        )
 
                 builder.setContentTitle(getString(R.string.screen_recorder_ready))
                 builder.setContentText(getString(R.string.feature_screen_recorder))
@@ -814,7 +804,11 @@ class ScreenRecorderService : Service() {
                         getString(R.string.screen_recorder_action_start),
                         recordPendingIntent
                 )
-                builder.addAction(0, getString(R.string.screen_recorder_stop), stopPendingIntent)
+                builder.addAction(
+                        0,
+                        getString(R.string.screen_recorder_stop),
+                        shutdownPendingIntent
+                )
             }
             RecorderState.RECORDING, RecorderState.PAUSED -> {
                 val pauseResumeIntent =
@@ -875,6 +869,8 @@ class ScreenRecorderService : Service() {
                         .setContentTitle(getString(R.string.screen_recorder_saved))
                         .setContentText(getString(R.string.screen_recorder_video_saved_path, path))
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .setGroup(groupKey)
+                        .setGroupSummary(false)
                         .setAutoCancel(true)
 
         notificationManager.notify(8473, builder.build())
@@ -885,66 +881,80 @@ class ScreenRecorderService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         // Stop recording and release resources BEFORE closing the dispatcher
-        if (currentState != RecorderState.IDLE) {
+        if (currentState != RecorderState.IDLE || isRunning) {
             currentState = RecorderState.IDLE
+            isRunning = false
             // Block briefly to ensure cleanup completes on the encoder thread
             runBlocking(recorderDispatcher) {
                 durationJob?.cancel()
                 recorderJob?.cancel()
-                releaseRecorderResources()
+                releaseRecorderResources(fullShutdown = true)
             }
         }
         serviceJob.cancel()
         recorderDispatcher.close()
     }
 
-    private fun releaseRecorderResources() {
+    private fun releaseRecorderResources(fullShutdown: Boolean) {
+        // 1. First, release the VirtualDisplay to stop production of frames
+        try {
+            virtualDisplay?.release()
+        } catch (_: Exception) {}
+        virtualDisplay = null
+
+        // 2. Stop the encoders and recorders
         try {
             mediaCodec?.stop()
             mediaCodec?.release()
         } catch (_: Exception) {}
+        mediaCodec = null
 
         try {
             audioCodec?.stop()
             audioCodec?.release()
         } catch (_: Exception) {}
+        audioCodec = null
 
         try {
             audioRecord?.stop()
             audioRecord?.release()
         } catch (_: Exception) {}
+        audioRecord = null
 
+        // 3. Stop the Muxer
         try {
-            if (isMuxerStarted) mediaMuxer?.stop()
+            if (isMuxerStarted) {
+                mediaMuxer?.stop()
+            }
             mediaMuxer?.release()
         } catch (_: Exception) {}
+        mediaMuxer = null
+        isMuxerStarted = false
 
+        // 4. Release the surface
         try {
             encoderInputSurface?.release()
         } catch (_: Exception) {}
-        try {
-            virtualDisplay?.release()
-        } catch (_: Exception) {}
-        try {
-            mediaProjection?.unregisterCallback(projectionCallback)
-            mediaProjection?.stop()
-        } catch (_: Exception) {}
+        encoderInputSurface = null
+
+        // 5. Cleanup projection if needed
+        if (fullShutdown) {
+            try {
+                mediaProjection?.unregisterCallback(projectionCallback)
+                mediaProjection?.stop()
+            } catch (_: Exception) {}
+            mediaProjection = null
+        }
 
         finalizeMediaStoreEntry()
         try {
             outputPfd?.close()
         } catch (_: Exception) {}
-
-        mediaCodec = null
-        audioCodec = null
-        audioRecord = null
-        mediaMuxer = null
-        encoderInputSurface = null
-        virtualDisplay = null
-        mediaProjection = null
         outputPfd = null
         outputUri = null
-        isMuxerStarted = false
+
+        videoTrackIndex = -1
+        audioTrackIndex = -1
 
         releaseWakeLock()
     }

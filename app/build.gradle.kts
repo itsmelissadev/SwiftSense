@@ -29,8 +29,8 @@ android {
         applicationId = "io.github.itsmelissadev.swiftsense"
         minSdk = 26
         targetSdk = 37
-        versionCode = 6
-        versionName = "1.1.8"
+        versionCode = 7
+        versionName = "1.1.9"
 
         vectorDrawables {
             useSupportLibrary = true

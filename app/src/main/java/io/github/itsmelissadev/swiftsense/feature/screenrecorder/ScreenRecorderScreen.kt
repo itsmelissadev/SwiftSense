@@ -1,6 +1,9 @@
+@file:Suppress("ANNOTATIONS_ON_BLOCK_LEVEL_EXPRESSION_ON_THE_SAME_LINE")
+
 package io.github.itsmelissadev.swiftsense.feature.screenrecorder
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -11,19 +14,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -34,7 +25,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -67,7 +57,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -75,9 +64,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import io.github.itsmelissadev.swiftsense.R
 import kotlin.math.roundToInt
 
+@SuppressLint("UseKtx")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScreenRecorderScreen(onNavigateBack: () -> Unit) {
@@ -141,43 +132,50 @@ fun ScreenRecorderScreen(onNavigateBack: () -> Unit) {
             )
 
     var isHevcSupported by remember { mutableStateOf(false) }
-    
+
     val codecAuto = stringResource(R.string.codec_auto)
     val codecAvc = stringResource(R.string.codec_avc)
     val codecHevc = stringResource(R.string.codec_hevc)
-    
-    val codecOptions = remember(isHevcSupported) {
-        val list = mutableListOf(codecAuto, codecAvc)
-        if (isHevcSupported) {
-            list.add(codecHevc)
-        }
-        list
-    }
-    
-    var selectedCodecOption by rememberSaveable(codecOptions) { 
-        mutableStateOf(prefs.getString("codec", codecAuto)?.takeIf { it in codecOptions } ?: codecAuto) 
-    }
-    
-    val codecDescriptions = mapOf(
-        codecAuto to stringResource(R.string.codec_desc_auto),
-        codecAvc to stringResource(R.string.codec_desc_avc),
-        codecHevc to stringResource(R.string.codec_desc_hevc)
-    )
+
+    val codecOptions =
+            remember(isHevcSupported) {
+                val list = mutableListOf(codecAuto, codecAvc)
+                if (isHevcSupported) {
+                    list.add(codecHevc)
+                }
+                list
+            }
+
+    var selectedCodecOption by
+            rememberSaveable(codecOptions) {
+                mutableStateOf(
+                        prefs.getString("codec", codecAuto)?.takeIf { it in codecOptions }
+                                ?: codecAuto
+                )
+            }
+
+    val codecDescriptions =
+            mapOf(
+                    codecAuto to stringResource(R.string.codec_desc_auto),
+                    codecAvc to stringResource(R.string.codec_desc_avc),
+                    codecHevc to stringResource(R.string.codec_desc_hevc)
+            )
 
     val audioQualityLow = stringResource(R.string.audio_quality_low)
     val audioQualityMedium = stringResource(R.string.audio_quality_medium)
     val audioQualityHigh = stringResource(R.string.audio_quality_high)
-    
+
     val audioQualityOptions = listOf(audioQualityLow, audioQualityMedium, audioQualityHigh)
     var selectedAudioQualityOption by rememberSaveable {
         mutableStateOf(prefs.getString("audio_quality", audioQualityMedium) ?: audioQualityMedium)
     }
-    
-    val audioQualityDescriptions = mapOf(
-        audioQualityLow to stringResource(R.string.audio_quality_desc_low),
-        audioQualityMedium to stringResource(R.string.audio_quality_desc_medium),
-        audioQualityHigh to stringResource(R.string.audio_quality_desc_high)
-    )
+
+    val audioQualityDescriptions =
+            mapOf(
+                    audioQualityLow to stringResource(R.string.audio_quality_desc_low),
+                    audioQualityMedium to stringResource(R.string.audio_quality_desc_medium),
+                    audioQualityHigh to stringResource(R.string.audio_quality_desc_high)
+            )
 
     LaunchedEffect(Unit) {
         val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
@@ -187,14 +185,20 @@ fun ScreenRecorderScreen(onNavigateBack: () -> Unit) {
             physicalHeight = bounds.height()
         } else {
             @Suppress("DEPRECATION") val display = wm.defaultDisplay
-            @Suppress("DEPRECATION") physicalWidth = display.width
-            @Suppress("DEPRECATION") physicalHeight = display.height
+            @Suppress("DEPRECATION")
+            physicalWidth = display.width
+            @Suppress("DEPRECATION")
+            physicalHeight = display.height
         }
-        
+
         kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             val codecList = MediaCodecList(MediaCodecList.ALL_CODECS)
             for (info in codecList.codecInfos) {
-                if (info.isEncoder && info.supportedTypes.any { it.equals(MediaFormat.MIMETYPE_VIDEO_HEVC, ignoreCase = true) }) {
+                if (info.isEncoder &&
+                                info.supportedTypes.any {
+                                    it.equals(MediaFormat.MIMETYPE_VIDEO_HEVC, ignoreCase = true)
+                                }
+                ) {
                     isHevcSupported = true
                     break
                 }
@@ -215,18 +219,17 @@ fun ScreenRecorderScreen(onNavigateBack: () -> Unit) {
                             selectedBitrateOption,
                             selectedOrientationOption,
                             selectedAudioOption,
-                            when(selectedCodecOption) {
+                            when (selectedCodecOption) {
                                 codecAvc -> 1
                                 codecHevc -> 2
                                 else -> 0
                             },
-                            when(selectedAudioQualityOption) {
+                            when (selectedAudioQualityOption) {
                                 audioQualityLow -> 64000
                                 audioQualityHigh -> 256000
                                 else -> 128000
                             },
-                            orientationAuto,
-                            orientationPortrait,
+                        orientationPortrait,
                             orientationLandscape,
                             result.resultCode,
                             result.data!!
@@ -241,7 +244,7 @@ fun ScreenRecorderScreen(onNavigateBack: () -> Unit) {
                 }
             }
 
-    val permissionLauncher =
+    val audioPermissionLauncher =
             rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
                     isGranted ->
                 if (isGranted) {
@@ -249,6 +252,33 @@ fun ScreenRecorderScreen(onNavigateBack: () -> Unit) {
                             context.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as
                                     android.media.projection.MediaProjectionManager
                     projectionLauncher.launch(mpManager.createScreenCaptureIntent())
+                } else {
+                    Toast.makeText(
+                                    context,
+                                    R.string.screen_recorder_permission_required,
+                                    Toast.LENGTH_SHORT
+                            )
+                            .show()
+                }
+            }
+
+    val notificationPermissionLauncher =
+            rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+                    isGranted ->
+                if (isGranted) {
+                    if (selectedAudioOption != 0 &&
+                                    ContextCompat.checkSelfPermission(
+                                            context,
+                                            Manifest.permission.RECORD_AUDIO
+                                    ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                    } else {
+                        val mpManager =
+                                context.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as
+                                        android.media.projection.MediaProjectionManager
+                        projectionLauncher.launch(mpManager.createScreenCaptureIntent())
+                    }
                 } else {
                     Toast.makeText(
                                     context,
@@ -291,32 +321,51 @@ fun ScreenRecorderScreen(onNavigateBack: () -> Unit) {
                 FloatingActionButton(
                         onClick = {
                             if (isServiceRunning) {
-                                context.startService(
-                                        Intent(context, ScreenRecorderService::class.java).apply {
-                                            action = ScreenRecorderService.ACTION_STOP
-                                        }
-                                )
-                            } else {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                    if (ContextCompat.checkSelfPermission(
-                                                    context,
-                                                    Manifest.permission.POST_NOTIFICATIONS
-                                            ) != PackageManager.PERMISSION_GRANTED
-                                    ) {
-                                        permissionLauncher.launch(
-                                                Manifest.permission.POST_NOTIFICATIONS
-                                        )
-                                        return@FloatingActionButton
-                                    }
+                                if (recorderState == ScreenRecorderService.RecorderState.RECORDING
+                                ) {
+                                    context.startService(
+                                            Intent(context, ScreenRecorderService::class.java)
+                                                    .apply {
+                                                        action = ScreenRecorderService.ACTION_STOP
+                                                    }
+                                    )
+                                } else {
+                                    context.startService(
+                                            Intent(context, ScreenRecorderService::class.java)
+                                                    .apply {
+                                                        action =
+                                                                ScreenRecorderService
+                                                                        .ACTION_SHUTDOWN
+                                                    }
+                                    )
                                 }
-
-                                val mpManager =
-                                        context.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as
-                                                android.media.projection.MediaProjectionManager
-                                projectionLauncher.launch(mpManager.createScreenCaptureIntent())
+                            } else {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                                                ContextCompat.checkSelfPermission(
+                                                        context,
+                                                        Manifest.permission.POST_NOTIFICATIONS
+                                                ) != PackageManager.PERMISSION_GRANTED
+                                ) {
+                                    notificationPermissionLauncher.launch(
+                                            Manifest.permission.POST_NOTIFICATIONS
+                                    )
+                                } else if (selectedAudioOption != 0 &&
+                                                ContextCompat.checkSelfPermission(
+                                                        context,
+                                                        Manifest.permission.RECORD_AUDIO
+                                                ) != PackageManager.PERMISSION_GRANTED
+                                ) {
+                                    audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                } else {
+                                    val mpManager =
+                                            context.getSystemService(
+                                                    Context.MEDIA_PROJECTION_SERVICE
+                                            ) as
+                                                    android.media.projection.MediaProjectionManager
+                                    projectionLauncher.launch(mpManager.createScreenCaptureIntent())
+                                }
                             }
                         },
-                        modifier = Modifier,
                         containerColor =
                                 if (isServiceRunning) MaterialTheme.colorScheme.error
                                 else MaterialTheme.colorScheme.primary,
@@ -326,7 +375,9 @@ fun ScreenRecorderScreen(onNavigateBack: () -> Unit) {
                         shape = FloatingActionButtonDefaults.shape
                 ) {
                     Icon(
-                            imageVector = if (isServiceRunning) Icons.Default.Stop else Icons.Default.PlayArrow,
+                            imageVector =
+                                    if (isServiceRunning) Icons.Default.Stop
+                                    else Icons.Default.PlayArrow,
                             contentDescription = if (isServiceRunning) "Stop" else "Start",
                             modifier = Modifier.size(24.dp)
                     )
@@ -343,100 +394,100 @@ fun ScreenRecorderScreen(onNavigateBack: () -> Unit) {
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
-
-
             // Video Settings Section
             SettingsSection(
-                title = stringResource(R.string.screen_recorder_video_header),
-                icon = Icons.Outlined.Videocam
+                    title = stringResource(R.string.screen_recorder_video_header),
+                    icon = Icons.Outlined.Videocam
             ) {
                 OptionDropdown(
-                    label = stringResource(R.string.screen_recorder_resolution),
-                    description = stringResource(R.string.screen_recorder_res_desc),
-                    options = resolutionOptions,
-                    selectedOption = selectedResolutionOption,
-                    onOptionSelected = {
-                        selectedResolutionOption = it
-                        prefs.edit().putString("resolution", it).apply()
-                    }
+                        label = stringResource(R.string.screen_recorder_resolution),
+                        description = stringResource(R.string.screen_recorder_res_desc),
+                        options = resolutionOptions,
+                        selectedOption = selectedResolutionOption,
+                        onOptionSelected = {
+                            selectedResolutionOption = it
+                            prefs.edit { putString("resolution", it) }
+                        }
                 )
 
                 OptionDropdown(
-                    label = stringResource(R.string.screen_recorder_fps),
-                    description = stringResource(R.string.screen_recorder_fps_desc),
-                    options = fpsOptions.map { it.toString() },
-                    selectedOption = selectedFpsOption.toString(),
-                    onOptionSelected = {
-                        selectedFpsOption = it.toInt()
-                        prefs.edit().putInt("fps", it.toInt()).apply()
-                    }
+                        label = stringResource(R.string.screen_recorder_fps),
+                        description = stringResource(R.string.screen_recorder_fps_desc),
+                        options = fpsOptions.map { it.toString() },
+                        selectedOption = selectedFpsOption.toString(),
+                        onOptionSelected = {
+                            selectedFpsOption = it.toInt()
+                            prefs.edit().putInt("fps", it.toInt()).apply()
+                        }
                 )
 
                 OptionDropdown(
-                    label = stringResource(R.string.screen_recorder_bitrate),
-                    description = stringResource(R.string.screen_recorder_bitrate_desc),
-                    options = bitrateOptions.map { "$it Mbps" },
-                    selectedOption = "$selectedBitrateOption Mbps",
-                    onOptionSelected = {
-                        val num = it.replace(" Mbps", "").toInt()
-                        selectedBitrateOption = num
-                        prefs.edit().putInt("bitrate", num).apply()
-                    }
+                        label = stringResource(R.string.screen_recorder_bitrate),
+                        description = stringResource(R.string.screen_recorder_bitrate_desc),
+                        options = bitrateOptions.map { "$it Mbps" },
+                        selectedOption = "$selectedBitrateOption Mbps",
+                        onOptionSelected = {
+                            val num = it.replace(" Mbps", "").toInt()
+                            selectedBitrateOption = num
+                            prefs.edit().putInt("bitrate", num).apply()
+                        }
                 )
 
                 OptionDropdown(
-                    label = stringResource(R.string.screen_recorder_orientation),
-                    description = stringResource(R.string.screen_recorder_orientation_desc),
-                    options = orientationOptions,
-                    selectedOption = selectedOrientationOption,
-                    onOptionSelected = {
-                        selectedOrientationOption = it
-                        prefs.edit().putString("orientation", it).apply()
-                    }
+                        label = stringResource(R.string.screen_recorder_orientation),
+                        description = stringResource(R.string.screen_recorder_orientation_desc),
+                        options = orientationOptions,
+                        selectedOption = selectedOrientationOption,
+                        onOptionSelected = {
+                            selectedOrientationOption = it
+                            prefs.edit().putString("orientation", it).apply()
+                        }
                 )
 
                 OptionDropdown(
-                    label = stringResource(R.string.screen_recorder_codec),
-                    description = codecDescriptions[selectedCodecOption] ?: "",
-                    options = codecOptions,
-                    selectedOption = selectedCodecOption,
-                    onOptionSelected = {
-                        selectedCodecOption = it
-                        prefs.edit().putString("codec", it).apply()
-                    }
+                        label = stringResource(R.string.screen_recorder_codec),
+                        description = codecDescriptions[selectedCodecOption] ?: "",
+                        options = codecOptions,
+                        selectedOption = selectedCodecOption,
+                        onOptionSelected = {
+                            selectedCodecOption = it
+                            prefs.edit().putString("codec", it).apply()
+                        }
                 )
             }
 
             // Audio Settings Section
             SettingsSection(
-                title = stringResource(R.string.screen_recorder_audio),
-                icon = Icons.Outlined.Mic
+                    title = stringResource(R.string.screen_recorder_audio),
+                    icon = Icons.Outlined.Mic
             ) {
                 OptionDropdown(
-                    label = stringResource(R.string.screen_recorder_audio),
-                    description = stringResource(R.string.screen_recorder_audio_desc),
-                    options = audioOptions.map { it.second },
-                    selectedOption = audioOptions.find { it.first == selectedAudioOption }?.second
-                        ?: audioOptions.first().second,
-                    onOptionSelected = { selectedName ->
-                        val option = audioOptions.find { it.second == selectedName }
-                        if (option != null) {
-                            selectedAudioOption = option.first
-                            prefs.edit().putInt("audio", option.first).apply()
+                        label = stringResource(R.string.screen_recorder_audio),
+                        description = stringResource(R.string.screen_recorder_audio_desc),
+                        options = audioOptions.map { it.second },
+                        selectedOption =
+                                audioOptions.find { it.first == selectedAudioOption }?.second
+                                        ?: audioOptions.first().second,
+                        onOptionSelected = { selectedName ->
+                            val option = audioOptions.find { it.second == selectedName }
+                            if (option != null) {
+                                selectedAudioOption = option.first
+                                prefs.edit().putInt("audio", option.first).apply()
+                            }
                         }
-                    }
                 )
-                
+
                 if (selectedAudioOption != 0) {
                     OptionDropdown(
-                        label = stringResource(R.string.screen_recorder_audio_quality),
-                        description = audioQualityDescriptions[selectedAudioQualityOption] ?: "",
-                        options = audioQualityOptions,
-                        selectedOption = selectedAudioQualityOption,
-                        onOptionSelected = {
-                            selectedAudioQualityOption = it
-                            prefs.edit().putString("audio_quality", it).apply()
-                        }
+                            label = stringResource(R.string.screen_recorder_audio_quality),
+                            description = audioQualityDescriptions[selectedAudioQualityOption]
+                                            ?: "",
+                            options = audioQualityOptions,
+                            selectedOption = selectedAudioQualityOption,
+                            onOptionSelected = {
+                                selectedAudioQualityOption = it
+                                prefs.edit().putString("audio_quality", it).apply()
+                            }
                     )
                 }
             }
@@ -447,43 +498,43 @@ fun ScreenRecorderScreen(onNavigateBack: () -> Unit) {
 }
 
 @Composable
-fun SettingsSection(
-    title: String,
-    icon: ImageVector,
-    content: @Composable ColumnScope.() -> Unit
-) {
+fun SettingsSection(title: String, icon: ImageVector, content: @Composable ColumnScope.() -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(horizontal = 4.dp)
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(horizontal = 4.dp)
         ) {
             Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.primary
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.primary
             )
             Text(
-                text = title.uppercase(),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                letterSpacing = 1.sp
+                    text = title.uppercase(),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    letterSpacing = 1.sp
             )
         }
 
         Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surface,
-            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.08f)),
-            shadowElevation = 0.dp
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surface,
+                border =
+                        androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.outline.copy(alpha = 0.08f)
+                        ),
+                shadowElevation = 0.dp
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp),
-                content = content
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp),
+                    content = content
             )
         }
     }
@@ -566,7 +617,6 @@ internal fun startRecorderService(
         audioOption: Int,
         codecChoice: Int,
         audioQualityChoice: Int,
-        autoString: String,
         portraitString: String,
         landscapeString: String,
         resultCode: Int,
@@ -579,7 +629,6 @@ internal fun startRecorderService(
                 else -> physicalWidth > physicalHeight
             }
 
-    val base = if (physicalWidth > physicalHeight) physicalHeight else physicalWidth
     val ratio =
             if (physicalWidth > physicalHeight) physicalWidth.toFloat() / physicalHeight.toFloat()
             else physicalHeight.toFloat() / physicalWidth.toFloat()
@@ -613,9 +662,5 @@ internal fun startRecorderService(
                 putExtra(ScreenRecorderService.EXTRA_AUDIO_QUALITY, audioQualityChoice)
             }
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        context.startForegroundService(intent)
-    } else {
-        context.startService(intent)
-    }
+    context.startForegroundService(intent)
 }

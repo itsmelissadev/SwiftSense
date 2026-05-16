@@ -2,7 +2,6 @@ package io.github.itsmelissadev.swiftsense.feature.screenrecorder
 
 import android.Manifest
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.projection.MediaProjectionManager
 import android.os.Build
@@ -69,7 +68,6 @@ class ScreenRecorderPromptActivity : ComponentActivity() {
                 audioOption = audio,
                 codecChoice = codecChoice,
                 audioQualityChoice = audioQualityChoice,
-                autoString = orientationAuto,
                 portraitString = orientationPortrait,
                 landscapeString = orientationLandscape,
                 resultCode = result.resultCode,
@@ -79,11 +77,21 @@ class ScreenRecorderPromptActivity : ComponentActivity() {
         finish()
     }
 
-    private val notificationPermissionLauncher = registerForActivityResult(
+    private val audioPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
             launchProjectionRequest()
+        } else {
+            finish()
+        }
+    }
+
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            checkAudioPermissionAndLaunch()
         } else {
             finish()
         }
@@ -99,6 +107,20 @@ class ScreenRecorderPromptActivity : ComponentActivity() {
             }
         }
 
+        checkAudioPermissionAndLaunch()
+    }
+
+    private fun checkAudioPermissionAndLaunch() {
+        val prefs = getSharedPreferences("ScreenRecorderPrefs", Context.MODE_PRIVATE)
+        val audioOption = prefs.getInt("audio", 0)
+        
+        if (audioOption != 0) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                return
+            }
+        }
+        
         launchProjectionRequest()
     }
 

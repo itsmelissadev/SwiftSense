@@ -1,22 +1,25 @@
 package io.github.itsmelissadev.swiftsense.ui.components
 
 import android.content.pm.PackageManager
-import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import io.github.itsmelissadev.swiftsense.R
-import rikka.shizuku.Shizuku
 import kotlinx.coroutines.delay
+import rikka.shizuku.Shizuku
 
 @Composable
 fun ShizukuStatusWidget() {
@@ -29,7 +32,7 @@ fun ShizukuStatusWidget() {
         isInstalled = try {
             context.packageManager.getPackageInfo("moe.shizuku.privileged.api", 0)
             true
-        } catch (e: PackageManager.NameNotFoundException) {
+        } catch (_: PackageManager.NameNotFoundException) {
             false
         }
         isRunning = Shizuku.pingBinder()

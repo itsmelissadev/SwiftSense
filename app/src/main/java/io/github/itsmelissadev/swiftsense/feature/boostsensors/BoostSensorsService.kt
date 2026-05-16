@@ -27,8 +27,14 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -56,14 +62,16 @@ class BoostSensorsService : Service(), SensorEventListener {
         const val ACTION_STOP = "io.github.itsmelissadev.swiftsense.feature.boostsensors.STOP"
 
         val liveHz = mutableStateMapOf<Int, Int>()
+        
+        private val _isRunning = MutableStateFlow(false)
+        val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
 
-        private var isServiceRunning = false
-        fun isRunning() = isServiceRunning
+        fun isRunning() = _isRunning.value
     }
 
     override fun onCreate() {
         super.onCreate()
-        isServiceRunning = true
+        _isRunning.value = true
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         preferenceManager = PreferenceManager(this)
 
@@ -106,7 +114,10 @@ class BoostSensorsService : Service(), SensorEventListener {
     private fun observeSensorChanges() {
         observationJob?.cancel()
         observationJob = serviceScope.launch {
-            preferenceManager.preferences.map { prefs ->
+            combine(
+                preferenceManager.preferences,
+                preferenceManager.sensorSpeed
+            ) { prefs, speed ->
                 val sensorTypes = listOf(
                     Sensor.TYPE_GYROSCOPE,
                     Sensor.TYPE_ACCELEROMETER,
@@ -116,7 +127,7 @@ class BoostSensorsService : Service(), SensorEventListener {
                     Sensor.TYPE_LINEAR_ACCELERATION
                 )
 
-                sensorTypes.mapNotNull { type ->
+                val activeSensors = sensorTypes.mapNotNull { type ->
                     val sensor = sensorManager.getDefaultSensor(type)
                     if (sensor != null) {
                         val enabled =
@@ -126,15 +137,15 @@ class BoostSensorsService : Service(), SensorEventListener {
                         if (enabled) sensor else null
                     } else null
                 }
-            }.distinctUntilChanged().collect { activeSensors ->
-                updateSensorListeners(activeSensors)
+                activeSensors to speed
+            }.distinctUntilChanged().collect { (activeSensors, speed) ->
+                updateSensorListeners(activeSensors, speed)
                 updateNotification(activeSensors)
             }
         }
-
     }
 
-    private fun updateSensorListeners(activeSensors: List<Sensor>) {
+    private fun updateSensorListeners(activeSensors: List<Sensor>, speed: String) {
         val newSensorTypes = activeSensors.map { it.type }.toSet()
 
         val toUnregister = currentRegisteredSensors.filter { !newSensorTypes.contains(it) }
@@ -146,16 +157,30 @@ class BoostSensorsService : Service(), SensorEventListener {
             currentRegisteredSensors.remove(type)
         }
 
+        val delayUs = when (speed) {
+            "very_slow" -> 60000 // ~16 Hz
+            "slow" -> 20000 // 50 Hz
+            "medium" -> 10000  // 100 Hz
+            "fast" -> 5000   // 200 Hz
+            "max" -> SensorManager.SENSOR_DELAY_FASTEST
+            else -> SensorManager.SENSOR_DELAY_FASTEST
+        }
+
         activeSensors.forEach { sensor ->
-            if (!currentRegisteredSensors.contains(sensor.type)) {
-                sensorManager.registerListener(
-                    this,
-                    sensor,
-                    SensorManager.SENSOR_DELAY_FASTEST,
-                    sensorHandler
-                )
-                currentRegisteredSensors.add(sensor.type)
-            }
+            // If speed changed, we need to re-register anyway, but the easiest way is to 
+            // unregister all and register all when speed changes.
+            // However, currentRegisteredSensors logic only registers new ones.
+            // Let's force re-registering all if the set of active sensors changed or speed changed.
+            // To simplify, since this is called on a dedicated thread, we can unregister all active first.
+            
+            sensorManager.unregisterListener(this, sensor)
+            sensorManager.registerListener(
+                this,
+                sensor,
+                delayUs,
+                sensorHandler
+            )
+            currentRegisteredSensors.add(sensor.type)
         }
     }
 
@@ -202,7 +227,7 @@ class BoostSensorsService : Service(), SensorEventListener {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(getString(R.string.feature_boost_sensors))
             .setContentText(contentText.ifEmpty { getString(R.string.status_running) })
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_bolt_24px)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setContentIntent(mainPI)
             .addAction(
@@ -236,7 +261,7 @@ class BoostSensorsService : Service(), SensorEventListener {
     }
 
     override fun onDestroy() {
-        isServiceRunning = false
+        _isRunning.value = false
         observationJob?.cancel()
         liveHzJob?.cancel()
         sensorManager.unregisterListener(this)
