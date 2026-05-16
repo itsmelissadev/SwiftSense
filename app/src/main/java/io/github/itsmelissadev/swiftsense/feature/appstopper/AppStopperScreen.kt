@@ -223,7 +223,6 @@ fun AppStopperScreen(
                     }
                 }
             } else {
-                // Settings Section
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = MaterialTheme.colorScheme.surface,
@@ -281,7 +280,6 @@ fun AppStopperScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Search & Actions
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
@@ -386,7 +384,6 @@ fun AppStopperScreen(
                     }
                 }
 
-                // Action Button (Sticky at bottom but part of column flow or FAB)
                 Button(
                     onClick = {
                         scope.launch {

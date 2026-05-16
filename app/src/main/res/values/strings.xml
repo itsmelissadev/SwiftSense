@@ -304,4 +304,12 @@
     <string name="audio_quality_desc_low">Smallest file size, basic audio quality. Good for voice.</string>
     <string name="audio_quality_desc_medium">Standard quality. Good balance of clarity and file size.</string>
     <string name="audio_quality_desc_high">High fidelity audio. Ideal for capturing detailed game sounds.</string>
+    <string name="screen_recorder_mbps_unit">%d Mbps</string>
+    <string name="screen_recorder_action_start_desc">Start</string>
+    <string name="screen_recorder_action_stop_desc">Stop</string>
+    <string name="shizuku_not_installed_desc">Please install Shizuku from the Play Store.</string>
+    <string name="shizuku_not_running_desc">Shizuku is installed but not running.</string>
+    <string name="shizuku_not_authorized_desc">SwiftSense has not been granted Shizuku authorization.</string>
+    <string name="shizuku_authorized_desc">Shizuku service is active and ready to use.</string>
+    <string name="macros_clipboard_label">Macros JSON</string>
 </resources>

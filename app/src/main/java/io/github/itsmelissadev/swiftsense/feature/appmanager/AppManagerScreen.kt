@@ -58,6 +58,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -115,7 +116,7 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
     var isProcessing by remember { mutableStateOf(false) }
     var currentProcessingApp by remember { mutableStateOf("") }
     var processingAction by remember { mutableStateOf("") }
-    var processingProgress by remember { mutableStateOf(0f) }
+    var processingProgress by remember { mutableFloatStateOf(0f) }
 
     val isShizukuReady = remember { mutableStateOf(false) }
 

@@ -49,25 +49,25 @@ fun ShizukuStatusWidget() {
     val (statusTitle, statusDesc, statusIcon, statusColor) = when {
         !isInstalled -> Quadruple(
             stringResource(R.string.shizuku_not_installed),
-            "Lütfen Play Store'dan Shizuku uygulamasını yükleyin.",
+            stringResource(R.string.shizuku_not_installed_desc),
             Icons.Default.Error,
             MaterialTheme.colorScheme.error
         )
         !isRunning -> Quadruple(
             stringResource(R.string.shizuku_not_running),
-            "Shizuku uygulaması yüklü ancak çalışmıyor.",
+            stringResource(R.string.shizuku_not_running_desc),
             Icons.Default.Warning,
             MaterialTheme.colorScheme.error
         )
         !isAuthorized -> Quadruple(
             stringResource(R.string.shizuku_not_authorized),
-            "SwiftSense için Shizuku yetkisi verilmedi.",
+            stringResource(R.string.shizuku_not_authorized_desc),
             Icons.Default.Refresh,
             MaterialTheme.colorScheme.tertiary
         )
         else -> Quadruple(
             stringResource(R.string.shizuku_authorized),
-            "Shizuku servisi aktif ve kullanıma hazır.",
+            stringResource(R.string.shizuku_authorized_desc),
             Icons.Default.CheckCircle,
             MaterialTheme.colorScheme.primary
         )

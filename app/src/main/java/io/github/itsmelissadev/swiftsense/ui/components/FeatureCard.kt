@@ -1,7 +1,6 @@
 package io.github.itsmelissadev.swiftsense.ui.components
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -47,7 +46,7 @@ fun FeatureCard(
             }
         },
         enabled = (onClick != null || onCheckedChange != null) && enabled,
-        shape = RoundedCornerShape(8.dp), // Shadcn-style sharper corners
+        shape = RoundedCornerShape(8.dp),
         color = containerColor ?: MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)),
         modifier = Modifier.fillMaxWidth()

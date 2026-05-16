@@ -46,7 +46,7 @@ import io.github.itsmelissadev.swiftsense.ui.components.FeatureCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun mainScreen(
+fun MainScreen(
     onNavigateToBoostSensors: () -> Unit,
     onNavigateToAppManager: () -> Unit,
     onNavigateToScreenResolution: () -> Unit,
@@ -107,7 +107,7 @@ fun mainScreen(
             verticalArrangement = Arrangement.spacedBy(28.dp)
         ) {
             item {
-                categorySection(
+                CategorySection(
                     title = stringResource(R.string.category_performance),
                     icon = Icons.Default.Bolt
                 ) {
@@ -134,9 +134,8 @@ fun mainScreen(
                 }
             }
 
-            // Tools Section
             item {
-                categorySection(
+                CategorySection(
                     title = stringResource(R.string.category_tools),
                     icon = Icons.Default.Build
                 ) {
@@ -183,7 +182,7 @@ fun mainScreen(
 }
 
 @Composable
-fun categorySection(
+fun CategorySection(
     title: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     content: @Composable () -> Unit

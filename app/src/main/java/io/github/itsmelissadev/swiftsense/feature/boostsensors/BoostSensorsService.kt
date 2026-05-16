@@ -30,12 +30,9 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class BoostSensorsService : Service(), SensorEventListener {
@@ -62,7 +59,7 @@ class BoostSensorsService : Service(), SensorEventListener {
         const val ACTION_STOP = "io.github.itsmelissadev.swiftsense.feature.boostsensors.STOP"
 
         val liveHz = mutableStateMapOf<Int, Int>()
-        
+
         private val _isRunning = MutableStateFlow(false)
         val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
 
@@ -158,21 +155,15 @@ class BoostSensorsService : Service(), SensorEventListener {
         }
 
         val delayUs = when (speed) {
-            "very_slow" -> 60000 // ~16 Hz
-            "slow" -> 20000 // 50 Hz
-            "medium" -> 10000  // 100 Hz
-            "fast" -> 5000   // 200 Hz
+            "very_slow" -> 60000
+            "slow" -> 20000
+            "medium" -> 10000
+            "fast" -> 5000
             "max" -> SensorManager.SENSOR_DELAY_FASTEST
             else -> SensorManager.SENSOR_DELAY_FASTEST
         }
 
         activeSensors.forEach { sensor ->
-            // If speed changed, we need to re-register anyway, but the easiest way is to 
-            // unregister all and register all when speed changes.
-            // However, currentRegisteredSensors logic only registers new ones.
-            // Let's force re-registering all if the set of active sensors changed or speed changed.
-            // To simplify, since this is called on a dedicated thread, we can unregister all active first.
-            
             sensorManager.unregisterListener(this, sensor)
             sensorManager.registerListener(
                 this,

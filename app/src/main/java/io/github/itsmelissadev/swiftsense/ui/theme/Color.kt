@@ -2,7 +2,6 @@ package io.github.itsmelissadev.swiftsense.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Shadcn UI Style Colors - Light (Zinc)
 val LightBackground = Color(0xFFFFFFFF)
 val LightForeground = Color(0xFF09090b)
 val LightCard = Color(0xFFF9FAFB)
@@ -19,7 +18,6 @@ val LightBorder = Color(0xFFe4e4e7)
 val LightInput = Color(0xFFe4e4e7)
 val LightRing = Color(0xFF18181b)
 
-// Shadcn UI Style Colors - Dark (Zinc)
 val DarkBackground = Color(0xFF09090b)
 val DarkForeground = Color(0xFFfafafa)
 val DarkCard = Color(0xFF0F1117)
@@ -36,7 +34,6 @@ val DarkBorder = Color(0xFF27272a)
 val DarkInput = Color(0xFF27272a)
 val DarkRing = Color(0xFFd4d4d8)
 
-// Extra Semantic Colors
 val Error = Color(0xFFef4444)
 val Success = Color(0xFF22c55e)
 val Warning = Color(0xFFf59e0b)

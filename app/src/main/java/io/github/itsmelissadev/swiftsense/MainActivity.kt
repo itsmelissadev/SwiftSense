@@ -34,7 +34,7 @@ import io.github.itsmelissadev.swiftsense.feature.systemtables.SystemTableMacroS
 import io.github.itsmelissadev.swiftsense.ui.screens.OnboardingScreen
 import io.github.itsmelissadev.swiftsense.ui.screens.PermissionScreen
 import io.github.itsmelissadev.swiftsense.ui.screens.SettingsScreen
-import io.github.itsmelissadev.swiftsense.ui.screens.mainScreen
+import io.github.itsmelissadev.swiftsense.ui.screens.MainScreen
 import io.github.itsmelissadev.swiftsense.ui.theme.SwiftSenseTheme
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -45,19 +45,21 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
-        
+
         preferenceManager = PreferenceManager(this)
         enableEdgeToEdge()
-        
+
         setContent {
-            val isOnboardingCompleted by preferenceManager.isOnboardingCompleted.collectAsState(initial = null)
+            val isOnboardingCompleted by preferenceManager.isOnboardingCompleted.collectAsState(
+                initial = null
+            )
             val themeMode by preferenceManager.themeMode.collectAsState(initial = "system")
             val language by preferenceManager.language.collectAsState(initial = "system")
-            
+
             val scope = rememberCoroutineScope()
             val navController = rememberNavController()
             val context = LocalContext.current
-            
+
             val configuration = LocalConfiguration.current
             val localizedConfiguration = remember(language, configuration) {
                 val config = Configuration(configuration)
@@ -87,8 +89,11 @@ class MainActivity : ComponentActivity() {
                                 else -> "main"
                             }
                         }
-                        
-                        NavHost(navController = navController, startDestination = startDestination) {
+
+                        NavHost(
+                            navController = navController,
+                            startDestination = startDestination
+                        ) {
                             composable("onboarding") {
                                 OnboardingScreen(onFinished = {
                                     scope.launch {
@@ -113,7 +118,7 @@ class MainActivity : ComponentActivity() {
                                 })
                             }
                             composable("main") {
-                                mainScreen(
+                                MainScreen(
                                     onNavigateToBoostSensors = { navController.navigate("boost_sensors") },
                                     onNavigateToAppManager = { navController.navigate("app_manager") },
                                     onNavigateToScreenResolution = { navController.navigate("screen_resolution") },
@@ -147,7 +152,8 @@ class MainActivity : ComponentActivity() {
                                 AmoledScreenProtectScreen(onNavigateBack = { navController.popBackStack() })
                             }
                             composable("screen_recorder") {
-                                io.github.itsmelissadev.swiftsense.feature.screenrecorder.ScreenRecorderScreen(onNavigateBack = { navController.popBackStack() })
+                                io.github.itsmelissadev.swiftsense.feature.screenrecorder.ScreenRecorderScreen(
+                                    onNavigateBack = { navController.popBackStack() })
                             }
                             composable("settings") {
                                 SettingsScreen(
@@ -164,15 +170,18 @@ class MainActivity : ComponentActivity() {
 
     private fun checkAllPermissions(context: Context): Boolean {
         val notificationGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
         } else true
-        
+
         val batteryIgnored = isBatteryOptimizationDisabled(context)
         return notificationGranted && batteryIgnored
     }
 
     private fun isBatteryOptimizationDisabled(context: Context): Boolean {
-        val powerManager = context.getSystemService(POWER_SERVICE) as PowerManager
-        return powerManager.isIgnoringBatteryOptimizations(context.packageName)
+        val powerManager = context.getSystemService(PowerManager::class.java)
+        return powerManager?.isIgnoringBatteryOptimizations(context.packageName) ?: true
     }
 }

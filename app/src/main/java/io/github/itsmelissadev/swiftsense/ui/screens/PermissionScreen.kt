@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
@@ -13,7 +12,18 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -21,8 +31,20 @@ import androidx.compose.material.icons.filled.BatteryFull
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -42,7 +64,10 @@ fun PermissionScreen(onAllPermissionsGranted: () -> Unit) {
     var isNotificationGranted by remember {
         mutableStateOf(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS,
+                ) == PackageManager.PERMISSION_GRANTED
             } else {
                 true
             }
@@ -142,12 +167,11 @@ fun PermissionScreen(onAllPermissionsGranted: () -> Unit) {
                     description = stringResource(R.string.notification_permission_desc),
                     icon = Icons.Default.Notifications,
                     isGranted = isNotificationGranted,
-                    onAllow = {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        }
+                ) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                     }
-                )
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -156,14 +180,13 @@ fun PermissionScreen(onAllPermissionsGranted: () -> Unit) {
                     description = stringResource(R.string.battery_permission_desc),
                     icon = Icons.Default.BatteryFull,
                     isGranted = isBatteryOptimizedOut,
-                    onAllow = {
-                        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                            data = Uri.parse("package:${context.packageName}")
+                ) {
+                    val intent =
+                        Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).apply {
                             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         }
-                        context.startActivity(intent)
-                    }
-                )
+                    context.startActivity(intent)
+                }
 
                 Spacer(modifier = Modifier.height(24.dp))
             }
@@ -179,8 +202,8 @@ fun PermissionScreen(onAllPermissionsGranted: () -> Unit) {
 }
 
 private fun isBatteryOptimizationDisabled(context: Context): Boolean {
-    val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-    return powerManager.isIgnoringBatteryOptimizations(context.packageName)
+    val powerManager = context.getSystemService(PowerManager::class.java)
+    return powerManager?.isIgnoringBatteryOptimizations(context.packageName) ?: true
 }
 
 @Composable
@@ -189,7 +212,6 @@ fun PermissionItem(
     description: String,
     icon: ImageVector,
     isGranted: Boolean,
-    optional: Boolean = false,
     onAllow: () -> Unit
 ) {
     val containerColor by animateColorAsState(
@@ -220,7 +242,10 @@ fun PermissionItem(
                         color = if (isGranted) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.surfaceVariant
                     ) {
-                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
                             Icon(
                                 icon,
                                 contentDescription = null,
@@ -254,7 +279,10 @@ fun PermissionItem(
                         shape = MaterialTheme.shapes.medium,
                         contentPadding = PaddingValues(horizontal = 16.dp)
                     ) {
-                        Text(stringResource(R.string.allow), style = MaterialTheme.typography.labelLarge)
+                        Text(
+                            stringResource(R.string.allow),
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
                 }
             }

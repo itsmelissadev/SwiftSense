@@ -304,4 +304,12 @@
     <string name="audio_quality_desc_low">En düşük dosya boyutu, temel ses kalitesi. Sadece ses (voice) için uygun.</string>
     <string name="audio_quality_desc_medium">Standart kalite. Netlik ve dosya boyutu arasında iyi bir denge kurar.</string>
     <string name="audio_quality_desc_high">Yüksek ses kalitesi. Oyun içi detaylı sesleri (ayak sesleri vb.) yakalamak için ideal.</string>
+    <string name="screen_recorder_mbps_unit">%d Mbps</string>
+    <string name="screen_recorder_action_start_desc">Başlat</string>
+    <string name="screen_recorder_action_stop_desc">Durdur</string>
+    <string name="shizuku_not_installed_desc">Lütfen Play Store\'dan Shizuku uygulamasını yükleyin.</string>
+    <string name="shizuku_not_running_desc">Shizuku uygulaması yüklü ancak çalışmıyor.</string>
+    <string name="shizuku_not_authorized_desc">SwiftSense için Shizuku yetkisi verilmedi.</string>
+    <string name="shizuku_authorized_desc">Shizuku servisi aktif ve kullanıma hazır.</string>
+    <string name="macros_clipboard_label">Makro JSON Kodları</string>
 </resources>

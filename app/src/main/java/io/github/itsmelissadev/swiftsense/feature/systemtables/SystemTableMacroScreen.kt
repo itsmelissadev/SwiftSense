@@ -42,6 +42,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,17 +50,15 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -74,6 +73,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.itsmelissadev.swiftsense.R
 import io.github.itsmelissadev.swiftsense.data.PreferenceManager
 import io.github.itsmelissadev.swiftsense.service.shizuku.ShizukuShellRunner
@@ -141,7 +141,6 @@ data class SystemMacro(
                     settingsList.add(MacroSetting.fromJsonObject(settingsArray.getJSONObject(i)))
                 }
             } else {
-                // Migration for old single setting macros
                 settingsList.add(
                     MacroSetting(
                         SystemTable.valueOf(obj.getString("table")),
@@ -162,32 +161,30 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val preferenceManager = remember { PreferenceManager(context) }
-    
+
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf(stringResource(R.string.macros), stringResource(R.string.tab_viewer))
-    
+
     var selectedTable by remember { mutableStateOf(SystemTable.SYSTEM) }
     var searchQuery by remember { mutableStateOf("") }
 
-    // Editor State
     var showEditor by remember { mutableStateOf(false) }
     var macroToEdit by remember { mutableStateOf<SystemMacro?>(null) }
     var originalMacroJson by remember { mutableStateOf<String?>(null) }
 
-    // UI states
     var showImportDialog by remember { mutableStateOf(false) }
     var showExportDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
-    
+
     var editingSetting by remember { mutableStateOf<Pair<String, String>?>(null) }
-    
-    val macrosJson by preferenceManager.systemMacros.collectAsState(initial = emptySet())
+
+    val macrosJson by preferenceManager.systemMacros.collectAsStateWithLifecycle(initialValue = emptySet())
     val macros = remember(macrosJson) { macrosJson.map { SystemMacro.fromJson(it) } }
 
     var tableData by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
 
-    val refreshTable = {
+    val refreshTable: () -> Unit = {
         isLoading = true
         scope.launch(Dispatchers.IO) {
             val result = ShizukuShellRunner.runCommand("settings list ${selectedTable.key}")
@@ -195,7 +192,7 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                 val output = result.getOrNull() ?: ""
                 tableData = output.lines()
                     .filter { it.contains("=") }
-                    .map { 
+                    .map {
                         val parts = it.split("=", limit = 2)
                         parts[0] to parts[1]
                     }
@@ -211,9 +208,9 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
     AnimatedContent(targetState = showEditor, label = "ScreenTransition") { isEditing ->
         if (isEditing) {
             BackHandler {
-                showEditor = false
                 macroToEdit = null
                 originalMacroJson = null
+                showEditor = false
             }
             MacroEditorPage(
                 macro = macroToEdit,
@@ -232,9 +229,9 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                         } else {
                             preferenceManager.addSystemMacro(newMacro.toJson())
                         }
-                        showEditor = false
                         macroToEdit = null
                         originalMacroJson = null
+                        showEditor = false
                     }
                 }
             )
@@ -319,21 +316,19 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                 }
                             }
                         )
-                        TabRow(
+                        SecondaryTabRow(
                             selectedTabIndex = selectedTabIndex,
                             containerColor = MaterialTheme.colorScheme.background,
                             contentColor = MaterialTheme.colorScheme.primary,
-                            indicator = { tabPositions ->
-                                if (selectedTabIndex < tabPositions.size) {
-                                    TabRowDefaults.SecondaryIndicator(
-                                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
-                                        color = MaterialTheme.colorScheme.primary,
-                                        height = 2.dp
-                                    )
-                                }
+                            indicator = {
+                                TabRowDefaults.SecondaryIndicator(
+                                    modifier = Modifier.tabIndicatorOffset(selectedTabIndex),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    height = 2.dp
+                                )
                             },
                             divider = {
-                                androidx.compose.material3.HorizontalDivider(
+                                HorizontalDivider(
                                     color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
                                 )
                             }
@@ -372,7 +367,7 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                     Spacer(modifier = Modifier.height(12.dp))
 
                     when (selectedTabIndex) {
-                        0 -> { // Macros Tab
+                        0 -> {
                             if (macros.isEmpty()) {
                                 Box(
                                     modifier = Modifier.fillMaxSize(),
@@ -447,7 +442,7 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                             }
                         }
 
-                        1 -> { // Table Viewer Tab
+                        1 -> {
                             Column(modifier = Modifier.fillMaxSize()) {
                                 var expanded by remember { mutableStateOf(false) }
                                 ExposedDropdownMenuBox(
@@ -657,7 +652,7 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                 for (i in 0 until array.length()) {
                                     val macroObj = array.getJSONObject(i)
                                     val macroString = macroObj.toString()
-                                    SystemMacro.fromJson(macroString) // Validate
+                                    SystemMacro.fromJson(macroString)
                                     preferenceManager.addSystemMacro(macroString)
                                 }
                                 showImportDialog = false
@@ -667,11 +662,11 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
-                        } catch (e: Exception) {
+                        } catch (_: Exception) {
                             try {
                                 val obj = JSONObject(jsonInput)
                                 val macroString = obj.toString()
-                                SystemMacro.fromJson(macroString) // Validate
+                                SystemMacro.fromJson(macroString)
                                 scope.launch {
                                     preferenceManager.addSystemMacro(macroString)
                                     showImportDialog = false
@@ -681,7 +676,7 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }
-                            } catch (e2: Exception) {
+                            } catch (_: Exception) {
                                 Toast.makeText(
                                     context,
                                     R.string.toast_import_invalid,
@@ -702,13 +697,14 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
         )
     }
 
+    val macros_clipboard_label = stringResource(R.string.macros_clipboard_label)
     if (showExportDialog) {
         val allMacrosJson = remember(macrosJson) {
             val jsonArray = JSONArray()
             macrosJson.forEach { jsonStr ->
                 try {
                     jsonArray.put(JSONObject(jsonStr))
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                 }
             }
             jsonArray.toString(4)
@@ -737,7 +733,7 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                     onClick = {
                         val clipboard =
                             context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        val clip = ClipData.newPlainText("Macros JSON", allMacrosJson)
+                        val clip = ClipData.newPlainText(macros_clipboard_label, allMacrosJson)
                         clipboard.setPrimaryClip(clip)
                         Toast.makeText(context, R.string.toast_copied, Toast.LENGTH_SHORT).show()
                         showExportDialog = false
@@ -914,7 +910,10 @@ fun MacroItem(
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 Button(
                     onClick = onApply,
                     modifier = Modifier
@@ -965,7 +964,7 @@ fun MacroEditorPage(
     var name by remember { mutableStateOf(macro?.name ?: "") }
     val settings =
         remember { mutableStateListOf<MacroSetting>().apply { macro?.let { addAll(it.settings) } } }
-    
+
     var currentTable by remember { mutableStateOf(SystemTable.SYSTEM) }
     var currentKey by remember { mutableStateOf("") }
     var currentDefaultValue by remember { mutableStateOf("") }
@@ -1119,7 +1118,7 @@ fun MacroEditorPage(
                                 letterSpacing = 1.sp
                             )
                         )
-                        
+
                         var expanded by remember { mutableStateOf(false) }
                         ExposedDropdownMenuBox(
                             expanded = expanded,
@@ -1235,11 +1234,18 @@ fun MacroEditorPage(
                             ),
                             textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
                         )
-                        
+
                         Button(
                             onClick = {
                                 if (currentKey.isNotBlank()) {
-                                    settings.add(MacroSetting(currentTable, currentKey, currentDefaultValue, currentTargetValue))
+                                    settings.add(
+                                        MacroSetting(
+                                            currentTable,
+                                            currentKey,
+                                            currentDefaultValue,
+                                            currentTargetValue
+                                        )
+                                    )
                                     currentKey = ""
                                     currentDefaultValue = ""
                                     currentTargetValue = ""
