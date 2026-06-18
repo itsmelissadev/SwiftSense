@@ -49,6 +49,9 @@ class PreferenceManager(private val context: Context) {
         val GYRO_SIM_AREA_HEIGHT = intPreferencesKey("gyro_sim_area_height")
         val GYRO_SIM_LOCKED = booleanPreferencesKey("gyro_sim_locked")
         val SENSOR_SPEED = stringPreferencesKey("sensor_speed")
+        val AUTO_APPLY_MACRO_JSON = stringPreferencesKey("auto_apply_macro_json")
+        val AUTO_APPLY_MACRO_INTERVAL = intPreferencesKey("auto_apply_macro_interval")
+        val IS_MACRO_SERVICE_RUNNING = booleanPreferencesKey("is_macro_service_running")
     }
 
     val preferences: Flow<Preferences> = context.dataStore.data
@@ -253,5 +256,28 @@ class PreferenceManager(private val context: Context) {
     val sensorSpeed: Flow<String> = preferences.map { it[SENSOR_SPEED] ?: "max" }
     suspend fun setSensorSpeed(speed: String) {
         context.dataStore.edit { it[SENSOR_SPEED] = speed }
+    }
+
+    val autoApplyMacroJson: Flow<String?> = preferences.map { it[AUTO_APPLY_MACRO_JSON] }
+    suspend fun setAutoApplyMacroJson(json: String?) {
+        context.dataStore.edit { prefs ->
+            if (json == null) {
+                prefs.remove(AUTO_APPLY_MACRO_JSON)
+            } else {
+                prefs[AUTO_APPLY_MACRO_JSON] = json
+            }
+        }
+    }
+
+    val autoApplyMacroInterval: Flow<Int> = preferences.map { it[AUTO_APPLY_MACRO_INTERVAL] ?: 30 }
+    suspend fun setAutoApplyMacroInterval(seconds: Int) {
+        context.dataStore.edit { it[AUTO_APPLY_MACRO_INTERVAL] = seconds }
+    }
+
+    val isMacroServiceRunning: Flow<Boolean> =
+        preferences.map { it[IS_MACRO_SERVICE_RUNNING] ?: false }
+
+    suspend fun setMacroServiceRunning(running: Boolean) {
+        context.dataStore.edit { it[IS_MACRO_SERVICE_RUNNING] = running }
     }
 }

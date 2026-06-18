@@ -31,18 +31,15 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import io.github.itsmelissadev.swiftsense.R
 import io.github.itsmelissadev.swiftsense.ui.components.FeatureCard
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseSectionHeader
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,17 +56,8 @@ fun MainScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            stringResource(R.string.app_name),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = (-0.5).sp
-                        )
-                    }
-                },
+            SwiftSenseTopAppBar(
+                title = stringResource(R.string.app_name),
                 actions = {
                     IconButton(
                         onClick = onNavigateToSettings,
@@ -91,11 +79,7 @@ fun MainScreen(
                             )
                         }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.background
-                )
+                }
             )
         }
     ) { innerPadding ->
@@ -207,13 +191,7 @@ fun CategorySection(
                 }
             }
             Spacer(modifier = Modifier.width(10.dp))
-            Text(
-                text = title.uppercase(),
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                letterSpacing = 1.5.sp
-            )
+            SwiftSenseSectionHeader(title = title)
         }
         content()
     }

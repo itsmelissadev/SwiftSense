@@ -23,28 +23,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -64,12 +54,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
 import io.github.itsmelissadev.swiftsense.R
 import io.github.itsmelissadev.swiftsense.data.PreferenceManager
 import io.github.itsmelissadev.swiftsense.service.shizuku.ShizukuShellRunner
 import io.github.itsmelissadev.swiftsense.ui.components.ShizukuStatusWidget
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseButton
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseSection
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseSelectionDialog
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTextField
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTopAppBar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -101,6 +95,7 @@ fun AppStopperScreen(
     var lastProcessedApp by remember { mutableStateOf("") }
 
     var stopMode by remember { mutableStateOf(StopMode.SIMPLE) }
+    var showModeDialog by remember { mutableStateOf(false) }
     var apps by remember { mutableStateOf<List<AppInfo>>(emptyList()) }
     val selectedPackages by preferenceManager.stopperApps.collectAsState(initial = emptySet())
     var isLoadingApps by remember { mutableStateOf(true) }
@@ -135,28 +130,9 @@ fun AppStopperScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        stringResource(R.string.feature_app_stopper).uppercase(),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 1.5.sp
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.background
-                )
+            SwiftSenseTopAppBar(
+                title = stringResource(R.string.feature_app_stopper),
+                onNavigateBack = onNavigateBack
             )
         }
     ) { innerPadding ->
@@ -210,99 +186,43 @@ fun AppStopperScreen(
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(24.dp))
-                        Button(
-                            onClick = { isComplete = false },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                        ) {
-                            Text(
-                                stringResource(R.string.granted),
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                        SwiftSenseButton(
+                            text = stringResource(R.string.granted),
+                            onClick = { isComplete = false }
+                        )
                     }
                 }
             } else {
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    border = BorderStroke(
-                        1.dp,
-                        MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            stringResource(R.string.stop_mode).uppercase(),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 1.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        SingleChoiceSegmentedButtonRow(
+                SwiftSenseSection(title = stringResource(R.string.stop_mode)) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        SwiftSenseTextField(
+                            value = stringResource(
+                                when (stopMode) {
+                                    StopMode.SIMPLE -> R.string.mode_simple
+                                    StopMode.FORCE -> R.string.mode_force
+                                }
+                            ),
+                            onValueChange = {},
+                            readOnly = true,
+                            label = stringResource(R.string.stop_mode),
+                            trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
                             modifier = Modifier.fillMaxWidth()
-                        ) {
-                            SegmentedButton(
-                                selected = stopMode == StopMode.SIMPLE,
-                                onClick = { stopMode = StopMode.SIMPLE },
-                                shape = SegmentedButtonDefaults.itemShape(
-                                    index = 0,
-                                    count = 2,
-                                    baseShape = RoundedCornerShape(8.dp)
-                                )
-                            ) {
-                                Text(
-                                    stringResource(R.string.mode_simple),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                            SegmentedButton(
-                                selected = stopMode == StopMode.FORCE,
-                                onClick = { stopMode = StopMode.FORCE },
-                                shape = SegmentedButtonDefaults.itemShape(
-                                    index = 1,
-                                    count = 2,
-                                    baseShape = RoundedCornerShape(8.dp)
-                                )
-                            ) {
-                                Text(
-                                    stringResource(R.string.mode_force),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
+                        )
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clickable { showModeDialog = true }
+                        )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                OutlinedTextField(
+                SwiftSenseTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = {
-                        Text(
-                            stringResource(R.string.search_apps),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            Icons.Default.Search,
-                            null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(8.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
-                        focusedBorderColor = MaterialTheme.colorScheme.primary
-                    )
+                    label = stringResource(R.string.search_apps),
+                    leadingIcon = Icons.Default.Search
                 )
 
                 Row(
@@ -310,7 +230,10 @@ fun AppStopperScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         TextButton(
                             onClick = {
                                 scope.launch {
@@ -318,41 +241,38 @@ fun AppStopperScreen(
                                         .toSet())
                                 }
                             },
-                            contentPadding = PaddingValues(horizontal = 8.dp)
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
                         ) {
                             Text(
                                 stringResource(R.string.select_all),
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
-                        Text(
-                            "|",
-                            modifier = Modifier.padding(horizontal = 4.dp).alpha(0.2f),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
                         TextButton(
                             onClick = { scope.launch { preferenceManager.setStopperApps(emptySet()) } },
-                            contentPadding = PaddingValues(horizontal = 8.dp)
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
                         ) {
                             Text(
                                 stringResource(R.string.deselect_all),
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
 
                     Surface(
-                        color = MaterialTheme.colorScheme.secondary,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         shape = RoundedCornerShape(4.dp),
                     ) {
                         Text(
                             stringResource(R.string.selected_count, selectedPackages.size),
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSecondary
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -384,7 +304,8 @@ fun AppStopperScreen(
                     }
                 }
 
-                Button(
+                SwiftSenseButton(
+                    text = stringResource(R.string.stop_now),
                     onClick = {
                         scope.launch {
                             isRunning = true
@@ -403,27 +324,25 @@ fun AppStopperScreen(
                             isComplete = true
                         }
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp)
-                        .height(52.dp),
                     enabled = selectedPackages.isNotEmpty() && isShizukuReady && !isRunning,
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        disabledContainerColor = MaterialTheme.colorScheme.secondary
-                    )
-                ) {
-                    Icon(Icons.Default.DoneAll, null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        stringResource(R.string.stop_now).uppercase(),
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 1.sp
-                    )
-                }
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                    icon = Icons.Default.DoneAll
+                )
             }
         }
+    }
+
+    if (showModeDialog) {
+        SwiftSenseSelectionDialog(
+            title = stringResource(R.string.stop_mode),
+            options = listOf(
+                StopMode.SIMPLE to stringResource(R.string.mode_simple),
+                StopMode.FORCE to stringResource(R.string.mode_force)
+            ),
+            selected = stopMode,
+            onSelectedChange = { stopMode = it },
+            onDismissRequest = { showModeDialog = false }
+        )
     }
 }
 
@@ -433,16 +352,16 @@ fun AppItem(app: AppInfo, isSelected: Boolean, onToggle: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onToggle() },
-        color = if (isSelected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(8.dp),
+        color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.06f) else MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(6.dp),
         border = BorderStroke(
             1.dp,
-            if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-            else MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+            if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+            else MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
         )
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(contentAlignment = Alignment.Center) {
@@ -473,17 +392,15 @@ fun AppItem(app: AppInfo, isSelected: Boolean, onToggle: () -> Unit) {
                 Text(
                     app.label,
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    color = if (isSelected) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     app.packageName,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = (if (isSelected) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurfaceVariant).copy(
-                        alpha = 0.7f
-                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )

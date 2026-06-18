@@ -13,21 +13,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.DoneAll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -42,10 +36,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import io.github.itsmelissadev.swiftsense.R
 import io.github.itsmelissadev.swiftsense.service.shizuku.ShizukuShellRunner
 import io.github.itsmelissadev.swiftsense.ui.components.ShizukuStatusWidget
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseButton
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTopAppBar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -87,28 +82,9 @@ fun CacheCleanerScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        stringResource(R.string.feature_cache_cleaner).uppercase(),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 1.5.sp
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.background
-                )
+            SwiftSenseTopAppBar(
+                title = stringResource(R.string.feature_cache_cleaner),
+                onNavigateBack = onNavigateBack
             )
         }
     ) { innerPadding ->
@@ -176,17 +152,11 @@ fun CacheCleanerScreen(
                         }
 
                         Spacer(modifier = Modifier.height(32.dp))
-                        Button(
+                        SwiftSenseButton(
+                            text = stringResource(R.string.granted),
                             onClick = { isComplete = false },
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.height(48.dp).width(160.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                        ) {
-                            Text(
-                                stringResource(R.string.granted),
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                            modifier = Modifier.width(160.dp)
+                        )
                     }
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -221,27 +191,13 @@ fun CacheCleanerScreen(
             }
 
             if (!isRunning && !isComplete) {
-                Button(
+                SwiftSenseButton(
+                    text = stringResource(R.string.clean_now),
                     onClick = { startCleaning() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 24.dp)
-                        .height(52.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
                     enabled = isShizukuReady,
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        disabledContainerColor = MaterialTheme.colorScheme.secondary
-                    )
-                ) {
-                    Icon(Icons.Default.CleaningServices, null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        stringResource(R.string.clean_now).uppercase(),
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 1.sp
-                    )
-                }
+                    icon = Icons.Default.CleaningServices
+                )
             } else {
                 Spacer(modifier = Modifier.height(100.dp))
             }

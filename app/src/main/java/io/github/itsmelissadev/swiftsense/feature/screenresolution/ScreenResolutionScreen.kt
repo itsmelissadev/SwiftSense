@@ -6,7 +6,6 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,26 +19,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -58,14 +49,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import io.github.itsmelissadev.swiftsense.R
 import io.github.itsmelissadev.swiftsense.data.PreferenceManager
 import io.github.itsmelissadev.swiftsense.service.shizuku.ShizukuShellRunner
+import io.github.itsmelissadev.swiftsense.ui.components.FeatureCard
 import io.github.itsmelissadev.swiftsense.ui.components.ShadcnDialog
 import io.github.itsmelissadev.swiftsense.ui.components.ShadcnDialogButton
 import io.github.itsmelissadev.swiftsense.ui.components.ShizukuStatusWidget
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseButton
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseOutlinedButton
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseSection
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTextField
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTopAppBar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -171,22 +167,10 @@ fun ScreenResolutionScreen(
             onDismissRequest = { showSavePlanDialog = false },
             title = stringResource(R.string.save_plan),
             content = {
-                OutlinedTextField(
+                SwiftSenseTextField(
                     value = planNameInput,
                     onValueChange = { planNameInput = it },
-                    label = {
-                        Text(
-                            stringResource(R.string.plan_name),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
-                    )
+                    label = stringResource(R.string.plan_name)
                 )
             },
             confirmButton = {
@@ -242,9 +226,11 @@ fun ScreenResolutionScreen(
                     text = stringResource(R.string.action_revert),
                     isPrimary = false,
                     onClick = {
-                        resetResolution()
-                        showConfirmationDialog = false
-                        refreshDisplayInfo()
+                        scope.launch {
+                            resetResolution()
+                            showConfirmationDialog = false
+                            refreshDisplayInfo()
+                        }
                     }
                 )
             }
@@ -253,33 +239,14 @@ fun ScreenResolutionScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        stringResource(R.string.feature_screen_resolution).uppercase(),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 1.5.sp
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                },
+            SwiftSenseTopAppBar(
+                title = stringResource(R.string.feature_screen_resolution),
+                onNavigateBack = onNavigateBack,
                 actions = {
                     IconButton(onClick = { refreshDisplayInfo() }) {
                         Icon(Icons.Default.Refresh, null, modifier = Modifier.size(20.dp))
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.background
-                )
+                }
             )
         }
     ) { innerPadding ->
@@ -294,81 +261,61 @@ fun ScreenResolutionScreen(
             Spacer(modifier = Modifier.height(4.dp))
             ShizukuStatusWidget()
 
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        stringResource(
-                            R.string.current_resolution,
-                            currentWidth,
-                            currentHeight,
-                            currentDpi
-                        ).uppercase(),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Black,
-                        color = MaterialTheme.colorScheme.primary,
-                        letterSpacing = 0.5.sp
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        stringResource(
-                            R.string.physical_resolution,
-                            physicalWidth,
-                            physicalHeight,
-                            physicalDpi
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+            SwiftSenseSection(title = stringResource(R.string.display_info)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.display_current),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "${currentWidth} x ${currentHeight} (${currentDpi} DPI)",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.display_physical),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "${physicalWidth} x ${physicalHeight} (${physicalDpi} DPI)",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
 
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column {
-                            Text(
-                                stringResource(R.string.maintain_aspect_ratio).uppercase(),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Black
-                            )
-                            Text(
-                                if (maintainAspectRatio) "LOCKED" else "UNLOCKED",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-                            )
-                        }
-                        Switch(
-                            checked = maintainAspectRatio,
-                            onCheckedChange = { maintainAspectRatio = it },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                                checkedTrackColor = MaterialTheme.colorScheme.primary
-                            )
-                        )
-                    }
+            SwiftSenseSection(title = stringResource(R.string.resolution_settings)) {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    FeatureCard(
+                        title = stringResource(R.string.maintain_aspect_ratio),
+                        description = if (maintainAspectRatio) stringResource(R.string.ratio_locked) else stringResource(
+                            R.string.ratio_unlocked
+                        ),
+                        checked = maintainAspectRatio,
+                        onCheckedChange = { maintainAspectRatio = it }
+                    )
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        OutlinedTextField(
+                        SwiftSenseTextField(
                             value = inputWidth,
                             onValueChange = { newValue ->
                                 if (newValue.all { it.isDigit() }) {
@@ -382,19 +329,12 @@ fun ScreenResolutionScreen(
                                     }
                                 }
                             },
-                            label = {
-                                Text(
-                                    stringResource(R.string.resolution_width),
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            },
+                            label = stringResource(R.string.resolution_width),
                             modifier = Modifier.weight(1f),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            shape = RoundedCornerShape(8.dp)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
 
-                        OutlinedTextField(
+                        SwiftSenseTextField(
                             value = inputHeight,
                             onValueChange = { newValue ->
                                 if (newValue.all { it.isDigit() }) {
@@ -408,32 +348,17 @@ fun ScreenResolutionScreen(
                                     }
                                 }
                             },
-                            label = {
-                                Text(
-                                    stringResource(R.string.resolution_height),
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            },
+                            label = stringResource(R.string.resolution_height),
                             modifier = Modifier.weight(1f),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            shape = RoundedCornerShape(8.dp)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
                     }
 
-                    OutlinedTextField(
+                    SwiftSenseTextField(
                         value = inputDpi,
                         onValueChange = { if (it.all { char -> char.isDigit() }) inputDpi = it },
-                        label = {
-                            Text(
-                                stringResource(R.string.resolution_dpi),
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        shape = RoundedCornerShape(8.dp)
+                        label = stringResource(R.string.resolution_dpi),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
                 }
             }
@@ -446,7 +371,8 @@ fun ScreenResolutionScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Button(
+                    SwiftSenseButton(
+                        text = stringResource(R.string.action_apply),
                         onClick = {
                             scope.launch {
                                 if (applyResolution(context, inputWidth, inputHeight, inputDpi)) {
@@ -455,31 +381,16 @@ fun ScreenResolutionScreen(
                                 }
                             }
                         },
-                        modifier = Modifier.weight(1f).height(52.dp),
-                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.weight(1f),
                         enabled = isShizukuReady
-                    ) {
-                        Text(
-                            stringResource(R.string.action_apply).uppercase(),
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 1.sp
-                        )
-                    }
+                    )
 
-                    Surface(
+                    SwiftSenseOutlinedButton(
+                        text = stringResource(R.string.save_plan),
                         onClick = { showSavePlanDialog = true },
-                        modifier = Modifier.size(52.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.secondary,
-                        border = BorderStroke(
-                            1.dp,
-                            MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
-                        )
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Save, null, modifier = Modifier.size(20.dp))
-                        }
-                    }
+                        modifier = Modifier.weight(1f),
+                        icon = Icons.Default.Save
+                    )
                 }
 
                 OutlinedButton(
@@ -489,103 +400,110 @@ fun ScreenResolutionScreen(
                             refreshDisplayInfo()
                         }
                     },
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
-                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth().height(42.dp),
+                    shape = RoundedCornerShape(6.dp),
                     enabled = isShizukuReady,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.2f)),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error,
+                        disabledContentColor = MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
+                    )
                 ) {
                     Text(
-                        stringResource(R.string.action_reset).uppercase(),
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 1.sp
+                        stringResource(R.string.action_reset),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
 
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text(
-                    stringResource(R.string.resolution_plans).uppercase(),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 1.5.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
+            SwiftSenseSection(title = stringResource(R.string.resolution_plans)) {
                 if (savedPlans.isEmpty()) {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.surface,
-                        border = BorderStroke(
-                            1.dp,
-                            MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
-                        )
-                    ) {
-                        Text(
-                            text = stringResource(R.string.no_plans),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                            modifier = Modifier.padding(24.dp),
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                    Text(
+                        text = stringResource(R.string.no_plans),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                        textAlign = TextAlign.Center
+                    )
                 } else {
-                    savedPlans.forEach { planJson ->
-                        val plan = JSONObject(planJson)
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.surface,
-                            border = BorderStroke(
-                                1.dp,
-                                MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
-                            ),
-                            onClick = {
-                                inputWidth = plan.getString("width")
-                                inputHeight = plan.getString("height")
-                                inputDpi = plan.getString("dpi")
-                            }
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = plan.getString("name"),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = "${plan.getString("width")}x${plan.getString("height")} • ${
-                                            plan.getString(
-                                                "dpi"
-                                            )
-                                        } DPI",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        savedPlans.forEach { planJson ->
+                            val plan = JSONObject(planJson)
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(6.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+                                border = BorderStroke(
+                                    1.dp,
+                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.08f)
+                                ),
+                                onClick = {
+                                    inputWidth = plan.getString("width")
+                                    inputHeight = plan.getString("height")
+                                    inputDpi = plan.getString("dpi")
                                 }
-                                IconButton(
-                                    onClick = {
-                                        scope.launch {
-                                            preferenceManager.deleteResolutionPlan(planJson)
-                                            Toast.makeText(
-                                                context,
-                                                R.string.toast_plan_deleted,
-                                                Toast.LENGTH_SHORT
-                                            ).show()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(
+                                        horizontal = 16.dp,
+                                        vertical = 12.dp
+                                    ).fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(
+                                        modifier = Modifier.weight(1f).padding(end = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text(
+                                            text = plan.getString("name"),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            modifier = Modifier.weight(1f, fill = false)
+                                        )
+                                        Surface(
+                                            color = MaterialTheme.colorScheme.secondaryContainer,
+                                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            shape = RoundedCornerShape(4.dp)
+                                        ) {
+                                            Text(
+                                                text = "${plan.getString("width")}x${
+                                                    plan.getString(
+                                                        "height"
+                                                    )
+                                                } • ${plan.getString("dpi")} DPI",
+                                                modifier = Modifier.padding(
+                                                    horizontal = 6.dp,
+                                                    vertical = 2.dp
+                                                ),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold
+                                            )
                                         }
                                     }
-                                ) {
-                                    Icon(
-                                        Icons.Default.Delete,
-                                        null,
-                                        modifier = Modifier.size(18.dp),
-                                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
-                                    )
+                                    IconButton(
+                                        onClick = {
+                                            scope.launch {
+                                                preferenceManager.deleteResolutionPlan(planJson)
+                                                Toast.makeText(
+                                                    context,
+                                                    R.string.toast_plan_deleted,
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Delete,
+                                            null,
+                                            modifier = Modifier.size(16.dp),
+                                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -595,7 +513,7 @@ fun ScreenResolutionScreen(
 
             if (!isShizukuReady) {
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(6.dp),
                     color = MaterialTheme.colorScheme.error.copy(alpha = 0.05f),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.1f))
                 ) {
@@ -603,7 +521,7 @@ fun ScreenResolutionScreen(
                         text = stringResource(R.string.shizuku_required_desc),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
                         textAlign = TextAlign.Center
                     )
                 }

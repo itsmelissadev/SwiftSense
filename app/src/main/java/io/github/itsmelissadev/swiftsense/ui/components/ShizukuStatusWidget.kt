@@ -6,9 +6,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -85,9 +83,10 @@ fun ShizukuStatusWidget() {
         },
         trailingContent = {
             if (isInstalled && isRunning && !isAuthorized) {
-                Button(onClick = { Shizuku.requestPermission(0) }) {
-                    Text(stringResource(R.string.allow))
-                }
+                SwiftSenseButton(
+                    text = stringResource(R.string.allow),
+                    onClick = { Shizuku.requestPermission(0) }
+                )
             }
         }
     )

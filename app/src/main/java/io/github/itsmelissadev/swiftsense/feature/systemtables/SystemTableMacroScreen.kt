@@ -3,10 +3,10 @@ package io.github.itsmelissadev.swiftsense.feature.systemtables
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,13 +18,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
@@ -34,31 +33,23 @@ import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -72,14 +63,20 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.itsmelissadev.swiftsense.R
 import io.github.itsmelissadev.swiftsense.data.PreferenceManager
 import io.github.itsmelissadev.swiftsense.service.shizuku.ShizukuShellRunner
+import io.github.itsmelissadev.swiftsense.ui.components.FeatureCard
 import io.github.itsmelissadev.swiftsense.ui.components.ShadcnDialog
 import io.github.itsmelissadev.swiftsense.ui.components.ShadcnDialogButton
 import io.github.itsmelissadev.swiftsense.ui.components.ShizukuStatusWidget
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseButton
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseOutlinedButton
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseSectionHeader
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseSelectionDialog
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTextField
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTopAppBar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -182,6 +179,13 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
     val macrosJson by preferenceManager.systemMacros.collectAsStateWithLifecycle(initialValue = emptySet())
     val macros = remember(macrosJson) { macrosJson.map { SystemMacro.fromJson(it) } }
 
+    val isMacroServiceRunning by SystemMacroService.isRunning.collectAsState()
+    val autoApplyJson by preferenceManager.autoApplyMacroJson.collectAsState(initial = null)
+    val autoApplyInterval by preferenceManager.autoApplyMacroInterval.collectAsState(initial = 30)
+
+    var showAutoApplyMacroDialog by remember { mutableStateOf(false) }
+    var showAutoApplyIntervalDialog by remember { mutableStateOf(false) }
+
     var tableData by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
 
@@ -240,30 +244,9 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
             Scaffold(
                 topBar = {
                     Column {
-                        TopAppBar(
-                            title = {
-                                Text(
-                                    stringResource(R.string.feature_system_tables).uppercase(),
-                                    style = MaterialTheme.typography.titleLarge.copy(
-                                        fontWeight = FontWeight.Black,
-                                        letterSpacing = 1.5.sp
-                                    )
-                                )
-                            },
-                            colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.background,
-                                titleContentColor = MaterialTheme.colorScheme.onSurface,
-                                navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
-                                actionIconContentColor = MaterialTheme.colorScheme.onSurface
-                            ),
-                            navigationIcon = {
-                                IconButton(onClick = onNavigateBack) {
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = null
-                                    )
-                                }
-                            },
+                        SwiftSenseTopAppBar(
+                            title = stringResource(R.string.feature_system_tables),
+                            onNavigateBack = onNavigateBack,
                             actions = {
                                 if (selectedTabIndex == 0) {
                                     IconButton(onClick = {
@@ -340,10 +323,9 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                     onClick = { selectedTabIndex = index },
                                     text = {
                                         Text(
-                                            title.uppercase(),
-                                            style = MaterialTheme.typography.labelMedium.copy(
-                                                fontWeight = if (selectedTabIndex == index) FontWeight.Black else FontWeight.Bold,
-                                                letterSpacing = 1.sp
+                                            title,
+                                            style = MaterialTheme.typography.titleSmall.copy(
+                                                fontWeight = if (selectedTabIndex == index) FontWeight.SemiBold else FontWeight.Medium
                                             )
                                         )
                                     },
@@ -363,27 +345,145 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                         .padding(innerPadding)
                         .padding(horizontal = 16.dp)
                 ) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    ShizukuStatusWidget()
-                    Spacer(modifier = Modifier.height(12.dp))
-
                     when (selectedTabIndex) {
                         0 -> {
-                            if (macros.isEmpty()) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                item {
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    ShizukuStatusWidget()
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                }
+
+                                item {
+                                    SwiftSenseSectionHeader(
+                                        title = stringResource(R.string.auto_apply_title),
+                                        modifier = Modifier.padding(bottom = 12.dp)
+                                    )
+
+                                    val activeAutoMacro = remember(autoApplyJson) {
+                                        autoApplyJson?.let {
+                                            try {
+                                                SystemMacro.fromJson(it)
+                                            } catch (e: Exception) {
+                                                null
+                                            }
+                                        }
+                                    }
+
+                                    FeatureCard(
+                                        title = stringResource(R.string.service_status),
+                                        description = stringResource(
+                                            if (isMacroServiceRunning) R.string.macro_service_running else R.string.macro_service_stopped
+                                        ),
+                                        icon = Icons.Default.Refresh,
+                                        checked = isMacroServiceRunning,
+                                        enabled = activeAutoMacro != null,
+                                        onCheckedChange = { active ->
+                                            scope.launch {
+                                                preferenceManager.setMacroServiceRunning(active)
+                                                val intent =
+                                                    Intent(context, SystemMacroService::class.java)
+                                                if (active) {
+                                                    context.startForegroundService(intent)
+                                                } else {
+                                                    context.stopService(intent)
+                                                }
+                                            }
+                                        }
+                                    )
+
+                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        Box(modifier = Modifier.weight(1f)) {
+                                            SwiftSenseTextField(
+                                                value = activeAutoMacro?.name
+                                                    ?: stringResource(R.string.audio_disabled),
+                                                onValueChange = {},
+                                                readOnly = true,
+                                                label = stringResource(R.string.select_macro_to_apply),
+                                                trailingIcon = {
+                                                    Icon(
+                                                        Icons.Default.ArrowDropDown,
+                                                        null
+                                                    )
+                                                },
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                            Box(
+                                                modifier = Modifier
+                                                    .matchParentSize()
+                                                    .clickable(enabled = !isMacroServiceRunning) {
+                                                        showAutoApplyMacroDialog = true
+                                                    }
+                                            )
+                                        }
+
+                                        Box(modifier = Modifier.weight(1f)) {
+                                            val intervalLabel = when (autoApplyInterval) {
+                                                5 -> stringResource(R.string.interval_5s)
+                                                10 -> stringResource(R.string.interval_10s)
+                                                30 -> stringResource(R.string.interval_30s)
+                                                60 -> stringResource(R.string.interval_1m)
+                                                120 -> stringResource(R.string.interval_2m)
+                                                300 -> stringResource(R.string.interval_5m)
+                                                600 -> stringResource(R.string.interval_10m)
+                                                else -> "$autoApplyInterval"
+                                            }
+                                            SwiftSenseTextField(
+                                                value = intervalLabel,
+                                                onValueChange = {},
+                                                readOnly = true,
+                                                label = stringResource(R.string.select_interval),
+                                                trailingIcon = {
+                                                    Icon(
+                                                        Icons.Default.ArrowDropDown,
+                                                        null
+                                                    )
+                                                },
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                            Box(
+                                                modifier = Modifier
+                                                    .matchParentSize()
+                                                    .clickable(enabled = !isMacroServiceRunning) {
+                                                        showAutoApplyIntervalDialog = true
+                                                    }
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        stringResource(R.string.no_macros),
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        text = stringResource(R.string.auto_apply_desc),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                            alpha = 0.7f
+                                        ),
+                                        modifier = Modifier.padding(bottom = 16.dp)
                                     )
                                 }
-                            } else {
-                                LazyColumn(
-                                    modifier = Modifier.fillMaxSize(),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
+                                if (macros.isEmpty()) {
+                                    item {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 48.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                stringResource(R.string.no_macros),
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                } else {
                                     items(macros) { macro ->
                                         MacroItem(
                                             macro = macro,
@@ -449,13 +549,9 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
 
                         1 -> {
                             Column(modifier = Modifier.fillMaxSize()) {
-                                var expanded by remember { mutableStateOf(false) }
-                                ExposedDropdownMenuBox(
-                                    expanded = expanded,
-                                    onExpandedChange = { expanded = !expanded },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    OutlinedTextField(
+                                var showTableDialog by remember { mutableStateOf(false) }
+                                Box(modifier = Modifier.fillMaxWidth()) {
+                                    SwiftSenseTextField(
                                         value = stringResource(
                                             when (selectedTable) {
                                                 SystemTable.SYSTEM -> R.string.table_system
@@ -465,105 +561,43 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                         ),
                                         onValueChange = {},
                                         readOnly = true,
-                                        label = {
-                                            Text(
-                                                stringResource(R.string.select_table).uppercase(),
-                                                style = MaterialTheme.typography.labelSmall.copy(
-                                                    fontWeight = FontWeight.Black
-                                                )
-                                            )
-                                        },
-                                        trailingIcon = {
-                                            ExposedDropdownMenuDefaults.TrailingIcon(
-                                                expanded = expanded
-                                            )
-                                        },
-                                        modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
-                                            .fillMaxWidth(),
-                                        shape = RoundedCornerShape(8.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(
-                                                alpha = 0.1f
-                                            )
-                                        ),
-                                        textStyle = MaterialTheme.typography.bodyMedium.copy(
-                                            fontWeight = FontWeight.Bold
-                                        )
+                                        label = stringResource(R.string.select_table),
+                                        trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
+                                        modifier = Modifier.fillMaxWidth()
                                     )
-                                    ExposedDropdownMenu(
-                                        expanded = expanded,
-                                        onDismissRequest = { expanded = false },
-                                        modifier = Modifier.background(MaterialTheme.colorScheme.surface)
-                                    ) {
-                                        SystemTable.entries.forEach { table ->
-                                            DropdownMenuItem(
-                                                text = {
-                                                    Text(
-                                                        stringResource(
-                                                            when (table) {
-                                                                SystemTable.SYSTEM -> R.string.table_system
-                                                                SystemTable.SECURE -> R.string.table_secure
-                                                                SystemTable.GLOBAL -> R.string.table_global
-                                                            }
-                                                        ),
-                                                        style = MaterialTheme.typography.bodyMedium.copy(
-                                                            fontWeight = FontWeight.Bold
-                                                        )
-                                                    )
-                                                },
-                                                onClick = {
-                                                    selectedTable = table
-                                                    expanded = false
+                                    Box(
+                                        modifier = Modifier
+                                            .matchParentSize()
+                                            .clickable { showTableDialog = true }
+                                    )
+                                }
+
+                                if (showTableDialog) {
+                                    SwiftSenseSelectionDialog(
+                                        title = stringResource(R.string.select_table),
+                                        options = SystemTable.entries.map { table ->
+                                            table to stringResource(
+                                                when (table) {
+                                                    SystemTable.SYSTEM -> R.string.table_system
+                                                    SystemTable.SECURE -> R.string.table_secure
+                                                    SystemTable.GLOBAL -> R.string.table_global
                                                 }
                                             )
-                                        }
-                                    }
+                                        },
+                                        selected = selectedTable,
+                                        onSelectedChange = { selectedTable = it },
+                                        onDismissRequest = { showTableDialog = false }
+                                    )
                                 }
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                OutlinedTextField(
+                                SwiftSenseTextField(
                                     value = searchQuery,
                                     onValueChange = { searchQuery = it },
-                                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                                    placeholder = {
-                                        Text(
-                                            stringResource(R.string.search_table).uppercase(),
-                                            style = MaterialTheme.typography.labelMedium.copy(
-                                                fontWeight = FontWeight.Black,
-                                                letterSpacing = 1.sp
-                                            ),
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                                alpha = 0.5f
-                                            )
-                                        )
-                                    },
-                                    leadingIcon = {
-                                        Icon(
-                                            Icons.Default.Search,
-                                            null,
-                                            modifier = Modifier.size(18.dp),
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    },
-                                    singleLine = true,
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                                            alpha = 0.3f
-                                        ),
-                                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                                            alpha = 0.3f
-                                        ),
-                                        focusedBorderColor = MaterialTheme.colorScheme.primary.copy(
-                                            alpha = 0.5f
-                                        ),
-                                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(
-                                            alpha = 0.1f
-                                        ),
-                                    ),
-                                    textStyle = MaterialTheme.typography.bodyMedium
+                                    label = stringResource(R.string.search_table),
+                                    leadingIcon = Icons.Default.Search,
+                                    singleLine = true
                                 )
 
                                 Spacer(modifier = Modifier.height(16.dp))
@@ -586,35 +620,59 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                         modifier = Modifier.weight(1f).fillMaxWidth(),
                                         verticalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
+                                        item {
+                                            ShizukuStatusWidget()
+                                            Spacer(modifier = Modifier.height(12.dp))
+                                        }
                                         items(filteredData) { (key, value) ->
                                             Surface(
                                                 modifier = Modifier.fillMaxWidth()
                                                     .clickable {
                                                         editingSetting = key to value
                                                     },
-                                                shape = RoundedCornerShape(8.dp),
-                                                color = MaterialTheme.colorScheme.surfaceVariant.copy(
-                                                    alpha = 0.2f
-                                                ),
+                                                shape = RoundedCornerShape(6.dp),
+                                                color = MaterialTheme.colorScheme.surface,
                                                 border = androidx.compose.foundation.BorderStroke(
                                                     1.dp,
-                                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
                                                 )
                                             ) {
-                                                Column(modifier = Modifier.padding(12.dp)) {
-                                                    Text(
-                                                        key,
-                                                        style = MaterialTheme.typography.bodyMedium,
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = MaterialTheme.colorScheme.onSurface
-                                                    )
-                                                    Spacer(modifier = Modifier.height(4.dp))
-                                                    Text(
-                                                        value,
-                                                        style = MaterialTheme.typography.bodySmall,
-                                                        fontWeight = FontWeight.Medium,
-                                                        color = MaterialTheme.colorScheme.primary
-                                                    )
+                                                Row(
+                                                    modifier = Modifier.padding(
+                                                        horizontal = 16.dp,
+                                                        vertical = 12.dp
+                                                    ),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Column(
+                                                        modifier = Modifier.weight(1f)
+                                                            .padding(end = 16.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = key,
+                                                            style = MaterialTheme.typography.bodyMedium,
+                                                            fontWeight = FontWeight.SemiBold,
+                                                            color = MaterialTheme.colorScheme.onSurface
+                                                        )
+                                                    }
+                                                    Surface(
+                                                        color = MaterialTheme.colorScheme.primary.copy(
+                                                            alpha = 0.08f
+                                                        ),
+                                                        contentColor = MaterialTheme.colorScheme.primary,
+                                                        shape = RoundedCornerShape(4.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = value,
+                                                            modifier = Modifier.padding(
+                                                                horizontal = 8.dp,
+                                                                vertical = 4.dp
+                                                            ),
+                                                            style = MaterialTheme.typography.labelMedium,
+                                                            fontWeight = FontWeight.Bold
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
@@ -634,17 +692,13 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
             onDismissRequest = { showImportDialog = false },
             title = stringResource(R.string.import_macros),
             content = {
-                OutlinedTextField(
+                SwiftSenseTextField(
                     value = jsonInput,
                     onValueChange = { jsonInput = it },
-                    modifier = Modifier.fillMaxWidth().height(200.dp),
-                    placeholder = { Text(stringResource(R.string.import_json_hint)) },
-                    shape = RoundedCornerShape(8.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
-                    ),
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                    label = stringResource(R.string.import_macros),
+                    placeholder = stringResource(R.string.import_json_hint),
+                    singleLine = false,
+                    modifier = Modifier.fillMaxWidth().height(200.dp)
                 )
             },
             confirmButton = {
@@ -719,17 +773,13 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
             onDismissRequest = { showExportDialog = false },
             title = stringResource(R.string.export_macros),
             content = {
-                OutlinedTextField(
+                SwiftSenseTextField(
                     value = allMacrosJson,
                     onValueChange = {},
                     readOnly = true,
-                    modifier = Modifier.fillMaxWidth().height(200.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
-                    ),
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                    label = stringResource(R.string.export_macros),
+                    singleLine = false,
+                    modifier = Modifier.fillMaxWidth().height(200.dp)
                 )
             },
             confirmButton = {
@@ -768,22 +818,10 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    OutlinedTextField(
+                    SwiftSenseTextField(
                         value = newValue,
                         onValueChange = { newValue = it },
-                        label = {
-                            Text(
-                                stringResource(R.string.new_value).uppercase(),
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black)
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
-                        ),
-                        textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                        label = stringResource(R.string.new_value)
                     )
                 }
             },
@@ -818,6 +856,44 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
             }
         )
     }
+
+    if (showAutoApplyMacroDialog) {
+        val macroOptions = macros.map { it.toJson() to it.name }
+        SwiftSenseSelectionDialog(
+            title = stringResource(R.string.select_macro_to_apply),
+            options = macroOptions,
+            selected = autoApplyJson ?: "",
+            onSelectedChange = { json ->
+                scope.launch {
+                    preferenceManager.setAutoApplyMacroJson(json)
+                }
+            },
+            onDismissRequest = { showAutoApplyMacroDialog = false }
+        )
+    }
+
+    if (showAutoApplyIntervalDialog) {
+        val intervalOptions = listOf(
+            5 to stringResource(R.string.interval_5s),
+            10 to stringResource(R.string.interval_10s),
+            30 to stringResource(R.string.interval_30s),
+            60 to stringResource(R.string.interval_1m),
+            120 to stringResource(R.string.interval_2m),
+            300 to stringResource(R.string.interval_5m),
+            600 to stringResource(R.string.interval_10m)
+        )
+        SwiftSenseSelectionDialog(
+            title = stringResource(R.string.select_interval),
+            options = intervalOptions,
+            selected = autoApplyInterval,
+            onSelectedChange = { interval ->
+                scope.launch {
+                    preferenceManager.setAutoApplyMacroInterval(interval)
+                }
+            },
+            onDismissRequest = { showAutoApplyIntervalDialog = false }
+        )
+    }
 }
 
 @Composable
@@ -830,11 +906,11 @@ fun MacroItem(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+        shape = RoundedCornerShape(6.dp),
+        color = MaterialTheme.colorScheme.surface,
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
         )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -845,22 +921,18 @@ fun MacroItem(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        macro.name.uppercase(),
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 1.2.sp
-                        ),
+                        macro.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         stringResource(
                             R.string.macro_settings_count,
                             macro.settings.size
-                        ).uppercase(),
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.ExtraBold,
-                            letterSpacing = 1.sp
                         ),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                 }
@@ -884,36 +956,81 @@ fun MacroItem(
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
-            macro.settings.forEach { setting ->
-                Row(
-                    modifier = Modifier.padding(vertical = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f),
+                shape = RoundedCornerShape(6.dp),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    MaterialTheme.colorScheme.outline.copy(alpha = 0.08f)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(4.dp)
-                            .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(1.dp))
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        stringResource(
-                            R.string.macro_setting_format,
-                            stringResource(
-                                when (setting.table) {
-                                    SystemTable.SYSTEM -> R.string.table_system
-                                    SystemTable.SECURE -> R.string.table_secure
-                                    SystemTable.GLOBAL -> R.string.table_global
+                    macro.settings.forEach { setting ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f).padding(end = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Surface(
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    shape = RoundedCornerShape(4.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(
+                                            when (setting.table) {
+                                                SystemTable.SYSTEM -> R.string.table_system
+                                                SystemTable.SECURE -> R.string.table_secure
+                                                SystemTable.GLOBAL -> R.string.table_global
+                                            }
+                                        ),
+                                        modifier = Modifier.padding(
+                                            horizontal = 6.dp,
+                                            vertical = 2.dp
+                                        ),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 }
-                            ),
-                            setting.key,
-                            setting.targetValue
-                        ),
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Medium,
-                            letterSpacing = 0.5.sp
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                                Text(
+                                    text = setting.key,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = setting.defaultValue,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                )
+                                Text(
+                                    text = "→",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                )
+                                Text(
+                                    text = setting.targetValue,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -921,41 +1038,16 @@ fun MacroItem(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Button(
+                SwiftSenseButton(
+                    text = stringResource(R.string.action_apply),
                     onClick = onApply,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(40.dp),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        stringResource(R.string.action_apply).uppercase(),
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 1.sp
-                        )
-                    )
-                }
-                OutlinedButton(
+                    modifier = Modifier.weight(1f)
+                )
+                SwiftSenseOutlinedButton(
+                    text = stringResource(R.string.action_revert_macro),
                     onClick = onRevert,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(40.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    border = androidx.compose.foundation.BorderStroke(
-                        1.dp,
-                        MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
-                    )
-                ) {
-                    Text(
-                        stringResource(R.string.action_revert_macro).uppercase(),
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 1.sp
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
@@ -972,6 +1064,8 @@ fun MacroEditorPage(
     val settings =
         remember { mutableStateListOf<MacroSetting>().apply { macro?.let { addAll(it.settings) } } }
 
+    var editingSetting by remember { mutableStateOf<Pair<Int, MacroSetting>?>(null) }
+
     var currentTable by remember { mutableStateOf(SystemTable.SYSTEM) }
     var currentKey by remember { mutableStateOf("") }
     var currentDefaultValue by remember { mutableStateOf("") }
@@ -979,29 +1073,9 @@ fun MacroEditorPage(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        (if (macro == null) stringResource(R.string.add_macro) else stringResource(
-                            R.string.edit_macro
-                        )).uppercase(),
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 1.5.sp
-                        )
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
-                    actionIconContentColor = MaterialTheme.colorScheme.onSurface
-                ),
-                navigationIcon = {
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-                    }
-                },
+            SwiftSenseTopAppBar(
+                title = if (macro == null) stringResource(R.string.add_macro) else stringResource(R.string.edit_macro),
+                onNavigateBack = onDismiss,
                 actions = {
                     IconButton(
                         onClick = {
@@ -1026,78 +1100,103 @@ fun MacroEditorPage(
         ) {
             item {
                 Spacer(modifier = Modifier.height(12.dp))
-                OutlinedTextField(
+                SwiftSenseTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = {
-                        Text(
-                            stringResource(R.string.macro_name).uppercase(),
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black)
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
-                    ),
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                    label = stringResource(R.string.macro_name)
                 )
             }
 
             item {
                 Text(
-                    text = stringResource(R.string.settings).uppercase(),
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 1.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    text = stringResource(R.string.settings),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
             items(settings) { setting ->
                 Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(6.dp),
+                    modifier = Modifier.fillMaxWidth().clickable {
+                        val idx = settings.indexOf(setting)
+                        if (idx != -1) {
+                            editingSetting = idx to setting
+                        }
+                    },
                     border = androidx.compose.foundation.BorderStroke(
                         1.dp,
-                        MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                        MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
                     )
                 ) {
                     Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                setting.key,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                stringResource(
-                                    R.string.macro_setting_format,
-                                    stringResource(
-                                        when (setting.table) {
-                                            SystemTable.SYSTEM -> R.string.table_system
-                                            SystemTable.SECURE -> R.string.table_secure
-                                            SystemTable.GLOBAL -> R.string.table_global
-                                        }
-                                    ),
-                                    setting.defaultValue,
-                                    setting.targetValue
-                                ),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                        Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Surface(
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    shape = RoundedCornerShape(4.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(
+                                            when (setting.table) {
+                                                SystemTable.SYSTEM -> R.string.table_system
+                                                SystemTable.SECURE -> R.string.table_secure
+                                                SystemTable.GLOBAL -> R.string.table_global
+                                            }
+                                        ),
+                                        modifier = Modifier.padding(
+                                            horizontal = 6.dp,
+                                            vertical = 2.dp
+                                        ),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                Text(
+                                    text = setting.key,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = setting.defaultValue,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                )
+                                Text(
+                                    text = "→",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                )
+                                Text(
+                                    text = setting.targetValue,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                         IconButton(onClick = { settings.remove(setting) }) {
                             Icon(
                                 Icons.Default.Close,
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
                             )
                         }
                     }
@@ -1106,12 +1205,12 @@ fun MacroEditorPage(
 
             item {
                 Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(6.dp),
                     modifier = Modifier.fillMaxWidth(),
                     border = androidx.compose.foundation.BorderStroke(
                         1.dp,
-                        MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                        MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
                     )
                 ) {
                     Column(
@@ -1119,20 +1218,14 @@ fun MacroEditorPage(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            stringResource(R.string.add_new_setting).uppercase(),
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Black,
-                                letterSpacing = 1.sp
-                            )
+                            stringResource(R.string.add_new_setting),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
-                        var expanded by remember { mutableStateOf(false) }
-                        ExposedDropdownMenuBox(
-                            expanded = expanded,
-                            onExpandedChange = { expanded = !expanded },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            OutlinedTextField(
+                        var showTableDialog by remember { mutableStateOf(false) }
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            SwiftSenseTextField(
                                 value = stringResource(
                                     when (currentTable) {
                                         SystemTable.SYSTEM -> R.string.table_system
@@ -1142,107 +1235,53 @@ fun MacroEditorPage(
                                 ),
                                 onValueChange = {},
                                 readOnly = true,
-                                label = {
-                                    Text(
-                                        stringResource(R.string.select_table).uppercase(),
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black)
-                                    )
-                                },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
-                                    .fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(
-                                        alpha = 0.1f
-                                    )
-                                ),
-                                textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                                label = stringResource(R.string.select_table),
+                                trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
+                                modifier = Modifier.fillMaxWidth()
                             )
-                            ExposedDropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false },
-                                modifier = Modifier.background(MaterialTheme.colorScheme.surface)
-                            ) {
-                                SystemTable.entries.forEach { t ->
-                                    DropdownMenuItem(
-                                        text = {
-                                            Text(
-                                                stringResource(
-                                                    when (t) {
-                                                        SystemTable.SYSTEM -> R.string.table_system
-                                                        SystemTable.SECURE -> R.string.table_secure
-                                                        SystemTable.GLOBAL -> R.string.table_global
-                                                    }
-                                                ),
-                                                style = MaterialTheme.typography.bodyMedium.copy(
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                            )
-                                        },
-                                        onClick = {
-                                            currentTable = t
-                                            expanded = false
-                                        }
-                                    )
-                                }
-                            }
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .clickable { showTableDialog = true }
+                            )
                         }
 
-                        OutlinedTextField(
+                        if (showTableDialog) {
+                            SwiftSenseSelectionDialog(
+                                title = stringResource(R.string.select_table),
+                                options = SystemTable.entries.map { t ->
+                                    t to stringResource(
+                                        when (t) {
+                                            SystemTable.SYSTEM -> R.string.table_system
+                                            SystemTable.SECURE -> R.string.table_secure
+                                            SystemTable.GLOBAL -> R.string.table_global
+                                        }
+                                    )
+                                },
+                                selected = currentTable,
+                                onSelectedChange = { currentTable = it },
+                                onDismissRequest = { showTableDialog = false }
+                            )
+                        }
+
+                        SwiftSenseTextField(
                             value = currentKey,
                             onValueChange = { currentKey = it },
-                            label = {
-                                Text(
-                                    stringResource(R.string.setting_key).uppercase(),
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black)
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
-                            ),
-                            textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                            label = stringResource(R.string.setting_key)
                         )
-                        OutlinedTextField(
+                        SwiftSenseTextField(
                             value = currentDefaultValue,
                             onValueChange = { currentDefaultValue = it },
-                            label = {
-                                Text(
-                                    stringResource(R.string.default_value).uppercase(),
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black)
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
-                            ),
-                            textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                            label = stringResource(R.string.default_value)
                         )
-                        OutlinedTextField(
+                        SwiftSenseTextField(
                             value = currentTargetValue,
                             onValueChange = { currentTargetValue = it },
-                            label = {
-                                Text(
-                                    stringResource(R.string.target_value).uppercase(),
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black)
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
-                            ),
-                            textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                            label = stringResource(R.string.target_value)
                         )
 
-                        Button(
+                        SwiftSenseButton(
+                            text = stringResource(R.string.add_new_setting),
                             onClick = {
                                 if (currentKey.isNotBlank()) {
                                     settings.add(
@@ -1258,25 +1297,9 @@ fun MacroEditorPage(
                                     currentTargetValue = ""
                                 }
                             },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.Add,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                stringResource(R.string.add_new_setting).uppercase(),
-                                style = MaterialTheme.typography.labelMedium.copy(
-                                    fontWeight = FontWeight.Black,
-                                    letterSpacing = 1.sp
-                                )
-                            )
-                        }
+                            icon = Icons.Default.Add,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             }
@@ -1285,5 +1308,102 @@ fun MacroEditorPage(
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
+    }
+
+    editingSetting?.let { (index, setting) ->
+        var editTable by remember { mutableStateOf(setting.table) }
+        var editKey by remember { mutableStateOf(setting.key) }
+        var editDefaultValue by remember { mutableStateOf(setting.defaultValue) }
+        var editTargetValue by remember { mutableStateOf(setting.targetValue) }
+
+        ShadcnDialog(
+            onDismissRequest = { editingSetting = null },
+            title = stringResource(R.string.edit_setting),
+            content = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    var showTableDialog by remember { mutableStateOf(false) }
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        SwiftSenseTextField(
+                            value = stringResource(
+                                when (editTable) {
+                                    SystemTable.SYSTEM -> R.string.table_system
+                                    SystemTable.SECURE -> R.string.table_secure
+                                    SystemTable.GLOBAL -> R.string.table_global
+                                }
+                            ),
+                            onValueChange = {},
+                            readOnly = true,
+                            label = stringResource(R.string.select_table),
+                            trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clickable { showTableDialog = true }
+                        )
+                    }
+
+                    if (showTableDialog) {
+                        SwiftSenseSelectionDialog(
+                            title = stringResource(R.string.select_table),
+                            options = SystemTable.entries.map { t ->
+                                t to stringResource(
+                                    when (t) {
+                                        SystemTable.SYSTEM -> R.string.table_system
+                                        SystemTable.SECURE -> R.string.table_secure
+                                        SystemTable.GLOBAL -> R.string.table_global
+                                    }
+                                )
+                            },
+                            selected = editTable,
+                            onSelectedChange = { editTable = it },
+                            onDismissRequest = { showTableDialog = false }
+                        )
+                    }
+
+                    SwiftSenseTextField(
+                        value = editKey,
+                        onValueChange = { editKey = it },
+                        label = stringResource(R.string.setting_key)
+                    )
+
+                    SwiftSenseTextField(
+                        value = editDefaultValue,
+                        onValueChange = { editDefaultValue = it },
+                        label = stringResource(R.string.default_value)
+                    )
+
+                    SwiftSenseTextField(
+                        value = editTargetValue,
+                        onValueChange = { editTargetValue = it },
+                        label = stringResource(R.string.target_value)
+                    )
+                }
+            },
+            confirmButton = {
+                ShadcnDialogButton(
+                    text = stringResource(R.string.action_apply),
+                    onClick = {
+                        if (editKey.isNotBlank()) {
+                            settings[index] = MacroSetting(
+                                editTable,
+                                editKey,
+                                editDefaultValue,
+                                editTargetValue
+                            )
+                        }
+                        editingSetting = null
+                    }
+                )
+            },
+            dismissButton = {
+                ShadcnDialogButton(
+                    text = stringResource(R.string.action_cancel),
+                    isPrimary = false,
+                    onClick = { editingSetting = null }
+                )
+            }
+        )
     }
 }

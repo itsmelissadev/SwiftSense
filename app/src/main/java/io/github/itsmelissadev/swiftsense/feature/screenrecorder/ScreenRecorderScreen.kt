@@ -12,10 +12,10 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,28 +23,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.outlined.Mic
-import androidx.compose.material.icons.outlined.Videocam
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -53,17 +43,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import io.github.itsmelissadev.swiftsense.R
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseSection
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseSelectionDialog
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTextField
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTopAppBar
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -109,9 +99,11 @@ fun ScreenRecorderScreen(onNavigateBack: () -> Unit) {
 
     var selectedFpsOption by rememberSaveable { mutableIntStateOf(prefs.getInt("fps", 60)) }
     val fpsOptions = listOf(60, 45, 30, 25, 15)
+    var showFpsDialog by remember { mutableStateOf(false) }
 
     var selectedBitrateOption by rememberSaveable { mutableIntStateOf(prefs.getInt("bitrate", 15)) }
     val bitrateOptions = listOf(15, 12, 10, 8, 6, 4, 2)
+    var showBitrateDialog by remember { mutableStateOf(false) }
 
     val orientationAuto = stringResource(R.string.orientation_auto)
     val orientationPortrait = stringResource(R.string.orientation_portrait)
@@ -166,6 +158,11 @@ fun ScreenRecorderScreen(onNavigateBack: () -> Unit) {
     var selectedAudioQualityOption by rememberSaveable {
         mutableStateOf(prefs.getString("audio_quality", audioQualityMedium) ?: audioQualityMedium)
     }
+    var showResolutionDialog by remember { mutableStateOf(false) }
+    var showOrientationDialog by remember { mutableStateOf(false) }
+    var showCodecDialog by remember { mutableStateOf(false) }
+    var showAudioDialog by remember { mutableStateOf(false) }
+    var showAudioQualityDialog by remember { mutableStateOf(false) }
 
     val audioQualityDescriptions =
         mapOf(
@@ -285,30 +282,9 @@ fun ScreenRecorderScreen(onNavigateBack: () -> Unit) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        stringResource(R.string.feature_screen_recorder).uppercase(),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 1.5.sp
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                },
-                colors =
-                    TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background,
-                        scrolledContainerColor =
-                            MaterialTheme.colorScheme.background
-                    )
+            SwiftSenseTopAppBar(
+                title = stringResource(R.string.feature_screen_recorder),
+                onNavigateBack = onNavigateBack
             )
         },
         floatingActionButton = {
@@ -392,215 +368,290 @@ fun ScreenRecorderScreen(onNavigateBack: () -> Unit) {
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
-            SettingsSection(
-                title = stringResource(R.string.screen_recorder_video_header),
-                icon = Icons.Outlined.Videocam
+            SwiftSenseSection(
+                title = stringResource(R.string.screen_recorder_video_header)
             ) {
-                OptionDropdown(
-                    label = stringResource(R.string.screen_recorder_resolution),
-                    description = stringResource(R.string.screen_recorder_res_desc),
-                    options = resolutionOptions,
-                    selectedOption = selectedResolutionOption,
-                    onOptionSelected = {
-                        selectedResolutionOption = it
-                        prefs.edit { putString("resolution", it) }
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        SwiftSenseTextField(
+                            value = selectedResolutionOption,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = stringResource(R.string.screen_recorder_resolution),
+                            trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clickable { showResolutionDialog = true }
+                        )
                     }
-                )
+                    Text(
+                        text = stringResource(R.string.screen_recorder_res_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                    )
+                }
 
-                OptionDropdown(
-                    label = stringResource(R.string.screen_recorder_fps),
-                    description = stringResource(R.string.screen_recorder_fps_desc),
-                    options = fpsOptions.map { it.toString() },
-                    selectedOption = selectedFpsOption.toString(),
-                    onOptionSelected = {
-                        selectedFpsOption = it.toInt()
-                        prefs.edit { putInt("fps", it.toInt()) }
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        SwiftSenseTextField(
+                            value = selectedFpsOption.toString(),
+                            onValueChange = {},
+                            readOnly = true,
+                            label = stringResource(R.string.screen_recorder_fps),
+                            trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clickable { showFpsDialog = true }
+                        )
                     }
-                )
+                    Text(
+                        text = stringResource(R.string.screen_recorder_fps_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                    )
+                }
 
-                OptionDropdown(
-                    label = stringResource(R.string.screen_recorder_bitrate),
-                    description = stringResource(R.string.screen_recorder_bitrate_desc),
-                    options = bitrateOptions.map { stringResource(R.string.screen_recorder_mbps_unit, it) },
-                    selectedOption = stringResource(R.string.screen_recorder_mbps_unit, selectedBitrateOption),
-                    onOptionSelected = {
-                        val num = it.substringBefore(" ").toInt()
-                        selectedBitrateOption = num
-                        prefs.edit { putInt("bitrate", num) }
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        SwiftSenseTextField(
+                            value = stringResource(
+                                R.string.screen_recorder_mbps_unit,
+                                selectedBitrateOption
+                            ),
+                            onValueChange = {},
+                            readOnly = true,
+                            label = stringResource(R.string.screen_recorder_bitrate),
+                            trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clickable { showBitrateDialog = true }
+                        )
                     }
-                )
+                    Text(
+                        text = stringResource(R.string.screen_recorder_bitrate_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                    )
+                }
 
-                OptionDropdown(
-                    label = stringResource(R.string.screen_recorder_orientation),
-                    description = stringResource(R.string.screen_recorder_orientation_desc),
-                    options = orientationOptions,
-                    selectedOption = selectedOrientationOption,
-                    onOptionSelected = {
-                        selectedOrientationOption = it
-                        prefs.edit { putString("orientation", it) }
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        SwiftSenseTextField(
+                            value = selectedOrientationOption,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = stringResource(R.string.screen_recorder_orientation),
+                            trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clickable { showOrientationDialog = true }
+                        )
                     }
-                )
+                    Text(
+                        text = stringResource(R.string.screen_recorder_orientation_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                    )
+                }
 
-                OptionDropdown(
-                    label = stringResource(R.string.screen_recorder_codec),
-                    description = codecDescriptions[selectedCodecOption] ?: "",
-                    options = codecOptions,
-                    selectedOption = selectedCodecOption,
-                    onOptionSelected = {
-                        selectedCodecOption = it
-                        prefs.edit { putString("codec", it) }
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        SwiftSenseTextField(
+                            value = selectedCodecOption,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = stringResource(R.string.screen_recorder_codec),
+                            trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clickable { showCodecDialog = true }
+                        )
                     }
-                )
+                    Text(
+                        text = codecDescriptions[selectedCodecOption] ?: "",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                    )
+                }
             }
 
-            SettingsSection(
-                title = stringResource(R.string.screen_recorder_audio),
-                icon = Icons.Outlined.Mic
+            SwiftSenseSection(
+                title = stringResource(R.string.screen_recorder_audio)
             ) {
-                OptionDropdown(
-                    label = stringResource(R.string.screen_recorder_audio),
-                    description = stringResource(R.string.screen_recorder_audio_desc),
-                    options = audioOptions.map { it.second },
-                    selectedOption =
-                        audioOptions.find { it.first == selectedAudioOption }?.second
-                            ?: audioOptions.first().second,
-                    onOptionSelected = { selectedName: String ->
-                        val option = audioOptions.find { it.second == selectedName }
-                        if (option != null) {
-                            selectedAudioOption = option.first
-                            prefs.edit { putInt("audio", option.first) }
-                        }
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        SwiftSenseTextField(
+                            value = audioOptions.find { it.first == selectedAudioOption }?.second
+                                ?: "",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = stringResource(R.string.screen_recorder_audio),
+                            trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clickable { showAudioDialog = true }
+                        )
                     }
-                )
+                    Text(
+                        text = stringResource(R.string.screen_recorder_audio_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                    )
+                }
 
                 if (selectedAudioOption != 0) {
-                    OptionDropdown(
-                        label = stringResource(R.string.screen_recorder_audio_quality),
-                        description = audioQualityDescriptions[selectedAudioQualityOption]
-                            ?: "",
-                        options = audioQualityOptions,
-                        selectedOption = selectedAudioQualityOption,
-                        onOptionSelected = {
-                            selectedAudioQualityOption = it
-                            prefs.edit { putString("audio_quality", it) }
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            SwiftSenseTextField(
+                                value = selectedAudioQualityOption,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = stringResource(R.string.screen_recorder_audio_quality),
+                                trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .clickable { showAudioQualityDialog = true }
+                            )
                         }
-                    )
+                        Text(
+                            text = audioQualityDescriptions[selectedAudioQualityOption] ?: "",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                        )
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(80.dp))
         }
     }
-}
 
-@Composable
-private fun SettingsSection(title: String, icon: ImageVector, content: @Composable ColumnScope.() -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(horizontal = 4.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = title.uppercase(),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                letterSpacing = 1.sp
-            )
-        }
-
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surface,
-            border =
-                androidx.compose.foundation.BorderStroke(
-                    1.dp,
-                    MaterialTheme.colorScheme.outline.copy(alpha = 0.08f)
-                ),
-            shadowElevation = 0.dp
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp),
-                content = content
-            )
-        }
-    }
-}
-
-@Composable
-private fun OptionDropdown(
-    label: String,
-    description: String,
-    options: List<String>,
-    selectedOption: String,
-    onOptionSelected: (String) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
-            text = label.uppercase(),
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Black,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+    if (showResolutionDialog) {
+        SwiftSenseSelectionDialog(
+            title = stringResource(R.string.screen_recorder_resolution),
+            options = resolutionOptions.map { it to it },
+            selected = selectedResolutionOption,
+            onSelectedChange = { res ->
+                selectedResolutionOption = res
+                prefs.edit { putString("resolution", res) }
+            },
+            onDismissRequest = { showResolutionDialog = false }
         )
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(8.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-            onClick = { expanded = true }
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = selectedOption,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
-                )
-                Icon(
-                    Icons.Default.ArrowDropDown,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+    }
 
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                modifier = Modifier.fillMaxWidth(0.85f)
-            ) {
-                options.forEach { option ->
-                    DropdownMenuItem(
-                        text = { Text(option) },
-                        onClick = {
-                            onOptionSelected(option)
-                            expanded = false
-                        }
-                    )
-                }
-            }
-        }
+    if (showFpsDialog) {
+        SwiftSenseSelectionDialog(
+            title = stringResource(R.string.screen_recorder_fps),
+            options = fpsOptions.map { it to it.toString() },
+            selected = selectedFpsOption,
+            onSelectedChange = { fps ->
+                selectedFpsOption = fps
+                prefs.edit { putInt("fps", fps) }
+            },
+            onDismissRequest = { showFpsDialog = false }
+        )
+    }
 
-        Text(
-            text = description,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+    if (showBitrateDialog) {
+        SwiftSenseSelectionDialog(
+            title = stringResource(R.string.screen_recorder_bitrate),
+            options = bitrateOptions.map {
+                it to stringResource(
+                    R.string.screen_recorder_mbps_unit,
+                    it
+                )
+            },
+            selected = selectedBitrateOption,
+            onSelectedChange = { bitrate ->
+                selectedBitrateOption = bitrate
+                prefs.edit { putInt("bitrate", bitrate) }
+            },
+            onDismissRequest = { showBitrateDialog = false }
+        )
+    }
+
+    if (showOrientationDialog) {
+        SwiftSenseSelectionDialog(
+            title = stringResource(R.string.screen_recorder_orientation),
+            options = orientationOptions.map { it to it },
+            selected = selectedOrientationOption,
+            onSelectedChange = { orientation ->
+                selectedOrientationOption = orientation
+                prefs.edit { putString("orientation", orientation) }
+            },
+            onDismissRequest = { showOrientationDialog = false }
+        )
+    }
+
+    if (showCodecDialog) {
+        SwiftSenseSelectionDialog(
+            title = stringResource(R.string.screen_recorder_codec),
+            options = codecOptions.map { it to it },
+            selected = selectedCodecOption,
+            onSelectedChange = { codec ->
+                selectedCodecOption = codec
+                prefs.edit { putString("codec", codec) }
+            },
+            onDismissRequest = { showCodecDialog = false }
+        )
+    }
+
+    if (showAudioDialog) {
+        SwiftSenseSelectionDialog(
+            title = stringResource(R.string.screen_recorder_audio),
+            options = audioOptions,
+            selected = selectedAudioOption,
+            onSelectedChange = { audio ->
+                selectedAudioOption = audio
+                prefs.edit { putInt("audio", audio) }
+            },
+            onDismissRequest = { showAudioDialog = false }
+        )
+    }
+
+    if (showAudioQualityDialog) {
+        SwiftSenseSelectionDialog(
+            title = stringResource(R.string.screen_recorder_audio_quality),
+            options = audioQualityOptions.map { it to it },
+            selected = selectedAudioQualityOption,
+            onSelectedChange = { quality ->
+                selectedAudioQualityOption = quality
+                prefs.edit { putString("audio_quality", quality) }
+            },
+            onDismissRequest = { showAudioQualityDialog = false }
         )
     }
 }
+
+
 
 internal fun startRecorderService(
     context: Context,

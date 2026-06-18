@@ -46,7 +46,7 @@ fun FeatureCard(
             }
         },
         enabled = (onClick != null || onCheckedChange != null) && enabled,
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(6.dp),
         color = containerColor ?: MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)),
         modifier = Modifier.fillMaxWidth()

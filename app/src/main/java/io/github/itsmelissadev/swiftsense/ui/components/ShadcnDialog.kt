@@ -2,6 +2,7 @@ package io.github.itsmelissadev.swiftsense.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -22,7 +23,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
@@ -33,15 +33,16 @@ fun ShadcnDialog(
     description: String? = null,
     confirmButton: @Composable (() -> Unit)? = null,
     dismissButton: @Composable (() -> Unit)? = null,
-    content: @Composable (() -> Unit)? = null,
-    properties: DialogProperties = DialogProperties()
+    contentPadding: PaddingValues = PaddingValues(horizontal = 24.dp),
+    properties: DialogProperties = DialogProperties(),
+    content: @Composable (() -> Unit)? = null
 ) {
     Dialog(
         onDismissRequest = onDismissRequest,
         properties = properties
     ) {
         Surface(
-            shape = RoundedCornerShape(8.dp),
+            shape = RoundedCornerShape(6.dp),
             color = MaterialTheme.colorScheme.surface,
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
             modifier = Modifier
@@ -49,35 +50,47 @@ fun ShadcnDialog(
                 .padding(16.dp)
         ) {
             Column(
-                modifier = Modifier.padding(24.dp)
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = title.uppercase(),
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 1.2.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                if (description != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 24.dp, end = 24.dp, top = 24.dp)
+                ) {
                     Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
                     )
+
+                    if (description != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
 
                 if (content != null) {
-                    Spacer(modifier = Modifier.height(20.dp))
-                    content()
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(contentPadding)
+                    ) {
+                        content()
+                    }
                 }
 
                 if (confirmButton != null || dismissButton != null) {
-                    Spacer(modifier = Modifier.height(24.dp))
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 24.dp, end = 24.dp, bottom = 24.dp, top = 24.dp),
                         horizontalArrangement = Arrangement.End,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -88,6 +101,10 @@ fun ShadcnDialog(
                         if (confirmButton != null) {
                             confirmButton()
                         }
+                    }
+                } else {
+                    if (content == null) {
+                        Spacer(modifier = Modifier.height(24.dp))
                     }
                 }
             }
@@ -106,7 +123,7 @@ fun ShadcnDialogButton(
         Button(
             onClick = onClick,
             enabled = enabled,
-            shape = RoundedCornerShape(8.dp),
+            shape = RoundedCornerShape(6.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
@@ -119,7 +136,7 @@ fun ShadcnDialogButton(
         OutlinedButton(
             onClick = onClick,
             enabled = enabled,
-            shape = RoundedCornerShape(8.dp),
+            shape = RoundedCornerShape(6.dp),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
             colors = ButtonDefaults.outlinedButtonColors(
                 contentColor = MaterialTheme.colorScheme.onSurface

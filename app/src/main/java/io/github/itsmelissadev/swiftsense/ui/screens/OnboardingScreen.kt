@@ -26,8 +26,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Security
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
@@ -47,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.itsmelissadev.swiftsense.R
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseButton
 import kotlinx.coroutines.launch
 
 data class OnboardingPage(
@@ -133,19 +132,10 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                     label = "onboarding_button"
                 ) { isLastPage ->
                     if (isLastPage) {
-                        Button(
-                            onClick = onFinished,
-                            modifier = Modifier.height(56.dp),
-                            shape = MaterialTheme.shapes.large,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            )
-                        ) {
-                            Text(
-                                stringResource(R.string.get_started),
-                                modifier = Modifier.padding(horizontal = 8.dp)
-                            )
-                        }
+                        SwiftSenseButton(
+                            text = stringResource(R.string.get_started),
+                            onClick = onFinished
+                        )
                     } else {
                         FilledIconButton(
                             onClick = {

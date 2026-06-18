@@ -27,6 +27,9 @@
     <string name="settings_title">Settings</string>
     <string name="appearance_header">Appearance</string>
     <string name="language_header">Language</string>
+    <string name="system_header">System</string>
+    <string name="check_updates_option">Check for Updates</string>
+    <string name="check_updates_desc">Open GitHub releases in your browser</string>
     <string name="theme_option">Theme</string>
     <string name="language_option">App Language</string>
     <string name="theme_system">System Default</string>
@@ -112,6 +115,12 @@
     <string name="free_adjustment">Free Adjustment</string>
     <string name="current_resolution">Current: %1$d x %2$d, %3$d DPI</string>
     <string name="physical_resolution">Physical: %1$d x %2$d, %3$d DPI</string>
+    <string name="display_info">Display Info</string>
+    <string name="display_current">Current Resolution</string>
+    <string name="display_physical">Physical Resolution</string>
+    <string name="ratio_locked">Locked</string>
+    <string name="ratio_unlocked">Unlocked</string>
+    <string name="resolution_settings">Resolution Settings</string>
     <string name="action_apply">Apply</string>
     <string name="action_reset">Reset to Default</string>
     <string name="shizuku_required_desc">This feature requires Shizuku to modify system settings.</string>
@@ -196,6 +205,7 @@
     <string name="filter_intensity">Filter Intensity</string>
     <string name="amoled_on">Protection Active</string>
     <string name="amoled_off">Protection Disabled</string>
+    <string name="amoled_filter_settings">Filter Settings</string>
 
     <string name="amoled_filter_type">Filter Effect</string>
     <string name="amoled_filter_dots">Dots</string>
@@ -312,4 +322,20 @@
     <string name="shizuku_not_authorized_desc">SwiftSense has not been granted Shizuku authorization.</string>
     <string name="shizuku_authorized_desc">Shizuku service is active and ready to use.</string>
     <string name="macros_clipboard_label">Macros JSON</string>
+    <string name="auto_apply_title">Background Auto-Apply</string>
+    <string name="auto_apply_desc">Repeatedly apply the selected macro in the background.</string>
+    <string name="select_macro_to_apply">Select Macro</string>
+    <string name="select_interval">Interval</string>
+    <string name="macro_service_running">Running</string>
+    <string name="macro_service_stopped">Stopped</string>
+    <string name="macro_service_notif_title">Auto Macro Repetition Active</string>
+    <string name="macro_service_notif_desc">Applying macro %1$s every %2$d seconds</string>
+    <string name="macro_service_notif_channel">Background Macros Channel</string>
+    <string name="interval_5s">5 Seconds</string>
+    <string name="interval_10s">10 Seconds</string>
+    <string name="interval_30s">30 Seconds</string>
+    <string name="interval_1m">1 Minute</string>
+    <string name="interval_2m">2 Minutes</string>
+    <string name="interval_5m">5 Minutes</string>
+    <string name="interval_10m">10 Minutes</string>
 </resources>

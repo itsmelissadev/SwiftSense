@@ -63,6 +63,12 @@
             tools:targetApi="34" />
 
         <service
+            android:name=".feature.systemtables.SystemMacroService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            tools:targetApi="34" />
+
+        <service
             android:name=".feature.amoledscreenprotect.AmoledProtectService"
             android:exported="true"
             android:foregroundServiceType="specialUse"

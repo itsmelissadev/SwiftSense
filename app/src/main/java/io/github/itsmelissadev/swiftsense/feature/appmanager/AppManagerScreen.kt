@@ -23,21 +23,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -48,9 +44,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -66,7 +59,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -74,7 +66,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
 import io.github.itsmelissadev.swiftsense.R
 import io.github.itsmelissadev.swiftsense.data.PreferenceManager
@@ -82,6 +73,10 @@ import io.github.itsmelissadev.swiftsense.service.shizuku.ShizukuShellRunner
 import io.github.itsmelissadev.swiftsense.ui.components.ShadcnDialog
 import io.github.itsmelissadev.swiftsense.ui.components.ShadcnDialogButton
 import io.github.itsmelissadev.swiftsense.ui.components.ShizukuStatusWidget
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseButton
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseOutlinedButton
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTextField
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTopAppBar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -158,91 +153,16 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
 
     Scaffold(
         topBar = {
-            Column(
-                modifier = Modifier
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.background,
-                                MaterialTheme.colorScheme.background.copy(alpha = 0.9f)
-                            )
-                        )
-                    )
-                    .statusBarsPadding()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        placeholder = {
-                            Text(
-                                stringResource(R.string.search_apps).uppercase(),
-                                style = MaterialTheme.typography.labelMedium.copy(
-                                    fontWeight = FontWeight.Black,
-                                    letterSpacing = 1.sp
-                                ),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                            )
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 8.dp)
-                            .height(48.dp),
-                        singleLine = true,
-                        shape = RoundedCornerShape(8.dp),
-                        leadingIcon = {
-                            Icon(
-                                Icons.Default.Search,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        },
-                        trailingIcon = {
-                            if (searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { searchQuery = "" }) {
-                                    Icon(
-                                        Icons.Default.Clear,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                                alpha = 0.3f
-                            ),
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                                alpha = 0.3f
-                            ),
-                            focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
-                        ),
-                        textStyle = MaterialTheme.typography.bodyMedium
-                    )
-
+            SwiftSenseTopAppBar(
+                title = stringResource(R.string.feature_app_manager),
+                onNavigateBack = onNavigateBack,
+                actions = {
                     var showMenu by remember { mutableStateOf(false) }
                     Box {
                         IconButton(onClick = { showMenu = true }) {
                             Icon(
                                 Icons.Default.MoreVert,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                contentDescription = null
                             )
                         }
                         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
@@ -262,7 +182,7 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                         }
                     }
                 }
-            }
+            )
         },
         bottomBar = {
             AnimatedVisibility(
@@ -278,11 +198,8 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                         if (isProcessing) {
                             Column(modifier = Modifier.padding(bottom = 20.dp)) {
                                 Text(
-                                    text = "$processingAction: $currentProcessingApp".uppercase(),
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontWeight = FontWeight.Black,
-                                        letterSpacing = 1.sp
-                                    ),
+                                    text = "$processingAction: $currentProcessingApp",
+                                    style = MaterialTheme.typography.titleSmall,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                     color = MaterialTheme.colorScheme.primary
@@ -303,7 +220,8 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            OutlinedButton(
+                            SwiftSenseOutlinedButton(
+                                text = stringResource(R.string.action_enable),
                                 onClick = {
                                     scope.launch {
                                         isProcessing = true
@@ -321,30 +239,11 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                                     }
                                 },
                                 enabled = !isProcessing && isShizukuReady.value,
-                                shape = RoundedCornerShape(8.dp),
-                                border = androidx.compose.foundation.BorderStroke(
-                                    1.dp,
-                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
-                                ),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(48.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = MaterialTheme.colorScheme.onSurface
-                                )
-                            ) {
-                                Text(
-                                    stringResource(R.string.action_enable).uppercase(),
-                                    style = MaterialTheme.typography.labelLarge.copy(
-                                        fontWeight = FontWeight.Black,
-                                        letterSpacing = 1.2.sp
-                                    ),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
+                                modifier = Modifier.weight(1f)
+                            )
 
-                            Button(
+                            SwiftSenseButton(
+                                text = stringResource(R.string.action_disable),
                                 onClick = {
                                     scope.launch {
                                         isProcessing = true
@@ -361,26 +260,9 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                                         isProcessing = false
                                     }
                                 },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.error,
-                                    contentColor = MaterialTheme.colorScheme.onError
-                                ),
                                 enabled = !isProcessing && isShizukuReady.value,
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(48.dp)
-                            ) {
-                                Text(
-                                    stringResource(R.string.action_disable).uppercase(),
-                                    style = MaterialTheme.typography.labelLarge.copy(
-                                        fontWeight = FontWeight.Black,
-                                        letterSpacing = 1.2.sp
-                                    ),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                     }
                 }
@@ -394,6 +276,26 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            item {
+                SwiftSenseTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    label = stringResource(R.string.search_apps),
+                    leadingIcon = Icons.Default.Search,
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(
+                                    Icons.Default.Clear,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                    }
+                )
+            }
+
             item { ShizukuStatusWidget() }
 
             item {
@@ -419,11 +321,8 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                stringResource(R.string.app_manager_warning_title).uppercase(),
-                                style = MaterialTheme.typography.labelLarge.copy(
-                                    fontWeight = FontWeight.Black,
-                                    letterSpacing = 1.2.sp
-                                ),
+                                stringResource(R.string.app_manager_warning_title),
+                                style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.error
                             )
                             Spacer(Modifier.height(4.dp))
@@ -541,29 +440,25 @@ fun AppItem(app: RichAppInfo, isSelected: Boolean, onToggleSelect: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (app.isEnabled) stringResource(R.string.app_status_enabled).uppercase()
-                        else stringResource(R.string.app_status_disabled).uppercase(),
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 1.sp
-                        ),
+                        text = if (app.isEnabled) stringResource(R.string.app_status_enabled)
+                        else stringResource(R.string.app_status_disabled),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium,
                         color = if (app.isEnabled) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
                     )
 
                     Text(
                         text = "•",
-                        style = MaterialTheme.typography.labelSmall,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                     )
 
                     Text(
-                        text = (if (app.isSystem) stringResource(R.string.app_type_system)
-                        else stringResource(R.string.app_type_user)).uppercase(),
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 0.5.sp
-                        ),
+                        text = if (app.isSystem) stringResource(R.string.app_type_system)
+                        else stringResource(R.string.app_type_user),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                 }
@@ -595,17 +490,14 @@ fun ImportExportDialog(
         title = stringResource(R.string.menu_import_export),
         description = stringResource(R.string.import_hint),
         content = {
-            OutlinedTextField(
+            SwiftSenseTextField(
                 value = text,
                 onValueChange = { text = it },
+                label = stringResource(R.string.menu_import_export),
+                singleLine = false,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(250.dp),
-                shape = RoundedCornerShape(8.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
-                )
+                    .height(250.dp)
             )
         },
         confirmButton = {
@@ -635,6 +527,8 @@ private suspend fun processApps(
     preferenceManager: PreferenceManager,
     onProgress: (String, String, Float) -> Unit
 ) {
+
+
     var successCount = 0
     val pm = context.packageManager
     val actionName =

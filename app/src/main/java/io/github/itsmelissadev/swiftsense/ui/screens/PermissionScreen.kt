@@ -15,7 +15,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,7 +30,6 @@ import androidx.compose.material.icons.filled.BatteryFull
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -55,6 +53,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import io.github.itsmelissadev.swiftsense.R
+import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseButton
 
 @Composable
 fun PermissionScreen(onAllPermissionsGranted: () -> Unit) {
@@ -91,21 +90,14 @@ fun PermissionScreen(onAllPermissionsGranted: () -> Unit) {
                 tonalElevation = 8.dp,
                 color = MaterialTheme.colorScheme.background
             ) {
-                Button(
+                SwiftSenseButton(
+                    text = stringResource(R.string.get_started),
                     onClick = onAllPermissionsGranted,
+                    enabled = isNotificationGranted && isBatteryOptimizedOut,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(24.dp)
-                        .height(64.dp),
-                    enabled = isNotificationGranted && isBatteryOptimizedOut,
-                    shape = MaterialTheme.shapes.large
-                ) {
-                    Text(
-                        stringResource(R.string.get_started),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                )
             }
         }
     ) { paddingValues ->
@@ -274,16 +266,10 @@ fun PermissionItem(
                         modifier = Modifier.size(32.dp)
                     )
                 } else {
-                    Button(
-                        onClick = onAllow,
-                        shape = MaterialTheme.shapes.medium,
-                        contentPadding = PaddingValues(horizontal = 16.dp)
-                    ) {
-                        Text(
-                            stringResource(R.string.allow),
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
+                    SwiftSenseButton(
+                        text = stringResource(R.string.allow),
+                        onClick = onAllow
+                    )
                 }
             }
 

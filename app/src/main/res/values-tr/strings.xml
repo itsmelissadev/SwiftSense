@@ -27,6 +27,9 @@
     <string name="settings_title">Ayarlar</string>
     <string name="appearance_header">Görünüm Seçenekleri</string>
     <string name="language_header">Dil Tercihi</string>
+    <string name="system_header">Sistem</string>
+    <string name="check_updates_option">Güncellemeleri Denetle</string>
+    <string name="check_updates_desc">GitHub yayınlar sayfasını tarayıcıda açar</string>
     <string name="theme_option">Tema Seçimi</string>
     <string name="language_option">Uygulama Dili</string>
     <string name="theme_system">Sistem Varsayılanı</string>
@@ -112,6 +115,12 @@
     <string name="free_adjustment">Serbest Ayarlama</string>
     <string name="current_resolution">Mevcut: %1$d x %2$d, %3$d DPI</string>
     <string name="physical_resolution">Fiziksel: %1$d x %2$d, %3$d DPI</string>
+    <string name="display_info">Ekran Bilgileri</string>
+    <string name="display_current">Mevcut Çözünürlük</string>
+    <string name="display_physical">Fiziksel Çözünürlük</string>
+    <string name="ratio_locked">Kilitli</string>
+    <string name="ratio_unlocked">Serbest</string>
+    <string name="resolution_settings">Çözünürlük Ayarları</string>
     <string name="action_apply">Uygula</string>
     <string name="action_reset">Varsayılana Sıfırla</string>
     <string name="shizuku_required_desc">Bu özellik, sistem ayarlarını değiştirmek için Shizuku gerektirir.</string>
@@ -196,6 +205,7 @@
     <string name="filter_intensity">Filtre Yoğunluğu</string>
     <string name="amoled_on">Koruma Aktif</string>
     <string name="amoled_off">Koruma Devre Dışı</string>
+    <string name="amoled_filter_settings">Filtre Ayarları</string>
 
     <string name="amoled_filter_type">Filtre Efekti</string>
     <string name="amoled_filter_dots">Noktalar</string>
@@ -312,4 +322,20 @@
     <string name="shizuku_not_authorized_desc">SwiftSense için Shizuku yetkisi verilmedi.</string>
     <string name="shizuku_authorized_desc">Shizuku servisi aktif ve kullanıma hazır.</string>
     <string name="macros_clipboard_label">Makro JSON Kodları</string>
+    <string name="auto_apply_title">Arka Planda Otomatik Uygula</string>
+    <string name="auto_apply_desc">Seçilen makroyu belirli aralıklarla arka planda otomatik olarak uygular.</string>
+    <string name="select_macro_to_apply">Makro Seçin</string>
+    <string name="select_interval">Aralık</string>
+    <string name="macro_service_running">Çalışıyor</string>
+    <string name="macro_service_stopped">Durduruldu</string>
+    <string name="macro_service_notif_title">Otomatik Makro Tekrarı Aktif</string>
+    <string name="macro_service_notif_desc">%1$s makrosu her %2$d saniyede bir uygulanıyor</string>
+    <string name="macro_service_notif_channel">Arka Plan Makroları Kanalı</string>
+    <string name="interval_5s">5 Saniye</string>
+    <string name="interval_10s">10 Saniye</string>
+    <string name="interval_30s">30 Saniye</string>
+    <string name="interval_1m">1 Dakika</string>
+    <string name="interval_2m">2 Dakika</string>
+    <string name="interval_5m">5 Dakika</string>
+    <string name="interval_10m">10 Dakika</string>
 </resources>
