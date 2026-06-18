@@ -74,27 +74,20 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val preferenceManager = remember { PreferenceManager(context) }
 
-    // Density
     val density by preferenceManager.amoledIntensity.collectAsState(initial = 0.5f)
     var densitySlider by remember(density) { mutableFloatStateOf(density) }
 
-    // Opacity
     val opacity by preferenceManager.amoledOpacity.collectAsState(initial = 0.5f)
     var opacitySlider by remember(opacity) { mutableFloatStateOf(opacity) }
 
-    // Filter type
     val filterType by preferenceManager.amoledFilterType.collectAsState(initial = "checker_grid")
 
-    // Cycle duration
     val cycleDuration by preferenceManager.amoledShiftSpeed.collectAsState(initial = 30)
 
-    // Warning state
     val isWarningDismissed by preferenceManager.amoledWarningDismissed.collectAsState(initial = false)
 
-    // Refresh Mode
     val refreshMode by preferenceManager.amoledRefreshMode.collectAsState(initial = "smooth")
 
-    // Active regions
     val activeRegions by preferenceManager.amoledRegions.collectAsState(initial = setOf("full_screen"))
 
     var isRunning by remember { mutableStateOf(AmoledProtectService.isServiceRunning) }
@@ -143,7 +136,6 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
         ) {
             Spacer(modifier = Modifier.height(4.dp))
 
-            // ── Health Warning Card ──
             if (!isWarningDismissed) {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
@@ -194,7 +186,6 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
                 }
             }
 
-            // ── Service Status Card ──
             FeatureCard(
                 title = stringResource(if (isRunning) R.string.amoled_on else R.string.amoled_off),
                 description = stringResource(R.string.service_status),
@@ -207,7 +198,6 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
                 }
             )
 
-            // ── Refresh Mode Selection ──
             SettingsSection(title = stringResource(R.string.amoled_refresh_mode)) {
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                     SegmentedButton(
@@ -251,7 +241,6 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
                 )
             }
 
-            // ── Filter Type Selection ──
             SettingsSection(title = stringResource(R.string.amoled_filter_type)) {
                 val filterTypes = listOf(
                     "checker_grid" to stringResource(R.string.amoled_filter_checker_grid),
@@ -302,10 +291,9 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
                 }
             }
 
-            // ── Sliders Section ──
             SettingsSection(title = stringResource(R.string.filter_intensity)) {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    // Density
+
                     Column {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -334,7 +322,7 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
                             )
                         )
                     }
-                    // Opacity
+
                     Column {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -367,7 +355,6 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
                 }
             }
 
-            // ── Cycle Duration ──
             SettingsSection(title = stringResource(R.string.amoled_cycle_duration)) {
                 val durations = listOf(
                     10 to stringResource(R.string.amoled_duration_10s),
@@ -400,7 +387,6 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
                 }
             }
 
-            // ── Active Regions ──
             SettingsSection(title = stringResource(R.string.amoled_active_regions)) {
                 val regions = listOf(
                     "full_screen" to stringResource(R.string.amoled_region_fullscreen),

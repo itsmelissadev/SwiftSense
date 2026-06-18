@@ -16,7 +16,6 @@ import android.os.IBinder
 import android.os.Process
 import android.util.SparseIntArray
 import android.util.SparseLongArray
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.core.app.NotificationCompat
 import io.github.itsmelissadev.swiftsense.MainActivity
 import io.github.itsmelissadev.swiftsense.R
@@ -34,6 +33,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentHashMap
 
 class BoostSensorsService : Service(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
@@ -49,6 +49,7 @@ class BoostSensorsService : Service(), SensorEventListener {
 
     private val eventCounts = SparseIntArray()
     private val lastTimestamps = SparseLongArray()
+    private val lock = Any()
 
     @Volatile
     private var showLiveHz = false
@@ -58,7 +59,7 @@ class BoostSensorsService : Service(), SensorEventListener {
         private const val NOTIFICATION_ID = 101
         const val ACTION_STOP = "io.github.itsmelissadev.swiftsense.feature.boostsensors.STOP"
 
-        val liveHz = mutableStateMapOf<Int, Int>()
+        val liveHz = ConcurrentHashMap<Int, Int>()
 
         private val _isRunning = MutableStateFlow(false)
         val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
@@ -88,9 +89,11 @@ class BoostSensorsService : Service(), SensorEventListener {
             preferenceManager.showLiveHz.collectLatest { show ->
                 showLiveHz = show
                 if (!show) {
-                    liveHz.clear()
-                    eventCounts.clear()
-                    lastTimestamps.clear()
+                    synchronized(lock) {
+                        liveHz.clear()
+                        eventCounts.clear()
+                        lastTimestamps.clear()
+                    }
                 }
             }
         }
@@ -178,20 +181,22 @@ class BoostSensorsService : Service(), SensorEventListener {
     override fun onSensorChanged(event: SensorEvent?) {
         if (event == null || !showLiveHz) return
 
-        val type = event.sensor.type
-        val timestamp = event.timestamp
+        synchronized(lock) {
+            val type = event.sensor.type
+            val timestamp = event.timestamp
 
-        val currentCount = eventCounts.get(type, 0) + 1
-        eventCounts.put(type, currentCount)
+            val currentCount = eventCounts.get(type, 0) + 1
+            eventCounts.put(type, currentCount)
 
-        val lastTime = lastTimestamps.get(type, 0L)
+            val lastTime = lastTimestamps.get(type, 0L)
 
-        if (timestamp - lastTime >= 1_000_000_000L) {
-            if (lastTime != 0L) {
-                liveHz[type] = currentCount
+            if (timestamp - lastTime >= 1_000_000_000L) {
+                if (lastTime != 0L) {
+                    liveHz[type] = currentCount
+                }
+                eventCounts.put(type, 0)
+                lastTimestamps.put(type, timestamp)
             }
-            eventCounts.put(type, 0)
-            lastTimestamps.put(type, timestamp)
         }
     }
 
@@ -259,9 +264,11 @@ class BoostSensorsService : Service(), SensorEventListener {
         sensorThread?.quitSafely()
         serviceScope.cancel()
 
-        eventCounts.clear()
-        lastTimestamps.clear()
-        liveHz.clear()
+        synchronized(lock) {
+            eventCounts.clear()
+            lastTimestamps.clear()
+            liveHz.clear()
+        }
 
         super.onDestroy()
     }

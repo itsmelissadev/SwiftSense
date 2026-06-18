@@ -82,6 +82,7 @@ import io.github.itsmelissadev.swiftsense.ui.components.ShadcnDialogButton
 import io.github.itsmelissadev.swiftsense.ui.components.ShizukuStatusWidget
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -389,12 +390,14 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                             onApply = {
                                                 scope.launch {
                                                     var success = true
-                                                    macro.settings.forEach { setting ->
-                                                        val cmd =
-                                                            "settings put ${setting.table.key} ${setting.key} ${setting.targetValue}"
-                                                        val result =
-                                                            ShizukuShellRunner.runCommand(cmd)
-                                                        if (!result.isSuccess) success = false
+                                                    withContext(Dispatchers.IO) {
+                                                        macro.settings.forEach { setting ->
+                                                            val cmd =
+                                                                "settings put ${setting.table.key} ${setting.key} ${setting.targetValue}"
+                                                            val result =
+                                                                ShizukuShellRunner.runCommand(cmd)
+                                                            if (!result.isSuccess) success = false
+                                                        }
                                                     }
                                                     if (success) {
                                                         Toast.makeText(
@@ -408,12 +411,14 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                             onRevert = {
                                                 scope.launch {
                                                     var success = true
-                                                    macro.settings.forEach { setting ->
-                                                        val cmd =
-                                                            "settings put ${setting.table.key} ${setting.key} ${setting.defaultValue}"
-                                                        val result =
-                                                            ShizukuShellRunner.runCommand(cmd)
-                                                        if (!result.isSuccess) success = false
+                                                    withContext(Dispatchers.IO) {
+                                                        macro.settings.forEach { setting ->
+                                                            val cmd =
+                                                                "settings put ${setting.table.key} ${setting.key} ${setting.defaultValue}"
+                                                            val result =
+                                                                ShizukuShellRunner.runCommand(cmd)
+                                                            if (!result.isSuccess) success = false
+                                                        }
                                                     }
                                                     if (success) {
                                                         Toast.makeText(
@@ -788,7 +793,9 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                     onClick = {
                         scope.launch {
                             val cmd = "settings put ${selectedTable.key} $key $newValue"
-                            val result = ShizukuShellRunner.runCommand(cmd)
+                            val result = withContext(Dispatchers.IO) {
+                                ShizukuShellRunner.runCommand(cmd)
+                            }
                             if (result.isSuccess) {
                                 Toast.makeText(
                                     context,

@@ -212,7 +212,7 @@ class AmoledProtectService : AccessibilityService() {
                 }
             }
 
-            else -> { // REGION_FULL_SCREEN
+            else -> {
                 WindowManager.LayoutParams(
                     WindowManager.LayoutParams.MATCH_PARENT,
                     WindowManager.LayoutParams.MATCH_PARENT,
@@ -257,7 +257,7 @@ class AmoledProtectService : AccessibilityService() {
             overlayViews.values.forEach { it.rebuildPattern() }
 
             if (currentRefreshMode == "smooth") {
-                // Smooth mode: Continuous movement
+
                 val stepMs = (totalMs / ANIMATION_STEPS).coerceAtLeast(16L)
                 var step = 0
                 while (isActive) {
@@ -268,11 +268,10 @@ class AmoledProtectService : AccessibilityService() {
                     step = (step + 1) % ANIMATION_STEPS
                 }
             } else {
-                // Jump mode: Stay still, then jump
+
                 var jumpIndex = 0
                 while (isActive) {
-                    // Calculate a sequence of 4 diagonal positions to cycle through
-                    // t = 0.0, 0.33, 0.66, 1.0 (various diagonal points)
+
                     val t = (jumpIndex % 4) * 0.33f
                     overlayViews.values.forEach { it.animateShift(t) }
 
@@ -320,6 +319,7 @@ class AmoledProtectService : AccessibilityService() {
         preferenceJob?.cancel()
         overlayViews.forEach { (_, view) ->
             try {
+                view.cleanup()
                 windowManager?.removeView(view)
             } catch (_: Exception) {
             }
@@ -340,6 +340,33 @@ class AmoledProtectService : AccessibilityService() {
         private var maxShiftX = 20f
         private var maxShiftY = 20f
 
+        private var patternBitmap: Bitmap? = null
+        private val noiseBitmaps = arrayOfNulls<Bitmap>(6)
+        private val noiseShaders = arrayOfNulls<BitmapShader>(6)
+        private val pixelShiftFilters = arrayOfNulls<ColorMatrixColorFilter>(6)
+
+        private fun clearPatterns() {
+            patternBitmap?.recycle()
+            patternBitmap = null
+            paint.shader = null
+
+            for (i in 0 until 6) {
+                noiseBitmaps[i]?.recycle()
+                noiseBitmaps[i] = null
+                noiseShaders[i] = null
+                pixelShiftFilters[i] = null
+            }
+        }
+
+        override fun onDetachedFromWindow() {
+            super.onDetachedFromWindow()
+            clearPatterns()
+        }
+
+        fun cleanup() {
+            clearPatterns()
+        }
+
         fun updateDensity(density: Float) {
             currentDensity = density
             rebuildPattern()
@@ -359,14 +386,22 @@ class AmoledProtectService : AccessibilityService() {
             shiftX = t * maxShiftX
             shiftY = t * maxShiftY
             frameCount++
-            if (currentFilterType == "noise" || currentFilterType == "pixel_shift") {
-                rebuildPattern()
+
+            if (currentFilterType == "noise") {
+                val index = (frameCount % 6)
+                paint.shader = noiseShaders[index]
+            } else if (currentFilterType == "pixel_shift") {
+                val index = (frameCount % 6)
+                pixelShiftPaint.colorFilter = pixelShiftFilters[index]
             }
+
             invalidate()
         }
 
         @SuppressLint("UseKtx")
         fun rebuildPattern() {
+            clearPatterns()
+
             val alpha = (currentOpacity * 255).toInt().coerceIn(0, 255)
             val dm: DisplayMetrics = resources.displayMetrics
             val screenDensity = dm.density
@@ -377,12 +412,12 @@ class AmoledProtectService : AccessibilityService() {
             maxShiftX = sizePx.toFloat() * 2f
             maxShiftY = sizePx.toFloat() * 2f
 
-            when (currentFilterType) {
-                "pixel_shift" -> {
-                    useShaderDraw = false
-                    paint.shader = null
-                    val phase = frameCount % 6
-                    val strength = currentDensity * 0.12f
+            if (currentFilterType == "pixel_shift") {
+                useShaderDraw = false
+                paint.shader = null
+                val strength = currentDensity * 0.12f
+
+                for (phase in 0 until 6) {
                     val matrix = when (phase) {
                         0 -> ColorMatrix(
                             floatArrayOf(
@@ -392,7 +427,6 @@ class AmoledProtectService : AccessibilityService() {
                                 0f, 0f, 0f, 1f, 0f
                             )
                         )
-
                         1 -> ColorMatrix(
                             floatArrayOf(
                                 1f - strength, 0f, strength, 0f, 0f,
@@ -401,7 +435,6 @@ class AmoledProtectService : AccessibilityService() {
                                 0f, 0f, 0f, 1f, 0f
                             )
                         )
-
                         2 -> ColorMatrix(
                             floatArrayOf(
                                 1f, 0f, 0f, 0f, 0f,
@@ -410,7 +443,6 @@ class AmoledProtectService : AccessibilityService() {
                                 0f, 0f, 0f, 1f, 0f
                             )
                         )
-
                         3 -> ColorMatrix(
                             floatArrayOf(
                                 1f - strength, strength, 0f, 0f, 0f,
@@ -419,7 +451,6 @@ class AmoledProtectService : AccessibilityService() {
                                 0f, 0f, 0f, 1f, 0f
                             )
                         )
-
                         4 -> ColorMatrix(
                             floatArrayOf(
                                 1f - strength * 0.5f, 0f, strength * 0.5f, 0f, 0f,
@@ -428,7 +459,6 @@ class AmoledProtectService : AccessibilityService() {
                                 0f, 0f, 0f, 1f, 0f
                             )
                         )
-
                         else -> ColorMatrix(
                             floatArrayOf(
                                 1f, 0f, 0f, 0f, 0f,
@@ -438,28 +468,53 @@ class AmoledProtectService : AccessibilityService() {
                             )
                         )
                     }
-                    pixelShiftPaint.colorFilter = ColorMatrixColorFilter(matrix)
-                    pixelShiftPaint.color =
-                        Color.argb((alpha * 0.15f).toInt().coerceIn(1, 40), 128, 128, 128)
-                    invalidate()
-                    return
+                    pixelShiftFilters[phase] = ColorMatrixColorFilter(matrix)
                 }
-
-                else -> {
-                    useShaderDraw = true
-                    pixelShiftPaint.colorFilter = null
-                }
+                pixelShiftPaint.color =
+                    Color.argb((alpha * 0.15f).toInt().coerceIn(1, 40), 128, 128, 128)
+                pixelShiftPaint.colorFilter = pixelShiftFilters[0]
+                invalidate()
+                return
+            } else {
+                useShaderDraw = true
+                pixelShiftPaint.colorFilter = null
             }
 
-            val bitmap: Bitmap
-            when (currentFilterType) {
-                "dots" -> {
-                    val ts = (sizePx * 2).coerceAtLeast(2)
-                    bitmap = Bitmap.createBitmap(ts, ts, Bitmap.Config.ARGB_8888)
+            if (currentFilterType == "noise") {
+                val ts = (sizePx * 4).coerceAtLeast(4)
+                val noiseDensity = 0.2f + currentDensity * 0.5f
+
+                for (i in 0 until 6) {
+                    val bmp = Bitmap.createBitmap(ts, ts, Bitmap.Config.ARGB_8888)
+
+                    val rand = java.util.Random((i * 12345L) + 1L)
                     for (x in 0 until ts) {
                         for (y in 0 until ts) {
-                            if ((x + y) % 2 == 0) {
-                                bitmap.setPixel(x, y, Color.argb(alpha, 0, 0, 0))
+                            if (rand.nextFloat() < noiseDensity) {
+                                val a = (alpha * (0.5f + rand.nextFloat() * 0.5f)).toInt()
+                                    .coerceIn(0, 255)
+                                bmp.setPixel(x, y, Color.argb(a, 0, 0, 0))
+                            }
+                        }
+                    }
+                    noiseBitmaps[i] = bmp
+                    noiseShaders[i] =
+                        BitmapShader(bmp, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT)
+                }
+                paint.shader = noiseShaders[0]
+                invalidate()
+                return
+            }
+
+            val bitmap: Bitmap = when (currentFilterType) {
+                "dots" -> {
+                    val ts = (sizePx * 2).coerceAtLeast(2)
+                    Bitmap.createBitmap(ts, ts, Bitmap.Config.ARGB_8888).apply {
+                        for (x in 0 until ts) {
+                            for (y in 0 until ts) {
+                                if ((x + y) % 2 == 0) {
+                                    setPixel(x, y, Color.argb(alpha, 0, 0, 0))
+                                }
                             }
                         }
                     }
@@ -467,52 +522,40 @@ class AmoledProtectService : AccessibilityService() {
 
                 "horizontal_lines" -> {
                     val ts = (sizePx * 2).coerceAtLeast(2)
-                    bitmap = Bitmap.createBitmap(1, ts, Bitmap.Config.ARGB_8888)
-                    for (y in 0 until ts) {
-                        if (y < sizePx) bitmap.setPixel(0, y, Color.argb(alpha, 0, 0, 0))
+                    Bitmap.createBitmap(1, ts, Bitmap.Config.ARGB_8888).apply {
+                        for (y in 0 until ts) {
+                            if (y < sizePx) setPixel(0, y, Color.argb(alpha, 0, 0, 0))
+                        }
                     }
                 }
 
                 "vertical_lines" -> {
                     val ts = (sizePx * 2).coerceAtLeast(2)
-                    bitmap = createBitmap(ts, 1)
-                    for (x in 0 until ts) {
-                        if (x < sizePx) bitmap[x, 0] = Color.argb(alpha, 0, 0, 0)
+                    createBitmap(ts, 1).apply {
+                        for (x in 0 until ts) {
+                            if (x < sizePx) this[x, 0] = Color.argb(alpha, 0, 0, 0)
+                        }
                     }
                 }
 
                 "grid" -> {
                     val ts = (sizePx * 3).coerceAtLeast(3)
-                    bitmap = createBitmap(ts, ts)
-                    for (i in 0 until ts) {
-                        for (j in 0 until sizePx.coerceAtMost(ts)) {
-                            bitmap[i, j] = Color.argb(alpha, 0, 0, 0)
-                            bitmap.setPixel(j, i, Color.argb(alpha, 0, 0, 0))
+                    createBitmap(ts, ts).apply {
+                        for (i in 0 until ts) {
+                            for (j in 0 until sizePx.coerceAtMost(ts)) {
+                                this[i, j] = Color.argb(alpha, 0, 0, 0)
+                                setPixel(j, i, Color.argb(alpha, 0, 0, 0))
+                            }
                         }
                     }
                 }
 
                 "diagonal" -> {
                     val ts = (sizePx * 4).coerceAtLeast(4)
-                    bitmap = Bitmap.createBitmap(ts, ts, Bitmap.Config.ARGB_8888)
-                    for (i in 0 until ts) {
-                        for (w in 0 until sizePx.coerceAtMost(ts)) {
-                            bitmap.setPixel(i, (i + w) % ts, Color.argb(alpha, 0, 0, 0))
-                        }
-                    }
-                }
-
-                "noise" -> {
-                    val ts = (sizePx * 4).coerceAtLeast(4)
-                    bitmap = Bitmap.createBitmap(ts, ts, Bitmap.Config.ARGB_8888)
-                    val rand = java.util.Random(frameCount.toLong())
-                    val noiseDensity = 0.2f + currentDensity * 0.5f
-                    for (x in 0 until ts) {
-                        for (y in 0 until ts) {
-                            if (rand.nextFloat() < noiseDensity) {
-                                val a = (alpha * (0.5f + rand.nextFloat() * 0.5f)).toInt()
-                                    .coerceIn(0, 255)
-                                bitmap.setPixel(x, y, Color.argb(a, 0, 0, 0))
+                    Bitmap.createBitmap(ts, ts, Bitmap.Config.ARGB_8888).apply {
+                        for (i in 0 until ts) {
+                            for (w in 0 until sizePx.coerceAtMost(ts)) {
+                                setPixel(i, (i + w) % ts, Color.argb(alpha, 0, 0, 0))
                             }
                         }
                     }
@@ -521,23 +564,26 @@ class AmoledProtectService : AccessibilityService() {
                 "checker_grid" -> {
                     val squareSize = sizePx.coerceAtLeast(1)
                     val tileSize = squareSize * 2
-                    bitmap = Bitmap.createBitmap(tileSize, tileSize, Bitmap.Config.ARGB_8888)
-                    for (x in 0 until tileSize) {
-                        for (y in 0 until tileSize) {
-                            if (((x / squareSize) + (y / squareSize)) % 2 == 0) {
-                                bitmap.setPixel(x, y, Color.argb(alpha, 0, 0, 0))
+                    Bitmap.createBitmap(tileSize, tileSize, Bitmap.Config.ARGB_8888).apply {
+                        for (x in 0 until tileSize) {
+                            for (y in 0 until tileSize) {
+                                if (((x / squareSize) + (y / squareSize)) % 2 == 0) {
+                                    setPixel(x, y, Color.argb(alpha, 0, 0, 0))
+                                }
                             }
                         }
                     }
                 }
 
                 else -> {
-                    bitmap = Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888)
-                    bitmap.setPixel(0, 0, Color.argb(alpha, 0, 0, 0))
-                    bitmap.setPixel(2, 2, Color.argb(alpha, 0, 0, 0))
+                    Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888).apply {
+                        setPixel(0, 0, Color.argb(alpha, 0, 0, 0))
+                        setPixel(2, 2, Color.argb(alpha, 0, 0, 0))
+                    }
                 }
             }
 
+            patternBitmap = bitmap
             val shader = BitmapShader(bitmap, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT)
             paint.shader = shader
             invalidate()

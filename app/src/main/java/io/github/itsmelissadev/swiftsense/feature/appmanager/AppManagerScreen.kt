@@ -87,8 +87,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import rikka.shizuku.Shizuku
+import java.util.concurrent.ConcurrentHashMap
 
-private val iconCache = mutableMapOf<String, ImageBitmap>()
+private val iconCache = ConcurrentHashMap<String, ImageBitmap>()
 
 data class RichAppInfo(
     val packageName: String,

@@ -78,7 +78,7 @@ class PreferenceManager(private val context: Context) {
     suspend fun setShizukuSensorBoost(enabled: Boolean) { context.dataStore.edit { it[SHIZUKU_SENSOR_BOOST] = enabled } }
 
     val disabledApps: Flow<Set<String>> = preferences.map { it[DISABLED_APPS] ?: emptySet() }
-    
+
     suspend fun setDisabledApps(apps: Set<String>) {
         context.dataStore.edit { it[DISABLED_APPS] = apps }
     }
@@ -95,7 +95,7 @@ class PreferenceManager(private val context: Context) {
     }
 
     val stopperApps: Flow<Set<String>> = preferences.map { it[STOPPER_APPS] ?: emptySet() }
-    
+
     suspend fun setStopperApps(apps: Set<String>) {
         context.dataStore.edit { it[STOPPER_APPS] = apps }
     }
@@ -135,7 +135,7 @@ class PreferenceManager(private val context: Context) {
     }
 
     val resolutionPlans: Flow<Set<String>> = preferences.map { it[RESOLUTION_PLANS] ?: emptySet() }
-    
+
     suspend fun addResolutionPlan(planJson: String) {
         context.dataStore.edit { prefs ->
             val current = prefs[RESOLUTION_PLANS] ?: emptySet()
@@ -150,20 +150,18 @@ class PreferenceManager(private val context: Context) {
         }
     }
 
-    fun getSensorState(sensorType: Int): Flow<Boolean> = preferences.map { 
-        it[booleanPreferencesKey(SENSOR_STATES_PREFIX + sensorType)] ?: false 
+    fun getSensorState(sensorType: Int): Flow<Boolean> = preferences.map {
+        it[booleanPreferencesKey(SENSOR_STATES_PREFIX + sensorType)] ?: false
     }
     suspend fun setSensorState(sensorType: Int, enabled: Boolean) {
         context.dataStore.edit { it[booleanPreferencesKey(SENSOR_STATES_PREFIX + sensorType)] = enabled }
     }
 
-    // Intensity (Density) Level 0.0 - 1.0 (Default: 1.0 - Highest)
     val amoledIntensity: Flow<Float> = preferences.map { it[AMOLED_INTENSITY] ?: 1.0f }
     suspend fun setAmoledIntensity(intensity: Float) {
         context.dataStore.edit { it[AMOLED_INTENSITY] = intensity }
     }
 
-    // Filter Type (Default: checker_grid)
     val amoledFilterType: Flow<String> =
         preferences.map { it[AMOLED_FILTER_TYPE] ?: "checker_grid" }
 
@@ -171,25 +169,21 @@ class PreferenceManager(private val context: Context) {
         context.dataStore.edit { it[AMOLED_FILTER_TYPE] = type }
     }
 
-    // Cycle duration in seconds (1 to 600)
     val amoledShiftSpeed: Flow<Int> = preferences.map { it[AMOLED_SHIFT_SPEED] ?: 30 }
     suspend fun setAmoledShiftSpeed(speed: Int) {
         context.dataStore.edit { it[AMOLED_SHIFT_SPEED] = speed }
     }
 
-    // Opacity (Default: 1.0 - 100%)
     val amoledOpacity: Flow<Float> = preferences.map { it[AMOLED_OPACITY] ?: 1.0f }
     suspend fun setAmoledOpacity(opacity: Float) {
         context.dataStore.edit { it[AMOLED_OPACITY] = opacity }
     }
 
-    // Refresh Mode: "smooth" vs "jump" (Default: "jump")
     val amoledRefreshMode: Flow<String> = preferences.map { it[AMOLED_REFRESH_MODE] ?: "jump" }
     suspend fun setAmoledRefreshMode(mode: String) {
         context.dataStore.edit { it[AMOLED_REFRESH_MODE] = mode }
     }
 
-    // Health warning dismissal state
     val amoledWarningDismissed: Flow<Boolean> =
         preferences.map { it[AMOLED_WARNING_DISMISSED] ?: false }
 
@@ -197,7 +191,6 @@ class PreferenceManager(private val context: Context) {
         context.dataStore.edit { it[AMOLED_WARNING_DISMISSED] = dismissed }
     }
 
-    // Regions: "full_screen", "status_bar", "navigation_bar"
     val amoledRegions: Flow<Set<String>> =
         preferences.map { it[AMOLED_REGIONS] ?: setOf("full_screen") }
 

@@ -58,7 +58,6 @@ private val LightColorScheme = lightColorScheme(
     error = Error
 )
 
-
 @Composable
 fun SwiftSenseTheme(
     themeMode: String = "system",

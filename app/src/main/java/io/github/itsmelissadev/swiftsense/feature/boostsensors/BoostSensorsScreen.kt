@@ -161,7 +161,7 @@ fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                
+
                 val speeds = listOf(
                     "very_slow" to stringResource(R.string.speed_very_slow),
                     "slow" to stringResource(R.string.speed_slow),
@@ -181,7 +181,7 @@ fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
                                 .weight(1f)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(
-                                    if (isSelected) MaterialTheme.colorScheme.primary 
+                                    if (isSelected) MaterialTheme.colorScheme.primary
                                     else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                                 )
                                 .clickable {
@@ -194,13 +194,13 @@ fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
                                 text = label.uppercase(),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary 
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary
                                         else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = stringResource(R.string.sensor_speed_desc),

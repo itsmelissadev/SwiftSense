@@ -66,8 +66,10 @@ import io.github.itsmelissadev.swiftsense.service.shizuku.ShizukuShellRunner
 import io.github.itsmelissadev.swiftsense.ui.components.ShadcnDialog
 import io.github.itsmelissadev.swiftsense.ui.components.ShadcnDialogButton
 import io.github.itsmelissadev.swiftsense.ui.components.ShizukuStatusWidget
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import rikka.shizuku.Shizuku
 
@@ -117,26 +119,32 @@ fun ScreenResolutionScreen(
             inputDpi = currentDpi.toString()
         }
 
-        val sizeResult = ShizukuShellRunner.runCommand("wm size")
-        sizeResult.onSuccess { output ->
-            if (output.contains("Physical size:")) {
-                val size = output.substringAfter("Physical size:").trim().split("\n")[0].split("x")
-                physicalWidth = size[0].toInt()
-                physicalHeight = size[1].toInt()
+        scope.launch(Dispatchers.IO) {
+            val sizeResult = ShizukuShellRunner.runCommand("wm size")
+            var pWidth = currentWidth
+            var pHeight = currentHeight
+            sizeResult.onSuccess { output ->
+                if (output.contains("Physical size:")) {
+                    val size =
+                        output.substringAfter("Physical size:").trim().split("\n")[0].split("x")
+                    pWidth = size[0].toInt()
+                    pHeight = size[1].toInt()
+                }
             }
-        }.onFailure {
-            physicalWidth = currentWidth
-            physicalHeight = currentHeight
-        }
 
-        val densityResult = ShizukuShellRunner.runCommand("wm density")
-        densityResult.onSuccess { output ->
-            if (output.contains("Physical density:")) {
-                physicalDpi =
-                    output.substringAfter("Physical density:").trim().split("\n")[0].toInt()
+            val densityResult = ShizukuShellRunner.runCommand("wm density")
+            var pDpi = currentDpi
+            densityResult.onSuccess { output ->
+                if (output.contains("Physical density:")) {
+                    pDpi = output.substringAfter("Physical density:").trim().split("\n")[0].toInt()
+                }
             }
-        }.onFailure {
-            physicalDpi = currentDpi
+
+            withContext(Dispatchers.Main) {
+                physicalWidth = pWidth
+                physicalHeight = pHeight
+                physicalDpi = pDpi
+            }
         }
     }
 
@@ -286,7 +294,6 @@ fun ScreenResolutionScreen(
             Spacer(modifier = Modifier.height(4.dp))
             ShizukuStatusWidget()
 
-            // Current Info Section
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
@@ -320,7 +327,6 @@ fun ScreenResolutionScreen(
                 }
             }
 
-            // Adjustment Section
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
@@ -435,7 +441,6 @@ fun ScreenResolutionScreen(
             val isShizukuReady =
                 Shizuku.pingBinder() && Shizuku.checkSelfPermission() == android.content.pm.PackageManager.PERMISSION_GRANTED
 
-            // Action Buttons
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -443,8 +448,11 @@ fun ScreenResolutionScreen(
                 ) {
                     Button(
                         onClick = {
-                            if (applyResolution(context, inputWidth, inputHeight, inputDpi)) {
-                                countdown = 10; showConfirmationDialog = true
+                            scope.launch {
+                                if (applyResolution(context, inputWidth, inputHeight, inputDpi)) {
+                                    countdown = 10
+                                    showConfirmationDialog = true
+                                }
                             }
                         },
                         modifier = Modifier.weight(1f).height(52.dp),
@@ -475,7 +483,12 @@ fun ScreenResolutionScreen(
                 }
 
                 OutlinedButton(
-                    onClick = { resetResolution(); refreshDisplayInfo() },
+                    onClick = {
+                        scope.launch {
+                            resetResolution()
+                            refreshDisplayInfo()
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = RoundedCornerShape(8.dp),
                     enabled = isShizukuReady,
@@ -490,7 +503,6 @@ fun ScreenResolutionScreen(
                 }
             }
 
-            // Plans Section
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text(
                     stringResource(R.string.resolution_plans).uppercase(),
@@ -602,17 +614,28 @@ fun ScreenResolutionScreen(
     }
 }
 
-private fun applyResolution(context: Context, width: String, height: String, dpi: String): Boolean {
+private suspend fun applyResolution(
+    context: Context,
+    width: String,
+    height: String,
+    dpi: String
+): Boolean {
     if (width.isEmpty() || height.isEmpty() || dpi.isEmpty()) {
-        Toast.makeText(context, R.string.toast_invalid_input, Toast.LENGTH_SHORT).show()
+        withContext(Dispatchers.Main) {
+            Toast.makeText(context, R.string.toast_invalid_input, Toast.LENGTH_SHORT).show()
+        }
         return false
     }
-    val sizeResult = ShizukuShellRunner.runCommand("wm size ${width}x${height}")
-    val densityResult = ShizukuShellRunner.runCommand("wm density $dpi")
-    return sizeResult.isSuccess && densityResult.isSuccess
+    return withContext(Dispatchers.IO) {
+        val sizeResult = ShizukuShellRunner.runCommand("wm size ${width}x${height}")
+        val densityResult = ShizukuShellRunner.runCommand("wm density $dpi")
+        sizeResult.isSuccess && densityResult.isSuccess
+    }
 }
 
-private fun resetResolution() {
-    ShizukuShellRunner.runCommand("wm size reset")
-    ShizukuShellRunner.runCommand("wm density reset")
+private suspend fun resetResolution() {
+    withContext(Dispatchers.IO) {
+        ShizukuShellRunner.runCommand("wm size reset")
+        ShizukuShellRunner.runCommand("wm density reset")
+    }
 }

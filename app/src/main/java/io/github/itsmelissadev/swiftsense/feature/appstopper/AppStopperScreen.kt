@@ -2,7 +2,6 @@ package io.github.itsmelissadev.swiftsense.feature.appstopper
 
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
-import android.graphics.drawable.Drawable
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -57,6 +56,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -79,7 +79,7 @@ import rikka.shizuku.Shizuku
 data class AppInfo(
     val packageName: String,
     val label: String,
-    val icon: Drawable,
+    val icon: ImageBitmap,
     val isSystem: Boolean
 )
 
@@ -123,7 +123,7 @@ fun AppStopperScreen(
                 AppInfo(
                     packageName = app.packageName,
                     label = pm.getApplicationLabel(app).toString(),
-                    icon = pm.getApplicationIcon(app),
+                    icon = pm.getApplicationIcon(app).toBitmap().asImageBitmap(),
                     isSystem = app.flags and ApplicationInfo.FLAG_SYSTEM != 0
                 )
             }.sortedBy { it.label }
@@ -394,7 +394,9 @@ fun AppStopperScreen(
                                 if (stopMode == StopMode.FORCE) "am force-stop" else "am kill"
                             targets.forEach { app ->
                                 lastProcessedApp = app.label
-                                ShizukuShellRunner.runCommand("$cmdPrefix ${app.packageName}")
+                                withContext(Dispatchers.IO) {
+                                    ShizukuShellRunner.runCommand("$cmdPrefix ${app.packageName}")
+                                }
                                 delay(50)
                             }
                             isRunning = false
@@ -445,7 +447,7 @@ fun AppItem(app: AppInfo, isSelected: Boolean, onToggle: () -> Unit) {
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Image(
-                    bitmap = app.icon.toBitmap().asImageBitmap(),
+                    bitmap = app.icon,
                     contentDescription = null,
                     modifier = Modifier.size(32.dp).alpha(if (isSelected) 1f else 0.7f)
                 )

@@ -21,8 +21,18 @@ object ShizukuShellRunner {
                 null
             ) as Process
 
+            var error = ""
+            val errorReaderThread = Thread {
+                try {
+                    error = process.errorStream.bufferedReader().use { it.readText() }
+                } catch (e: Exception) {
+                    error = e.message ?: "Error reading error stream"
+                }
+            }
+            errorReaderThread.start()
+
             val output = process.inputStream.bufferedReader().use { it.readText() }
-            val error = process.errorStream.bufferedReader().use { it.readText() }
+            errorReaderThread.join()
             val exitCode = process.waitFor()
 
             if (exitCode == 0) {

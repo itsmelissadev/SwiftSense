@@ -27,7 +27,7 @@ class BoostSensorsTileService : TileService() {
         super.onStartListening()
         listeningJob?.cancel()
         listeningJob = serviceScope.launch {
-            BoostSensorsService.isRunning.collectLatest { 
+            BoostSensorsService.isRunning.collectLatest {
                 updateTile(it)
             }
         }
@@ -40,7 +40,7 @@ class BoostSensorsTileService : TileService() {
 
     private fun updateTile(isRunning: Boolean) {
         val tile = qsTile ?: return
-        
+
         tile.state = if (isRunning) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
         tile.label = getString(R.string.feature_boost_sensors)
         tile.icon = Icon.createWithResource(this, R.drawable.ic_bolt_24px)

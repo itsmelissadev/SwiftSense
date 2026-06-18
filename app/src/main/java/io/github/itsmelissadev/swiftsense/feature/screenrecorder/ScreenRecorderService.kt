@@ -613,6 +613,10 @@ class ScreenRecorderService : Service() {
             val codec = mediaCodec ?: break
             try {
                 val outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, 10000)
+                if (outputBufferIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
+                    delay(10)
+                    continue
+                }
                 if (outputBufferIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                     val muxer = mediaMuxer
                     if (muxer != null && !isMuxerStarted) {
