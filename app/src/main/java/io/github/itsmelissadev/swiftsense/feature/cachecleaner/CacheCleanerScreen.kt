@@ -136,7 +136,8 @@ fun CacheCleanerScreen(
                             Spacer(modifier = Modifier.height(16.dp))
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
-                                color = MaterialTheme.colorScheme.secondary
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                             ) {
                                 Text(
                                     stringResource(R.string.freed_space, freedMb),
@@ -145,8 +146,7 @@ fun CacheCleanerScreen(
                                     modifier = Modifier.padding(
                                         horizontal = 12.dp,
                                         vertical = 6.dp
-                                    ),
-                                    color = MaterialTheme.colorScheme.onSecondary
+                                    )
                                 )
                             }
                         }
@@ -161,11 +161,11 @@ fun CacheCleanerScreen(
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Surface(
-                            shape = RoundedCornerShape(8.dp),
+                            shape = RoundedCornerShape(6.dp),
                             color = MaterialTheme.colorScheme.surface,
                             border = BorderStroke(
                                 1.dp,
-                                MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                                MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
                             ),
                             modifier = Modifier.size(120.dp)
                         ) {

@@ -301,11 +301,11 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
             item {
                 Surface(
                     color = MaterialTheme.colorScheme.error.copy(alpha = 0.05f),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(6.dp),
                     modifier = Modifier.fillMaxWidth(),
                     border = androidx.compose.foundation.BorderStroke(
                         1.dp,
-                        MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
+                        MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
                     )
                 ) {
                     Row(
@@ -376,13 +376,13 @@ fun AppItem(app: RichAppInfo, isSelected: Boolean, onToggleSelect: () -> Unit) {
 
     Surface(
         onClick = onToggleSelect,
-        shape = RoundedCornerShape(8.dp),
-        color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
-        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+        shape = RoundedCornerShape(6.dp),
+        color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.06f)
+        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f),
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-            else MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+            if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+            else MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
         ),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -428,7 +428,7 @@ fun AppItem(app: RichAppInfo, isSelected: Boolean, onToggleSelect: () -> Unit) {
                 Text(
                     text = app.label,
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis

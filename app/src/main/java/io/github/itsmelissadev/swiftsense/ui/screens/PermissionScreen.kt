@@ -12,6 +12,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,14 +26,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryFull
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -85,19 +87,21 @@ fun PermissionScreen(onAllPermissionsGranted: () -> Unit) {
 
     Scaffold(
         bottomBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                tonalElevation = 8.dp,
-                color = MaterialTheme.colorScheme.background
-            ) {
-                SwiftSenseButton(
-                    text = stringResource(R.string.get_started),
-                    onClick = onAllPermissionsGranted,
-                    enabled = isNotificationGranted && isBatteryOptimizedOut,
+            Column {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.background)
                         .padding(24.dp)
-                )
+                ) {
+                    SwiftSenseButton(
+                        text = stringResource(R.string.get_started),
+                        onClick = onAllPermissionsGranted,
+                        enabled = isNotificationGranted && isBatteryOptimizedOut,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     ) { paddingValues ->
@@ -118,16 +122,19 @@ fun PermissionScreen(onAllPermissionsGranted: () -> Unit) {
 
                 Surface(
                     modifier = Modifier.size(96.dp),
-                    shape = MaterialTheme.shapes.extraLarge,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    tonalElevation = 2.dp
+                    shape = RoundedCornerShape(6.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                    border = BorderStroke(
+                        1.dp,
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                    )
                 ) {
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                         Icon(
                             Icons.Default.Settings,
                             contentDescription = null,
                             modifier = Modifier.size(48.dp),
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -207,16 +214,21 @@ fun PermissionItem(
     onAllow: () -> Unit
 ) {
     val containerColor by animateColorAsState(
-        targetValue = if (isGranted) MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
-        else MaterialTheme.colorScheme.surfaceContainerHigh,
+        targetValue = if (isGranted) MaterialTheme.colorScheme.primary.copy(alpha = 0.06f)
+        else MaterialTheme.colorScheme.surface,
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "permission_color"
     )
 
-    Card(
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(containerColor = containerColor)
+        shape = RoundedCornerShape(6.dp),
+        color = containerColor,
+        border = BorderStroke(
+            1.dp,
+            if (isGranted) MaterialTheme.colorScheme.primary.copy(alpha = 0.24f)
+            else MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
+        )
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(
@@ -230,9 +242,13 @@ fun PermissionItem(
                 ) {
                     Surface(
                         modifier = Modifier.size(48.dp),
-                        shape = MaterialTheme.shapes.large,
-                        color = if (isGranted) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.surfaceVariant
+                        shape = RoundedCornerShape(6.dp),
+                        color = if (isGranted) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                        else MaterialTheme.colorScheme.surfaceVariant,
+                        border = if (isGranted) null else BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
+                        )
                     ) {
                         Box(
                             contentAlignment = Alignment.Center,
@@ -241,7 +257,7 @@ fun PermissionItem(
                             Icon(
                                 icon,
                                 contentDescription = null,
-                                tint = if (isGranted) MaterialTheme.colorScheme.onPrimary
+                                tint = if (isGranted) MaterialTheme.colorScheme.primary
                                 else MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(24.dp)
                             )
