@@ -10,6 +10,9 @@ performance, minimize system latency, and provide advanced system tools.
 * **AMOLED Screen Protect:** Prevents screen burn-in and limits static pixels using a subtle overlay
   mesh. Highly customizable with various patterns (Dots, Grid, Pixel Shift), adjustable opacity, and
   dynamic shift cycles to extend display lifespan.
+* **Always-On Display (Beta):** A customizable lock screen overlay showing time, date, battery, and 
+  notifications. Features advanced burn-in protections (Bounce, Random Jump, RGB Shift) and smart 
+  wake integrations (Power Button, Double Tap).
 * **Sensor Optimization:** Boosts sensor sampling rates (Gyroscope, Accelerometer, etc.) to their
   hardware limits. Includes a **Live Frequency Monitor** to track real-time sensor speeds in Hz.
 * **Advanced App Manager:** Easily enable or disable system and user applications via **Shizuku**.
@@ -34,6 +37,7 @@ performance, minimize system latency, and provide advanced system tools.
 
 | Feature                | Requirement  | Purpose                       |
 |:-----------------------|:-------------|:------------------------------|
+| **Always-On Display**  | Android 8.0+ | Smart lock screen overlay     |
 | **AMOLED Protect**     | Android 8.0+ | Prevent screen burn-in        |
 | **Sensor Boost**       | Android 8.0+ | Low-latency data processing   |
 | **App & System Tools** | **Shizuku**  | Advanced system-level control |
