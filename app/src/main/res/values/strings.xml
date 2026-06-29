@@ -141,6 +141,12 @@
     <string name="toast_plan_deleted">Plan deleted.</string>
     <string name="action_delete">Delete</string>
 
+    <string name="aod_overlay_permission_warning_title">Permission Required</string>
+    <string name="aod_overlay_permission_warning_desc">Always On Display requires the "Display over other apps" permission to show the clock and notifications on your lock screen.</string>
+    <string name="aod_dismiss_power_button">Dismiss with Power Button</string>
+    <string name="aod_dismiss_double_tap">Dismiss with Double Tap</string>
+    <string name="aod_grant_permission">Grant Permission</string>
+
     <string name="feature_app_stopper">Background Killer</string>
     <string name="feature_app_stopper_desc">Close background applications to free up memory and reduce CPU usage.</string>
     <string name="feature_cache_cleaner">Cache Cleaner</string>
@@ -264,6 +270,9 @@
     <string name="hz_unit">%d HZ</string>
     <string name="dpi_unit">%d DPI</string>
 
+    <string name="aod_service_name">SwiftSense: Always On Display</string>
+    <string name="aod_service_description">This service is used to detect when the screen is turned off in order to display a clock, battery, and notification information on your lock screen. It DOES NOT collect, store or transmit any of your personal data or screen content.</string>
+
     <string name="feature_screen_recorder">Screen Recorder</string>
     <string name="feature_screen_recorder_desc">High performance screen recording optimized for gaming.</string>
     <string name="screen_recorder_resolution">Resolution</string>
@@ -338,4 +347,66 @@
     <string name="interval_2m">2 Minutes</string>
     <string name="interval_5m">5 Minutes</string>
     <string name="interval_10m">10 Minutes</string>
+    
+    <string name="feature_always_on_display">Always On Display (Beta)</string>
+    <string name="feature_always_on_display_desc">Customizable overlay screen showing time and battery when device is locked.</string>
+    
+    <string name="aod_section_settings">Display Settings</string>
+    <string name="aod_section_content">Content</string>
+    <string name="aod_section_behavior">Behavior</string>
+    
+    <string name="aod_clock_style">Clock Style</string>
+    <string name="aod_clock_style_digital">Digital</string>
+    <string name="aod_clock_style_analog">Analog Minimal</string>
+    <string name="aod_clock_style_modern_stacked">Modern Stacked</string>
+    <string name="aod_clock_style_modern_glow">Modern Glow</string>
+    
+    <string name="aod_theme">Theme</string>
+    <string name="aod_theme_minimal">Minimal (Dark)</string>
+    <string name="aod_theme_bold">Bold</string>
+    <string name="aod_theme_glass">Glassmorphism</string>
+    
+    <string name="aod_brightness">Brightness (Opacity)</string>
+    
+    <string name="aod_show_clock">Show Clock</string>
+    <string name="aod_show_date">Show Date</string>
+    <string name="aod_show_battery">Show Battery</string>
+    <string name="aod_show_notifications">Show Notification Badge</string>
+    
+    <string name="aod_activate_on_lock">Activate on Device Lock</string>
+    <string name="aod_timeout">Auto Turn-off Timeout</string>
+    <string name="aod_timeout_never">Never</string>
+    <string name="aod_timeout_10s">10 seconds</string>
+    <string name="aod_timeout_30s">30 seconds</string>
+    <string name="aod_timeout_1m">1 minute</string>
+
+    <string name="aod_theme_previews">Themes</string>
+    <string name="aod_text_color">Text Color</string>
+    <string name="aod_font_family">Font Family</string>
+    <string name="aod_font_default">Default</string>
+    <string name="aod_font_monospace">Monospace</string>
+    <string name="aod_font_serif">Serif</string>
+    <string name="aod_burn_in_protection">AMOLED Burn-in Protection</string>
+    <string name="aod_burn_in_protection_desc">Periodically shifts elements slightly to prevent screen burn-in.</string>
+    <string name="aod_burn_in_interval">Shift Interval (Seconds)</string>
+    <string name="aod_burn_in_mode">Shift Mode</string>
+    <string name="aod_burn_in_mode_jump">Random Jump</string>
+    <string name="aod_burn_in_mode_bounce">DVD Bounce</string>
+    <string name="aod_burn_in_rgb_shift">RGB Color Shift</string>
+    
+
+    <string name="aod_overlay_permission">Overlay Permission</string>
+    <string name="aod_overlay_permission_desc">Required to draw the Always On Display screen over the lock screen.</string>
+    
+    <string name="aod_battery_warning_title">Battery Usage Warning</string>
+    <string name="aod_battery_warning_desc">Always On Display keeps the screen partially awake and running in the background. This may noticeably increase your battery consumption.</string>
+    
+    <string name="aod_status_active">AOD Active</string>
+    <string name="aod_status_inactive">AOD Inactive</string>
+    
+    <string name="aod_service_notification_title">Always On Display</string>
+    <string name="aod_service_notification_text">Waiting for device to lock…</string>
+    <string name="aod_service_channel">AOD Background Service</string>
+    
+    <string name="optional_permission">Optional</string>
 </resources>

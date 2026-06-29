@@ -31,8 +31,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryFull
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Style
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -77,6 +79,10 @@ fun PermissionScreen(onAllPermissionsGranted: () -> Unit) {
 
     var isBatteryOptimizedOut by remember {
         mutableStateOf(isBatteryOptimizationDisabled(context))
+    }
+
+    var isOverlayGranted by remember {
+        mutableStateOf(Settings.canDrawOverlays(context))
     }
 
     val notificationLauncher = rememberLauncherForActivityResult(
@@ -186,6 +192,21 @@ fun PermissionScreen(onAllPermissionsGranted: () -> Unit) {
                         }
                     context.startActivity(intent)
                 }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                PermissionItem(
+                    title = stringResource(R.string.aod_overlay_permission),
+                    description = stringResource(R.string.aod_overlay_permission_desc),
+                    icon = Icons.Default.Style,
+                    isGranted = isOverlayGranted,
+                    isOptional = true
+                ) {
+                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(intent)
+                }
 
                 Spacer(modifier = Modifier.height(24.dp))
             }
@@ -195,6 +216,7 @@ fun PermissionScreen(onAllPermissionsGranted: () -> Unit) {
     LaunchedEffect(Unit) {
         while (true) {
             isBatteryOptimizedOut = isBatteryOptimizationDisabled(context)
+            isOverlayGranted = Settings.canDrawOverlays(context)
             kotlinx.coroutines.delay(1000)
         }
     }
@@ -211,6 +233,7 @@ fun PermissionItem(
     description: String,
     icon: ImageVector,
     isGranted: Boolean,
+    isOptional: Boolean = false,
     onAllow: () -> Unit
 ) {
     val containerColor by animateColorAsState(
@@ -265,12 +288,29 @@ fun PermissionItem(
                     }
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            if (isOptional && !isGranted) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.optional_permission),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.tertiary,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 

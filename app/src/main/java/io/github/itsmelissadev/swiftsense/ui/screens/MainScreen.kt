@@ -34,7 +34,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import io.github.itsmelissadev.swiftsense.R
 import io.github.itsmelissadev.swiftsense.ui.components.FeatureCard
@@ -51,6 +53,7 @@ fun MainScreen(
     onNavigateToCacheCleaner: () -> Unit,
     onNavigateToSystemTables: () -> Unit,
     onNavigateToAmoledScreenProtect: () -> Unit,
+    onNavigateToAlwaysOnDisplay: () -> Unit,
     onNavigateToScreenRecorder: () -> Unit,
     onNavigateToSettings: () -> Unit
 ) {
@@ -129,6 +132,12 @@ fun MainScreen(
                             description = stringResource(R.string.feature_amoled_protect_desc),
                             icon = Icons.Default.Shield,
                             onClick = onNavigateToAmoledScreenProtect
+                        )
+                        FeatureCard(
+                            title = stringResource(R.string.feature_always_on_display),
+                            description = stringResource(R.string.feature_always_on_display_desc),
+                            icon = ImageVector.vectorResource(id = R.drawable.ic_aod_24px),
+                            onClick = onNavigateToAlwaysOnDisplay
                         )
                         FeatureCard(
                             title = stringResource(R.string.feature_app_manager),

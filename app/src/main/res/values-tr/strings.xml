@@ -141,6 +141,10 @@
     <string name="toast_plan_deleted">Plan silindi.</string>
     <string name="action_delete">Sil</string>
 
+    <string name="aod_overlay_permission_warning_title">İzin Gerekli</string>
+    <string name="aod_overlay_permission_warning_desc">Her Zaman Açık Ekran, saati ve bildirimleri kilit ekranınızda gösterebilmek için \"Diğer uygulamaların üzerinde göster\" iznine ihtiyaç duyar.</string>
+    <string name="aod_grant_permission">İzin Ver</string>
+    
     <string name="feature_app_stopper">Arkaplan Durdurucu</string>
     <string name="feature_app_stopper_desc">Belleği boşaltmak ve CPU kullanımını azaltmak için arkaplan uygulamalarını kapatın.</string>
     <string name="feature_cache_cleaner">Önbellek Temizleyici</string>
@@ -264,6 +268,9 @@
     <string name="hz_unit">%d HZ</string>
     <string name="dpi_unit">%d DPI</string>
 
+    <string name="aod_service_name">SwiftSense: Her Zaman Açık Ekran</string>
+    <string name="aod_service_description">Bu servis, ekran kilitlendiğinde kilit ekranınızda saat, pil ve bildirim bilgilerini göstermek için ekranın kapanma durumunu algılamak amacıyla kullanılır. Kişisel verilerinizi veya ekran içeriğinizi kesinlikle toplamaz, saklamaz veya paylaşmaz.</string>
+
     <string name="feature_screen_recorder">Ekran Kaydedici</string>
     <string name="feature_screen_recorder_desc">Oyunlar için optimize edilmiş yüksek performanslı ekran kaydı.</string>
     <string name="screen_recorder_resolution">Çözünürlük</string>
@@ -338,4 +345,68 @@
     <string name="interval_2m">2 Dakika</string>
     <string name="interval_5m">5 Dakika</string>
     <string name="interval_10m">10 Dakika</string>
+
+    <string name="feature_always_on_display">Her Zaman Açık Ekran (Beta)</string>
+    <string name="feature_always_on_display_desc">Cihaz kilitliyken saat, tarih ve pil durumunu gösteren özelleştirilebilir ekran.</string>
+
+    <string name="aod_section_settings">Görünüm Ayarları</string>
+    <string name="aod_section_content">İçerik</string>
+    <string name="aod_section_behavior">Davranış</string>
+
+    <string name="aod_clock_style">Saat Stili</string>
+    <string name="aod_clock_style_digital">Dijital</string>
+    <string name="aod_clock_style_analog">Analog Minimal</string>
+    <string name="aod_clock_style_modern_stacked">Modern Alt Alta</string>
+    <string name="aod_clock_style_modern_glow">Modern Parlak</string>
+    <string name="aod_theme">Tema</string>
+    <string name="aod_theme_minimal">Minimal (Koyu)</string>
+    <string name="aod_theme_bold">Kalın</string>
+    <string name="aod_theme_glass">Cam Efekti (Glassmorphism)</string>
+
+    <string name="aod_brightness">Parlaklık (Opaklık)</string>
+
+    <string name="aod_show_clock">Saati Göster</string>
+    <string name="aod_show_date">Tarihi Göster</string>
+    <string name="aod_show_battery">Pil Durumunu Göster</string>
+    <string name="aod_show_notifications">Bildirim Rozetini Göster</string>
+
+    <string name="aod_activate_on_lock">Ekran Kilitlenince Başlat</string>
+    <string name="aod_timeout">Otomatik Kapanma Süresi</string>
+    <string name="aod_timeout_10s">10 saniye</string>
+    <string name="aod_timeout_30s">30 saniye</string>
+    <string name="aod_timeout_1m">1 dakika</string>
+    <string name="aod_timeout_never">Asla</string>
+
+    <string name="aod_theme_previews">Temalar</string>
+    <string name="aod_text_color">Yazı Rengi</string>
+    <string name="aod_font_family">Yazı Tipi</string>
+    <string name="aod_font_default">Varsayılan</string>
+    <string name="aod_font_monospace">Monospace</string>
+    <string name="aod_font_serif">Serif</string>
+    <string name="aod_burn_in_protection">AMOLED Yanık Koruması</string>
+    <string name="aod_burn_in_protection_desc">Ekran yanmasını önlemek için öğeleri periyodik olarak hafifçe kaydırır.</string>
+    <string name="aod_burn_in_interval">Kayma Aralığı (Saniye)</string>
+    <string name="aod_burn_in_mode">Kayma Modu</string>
+    <string name="aod_burn_in_mode_jump">Rastgele Sıçrama</string>
+    <string name="aod_burn_in_mode_bounce">Köşelerden Sekme</string>
+    <string name="aod_burn_in_rgb_shift">Dinamik Renk (RGB Kayması)</string>
+    
+
+    <string name="aod_overlay_permission">Diğer Uygulamaların Üzerinde Gösterme İzni</string>
+    <string name="aod_overlay_permission_desc">Always On Display ekranının kilit ekranı üzerinde görünebilmesi için gereklidir.</string>
+
+    <string name="aod_dismiss_power_button">Güç Tuşuyla Kapat</string>
+    <string name="aod_dismiss_double_tap">Çift Dokunuşla Kapat</string>
+
+    <string name="aod_battery_warning_title">Pil Tüketimi Uyarısı</string>
+    <string name="aod_battery_warning_desc">Her Zaman Açık Ekran (AOD) özelliği ekranı kısmen uyanık tutar ve arka planda çalışır. Bu durum pil tüketimini belirgin bir şekilde artırabilir.</string>
+
+    <string name="aod_status_active">AOD Aktif</string>
+    <string name="aod_status_inactive">AOD Kapalı</string>
+
+    <string name="aod_service_notification_title">Her Zaman Açık Ekran (AOD)</string>
+    <string name="aod_service_notification_text">Cihazın kilitlenmesi bekleniyor…</string>
+    <string name="aod_service_channel">AOD Arka Plan Servisi</string>
+
+    <string name="optional_permission">İsteğe Bağlı</string>
 </resources>

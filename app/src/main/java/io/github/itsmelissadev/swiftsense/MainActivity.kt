@@ -24,6 +24,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import io.github.itsmelissadev.swiftsense.data.PreferenceManager
+import io.github.itsmelissadev.swiftsense.feature.alwaysondisplay.AlwaysOnDisplayScreen
 import io.github.itsmelissadev.swiftsense.feature.amoledscreenprotect.AmoledScreenProtectScreen
 import io.github.itsmelissadev.swiftsense.feature.appmanager.AppManagerScreen
 import io.github.itsmelissadev.swiftsense.feature.appstopper.AppStopperScreen
@@ -126,6 +127,7 @@ class MainActivity : ComponentActivity() {
                                     onNavigateToCacheCleaner = { navController.navigate("cache_cleaner") },
                                     onNavigateToSystemTables = { navController.navigate("system_tables") },
                                     onNavigateToAmoledScreenProtect = { navController.navigate("amoled_screen_protect") },
+                                    onNavigateToAlwaysOnDisplay = { navController.navigate("always_on_display") },
                                     onNavigateToScreenRecorder = { navController.navigate("screen_recorder") },
                                     onNavigateToSettings = { navController.navigate("settings") }
                                 )
@@ -147,6 +149,9 @@ class MainActivity : ComponentActivity() {
                             }
                             composable("system_tables") {
                                 SystemTableMacroScreen(onNavigateBack = { navController.popBackStack() })
+                            }
+                            composable("always_on_display") {
+                                AlwaysOnDisplayScreen(onNavigateBack = { navController.popBackStack() })
                             }
                             composable("amoled_screen_protect") {
                                 AmoledScreenProtectScreen(onNavigateBack = { navController.popBackStack() })

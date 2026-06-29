@@ -52,6 +52,28 @@ class PreferenceManager(private val context: Context) {
         val AUTO_APPLY_MACRO_JSON = stringPreferencesKey("auto_apply_macro_json")
         val AUTO_APPLY_MACRO_INTERVAL = intPreferencesKey("auto_apply_macro_interval")
         val IS_MACRO_SERVICE_RUNNING = booleanPreferencesKey("is_macro_service_running")
+        
+        val AOD_ENABLED = booleanPreferencesKey("aod_enabled")
+        val AOD_SHOW_CLOCK = booleanPreferencesKey("aod_show_clock")
+        val AOD_SHOW_DATE = booleanPreferencesKey("aod_show_date")
+        val AOD_SHOW_BATTERY = booleanPreferencesKey("aod_show_battery")
+        val AOD_SHOW_NOTIFICATIONS = booleanPreferencesKey("aod_show_notifications")
+        val AOD_CLOCK_STYLE = stringPreferencesKey("aod_clock_style")
+        val AOD_THEME = stringPreferencesKey("aod_theme")
+        val AOD_BRIGHTNESS = floatPreferencesKey("aod_brightness")
+        val AOD_ACTIVATE_ON_LOCK = booleanPreferencesKey("aod_activate_on_lock")
+        val AOD_TIMEOUT_SECONDS = intPreferencesKey("aod_timeout_seconds")
+        val AOD_WARNING_DISMISSED = booleanPreferencesKey("aod_warning_dismissed")
+        
+        val AOD_TEXT_COLOR = intPreferencesKey("aod_text_color")
+        val AOD_FONT_FAMILY = stringPreferencesKey("aod_font_family")
+        val AOD_BURN_IN_PROTECTION = booleanPreferencesKey("aod_burn_in_protection")
+        val AOD_BURN_IN_INTERVAL = intPreferencesKey("aod_burn_in_interval")
+        val AOD_BURN_IN_MODE = stringPreferencesKey("aod_burn_in_mode")
+        val AOD_BURN_IN_RGB_SHIFT = booleanPreferencesKey("aod_burn_in_rgb_shift")
+        
+        val AOD_DISMISS_POWER_BUTTON = booleanPreferencesKey("aod_dismiss_power_button")
+        val AOD_DISMISS_DOUBLE_TAP = booleanPreferencesKey("aod_dismiss_double_tap")
     }
 
     val preferences: Flow<Preferences> = context.dataStore.data
@@ -280,4 +302,61 @@ class PreferenceManager(private val context: Context) {
     suspend fun setMacroServiceRunning(running: Boolean) {
         context.dataStore.edit { it[IS_MACRO_SERVICE_RUNNING] = running }
     }
+
+    val aodEnabled: Flow<Boolean> = preferences.map { it[AOD_ENABLED] ?: false }
+    suspend fun setAodEnabled(enabled: Boolean) { context.dataStore.edit { it[AOD_ENABLED] = enabled } }
+
+    val aodShowClock: Flow<Boolean> = preferences.map { it[AOD_SHOW_CLOCK] ?: true }
+    suspend fun setAodShowClock(show: Boolean) { context.dataStore.edit { it[AOD_SHOW_CLOCK] = show } }
+
+    val aodShowDate: Flow<Boolean> = preferences.map { it[AOD_SHOW_DATE] ?: true }
+    suspend fun setAodShowDate(show: Boolean) { context.dataStore.edit { it[AOD_SHOW_DATE] = show } }
+
+    val aodShowBattery: Flow<Boolean> = preferences.map { it[AOD_SHOW_BATTERY] ?: true }
+    suspend fun setAodShowBattery(show: Boolean) { context.dataStore.edit { it[AOD_SHOW_BATTERY] = show } }
+
+    val aodShowNotifications: Flow<Boolean> = preferences.map { it[AOD_SHOW_NOTIFICATIONS] ?: true }
+    suspend fun setAodShowNotifications(show: Boolean) { context.dataStore.edit { it[AOD_SHOW_NOTIFICATIONS] = show } }
+
+    val aodClockStyle: Flow<String> = preferences.map { it[AOD_CLOCK_STYLE] ?: "digital" }
+    suspend fun setAodClockStyle(style: String) { context.dataStore.edit { it[AOD_CLOCK_STYLE] = style } }
+
+    val aodTheme: Flow<String> = preferences.map { it[AOD_THEME] ?: "minimal" }
+    suspend fun setAodTheme(theme: String) { context.dataStore.edit { it[AOD_THEME] = theme } }
+
+    val aodBrightness: Flow<Float> = preferences.map { it[AOD_BRIGHTNESS] ?: 0.5f }
+    suspend fun setAodBrightness(brightness: Float) { context.dataStore.edit { it[AOD_BRIGHTNESS] = brightness } }
+
+    val aodActivateOnLock: Flow<Boolean> = preferences.map { it[AOD_ACTIVATE_ON_LOCK] ?: true }
+    suspend fun setAodActivateOnLock(activate: Boolean) { context.dataStore.edit { it[AOD_ACTIVATE_ON_LOCK] = activate } }
+
+    val aodTimeoutSeconds: Flow<Int> = preferences.map { it[AOD_TIMEOUT_SECONDS] ?: 0 } // 0 means never
+    suspend fun setAodTimeoutSeconds(seconds: Int) { context.dataStore.edit { it[AOD_TIMEOUT_SECONDS] = seconds } }
+
+    val aodWarningDismissed: Flow<Boolean> = preferences.map { it[AOD_WARNING_DISMISSED] ?: false }
+    suspend fun setAodWarningDismissed(dismissed: Boolean) { context.dataStore.edit { it[AOD_WARNING_DISMISSED] = dismissed } }
+
+    val aodTextColor: Flow<Int> = preferences.map { it[AOD_TEXT_COLOR] ?: android.graphics.Color.WHITE }
+    suspend fun setAodTextColor(color: Int) { context.dataStore.edit { it[AOD_TEXT_COLOR] = color } }
+
+    val aodFontFamily: Flow<String> = preferences.map { it[AOD_FONT_FAMILY] ?: "monospace" }
+    suspend fun setAodFontFamily(font: String) { context.dataStore.edit { it[AOD_FONT_FAMILY] = font } }
+
+    val aodBurnInProtection: Flow<Boolean> = preferences.map { it[AOD_BURN_IN_PROTECTION] ?: true }
+    suspend fun setAodBurnInProtection(enabled: Boolean) { context.dataStore.edit { it[AOD_BURN_IN_PROTECTION] = enabled } }
+
+    val aodBurnInInterval: Flow<Int> = preferences.map { it[AOD_BURN_IN_INTERVAL] ?: 20 }
+    suspend fun setAodBurnInInterval(seconds: Int) { context.dataStore.edit { it[AOD_BURN_IN_INTERVAL] = seconds } }
+
+    val aodBurnInMode: Flow<String> = preferences.map { it[AOD_BURN_IN_MODE] ?: "jump" }
+    suspend fun setAodBurnInMode(mode: String) { context.dataStore.edit { it[AOD_BURN_IN_MODE] = mode } }
+
+    val aodBurnInRgbShift: Flow<Boolean> = preferences.map { it[AOD_BURN_IN_RGB_SHIFT] ?: false }
+    suspend fun setAodBurnInRgbShift(enabled: Boolean) { context.dataStore.edit { it[AOD_BURN_IN_RGB_SHIFT] = enabled } }
+
+    val aodDismissPowerButton: Flow<Boolean> = preferences.map { it[AOD_DISMISS_POWER_BUTTON] ?: true }
+    suspend fun setAodDismissPowerButton(enabled: Boolean) { context.dataStore.edit { it[AOD_DISMISS_POWER_BUTTON] = enabled } }
+
+    val aodDismissDoubleTap: Flow<Boolean> = preferences.map { it[AOD_DISMISS_DOUBLE_TAP] ?: true }
+    suspend fun setAodDismissDoubleTap(enabled: Boolean) { context.dataStore.edit { it[AOD_DISMISS_DOUBLE_TAP] = enabled } }
 }
