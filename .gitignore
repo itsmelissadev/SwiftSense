@@ -17,3 +17,5 @@
 local.properties
 /.vscode/
 releases
+project_context.md
+.agents
