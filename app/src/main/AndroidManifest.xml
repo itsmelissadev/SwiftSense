@@ -130,7 +130,9 @@
             android:name=".feature.alwaysondisplay.AlwaysOnDisplayService"
             android:exported="true"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
-            android:label="@string/aod_service_name">
+            android:label="@string/aod_service_name"
+            android:foregroundServiceType="specialUse"
+            tools:targetApi="34">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>

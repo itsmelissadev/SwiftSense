@@ -49,7 +49,17 @@ class AodOverlayView(context: Context) : View(context) {
         set(value) { field = value; invalidate() }
     var brightness = 0.5f
         set(value) { field = value; invalidate() }
-    var textColor = Color.WHITE
+    var clockColor = Color.WHITE
+        set(value) { field = value; invalidate() }
+    var batteryColor = Color.WHITE
+        set(value) { field = value; invalidate() }
+    var batteryStyle = "horizontal_classic"
+        set(value) { field = value; invalidate() }
+    var showWattage = false
+        set(value) { field = value; invalidate() }
+    var chargingWatts = 0f
+        set(value) { field = value; invalidate() }
+    var chargingCurrentMa = 0
         set(value) { field = value; invalidate() }
     var fontFamily = "monospace"
         set(value) {
@@ -62,7 +72,8 @@ class AodOverlayView(context: Context) : View(context) {
     var burnInMode = "jump"
     var burnInRgbShift = false
     
-    private var activeTextColor = Color.WHITE
+    private var activeClockColor = Color.WHITE
+    private var activeBatteryColor = Color.WHITE
     
     private var xOffset = 0f
     private var yOffset = 0f
@@ -124,6 +135,33 @@ class AodOverlayView(context: Context) : View(context) {
         updateTypefaces()
     }
 
+    private fun updateColors() {
+        if (!burnInRgbShift) {
+            activeClockColor = clockColor
+            activeBatteryColor = batteryColor
+            return
+        }
+
+        val t = System.currentTimeMillis() / 2000.0
+        val cr = ((sin(t) * 0.5 + 0.5) * 50).toInt()
+        val cg = ((sin(t + 2) * 0.5 + 0.5) * 50).toInt()
+        val cb = ((sin(t + 4) * 0.5 + 0.5) * 50).toInt()
+
+        activeClockColor = Color.argb(
+            255,
+            min(255, Color.red(clockColor) + cr),
+            min(255, Color.green(clockColor) + cg),
+            min(255, Color.blue(clockColor) + cb)
+        )
+        
+        activeBatteryColor = Color.argb(
+            255,
+            min(255, Color.red(batteryColor) + cr),
+            min(255, Color.green(batteryColor) + cg),
+            min(255, Color.blue(batteryColor) + cb)
+        )
+    }
+
     private fun startTicking() {
         handler.removeCallbacks(tickRunnable)
         handler.post(tickRunnable)
@@ -173,11 +211,18 @@ class AodOverlayView(context: Context) : View(context) {
             yOffset = 0f
         }
 
-        activeTextColor = if (burnInProtection && burnInRgbShift) {
+        activeClockColor = if (burnInProtection && burnInRgbShift) {
             val hue = ((System.currentTimeMillis() / 40L) % 360L).toFloat()
             Color.HSVToColor(floatArrayOf(hue, 0.8f, 1f))
         } else {
-            textColor
+            clockColor
+        }
+
+        activeBatteryColor = if (burnInProtection && burnInRgbShift) {
+            val hue = ((System.currentTimeMillis() / 40L) % 360L).toFloat()
+            Color.HSVToColor(floatArrayOf(hue, 0.8f, 1f))
+        } else {
+            batteryColor
         }
 
         val cx = width / 2f + xOffset
@@ -185,11 +230,17 @@ class AodOverlayView(context: Context) : View(context) {
 
         if (showClock) {
             when (clockStyle) {
-                "digital" -> cy = drawDigitalClock(canvas, cx, cy)
-                "analog" -> cy = drawAnalogClock(canvas, cx, cy)
-                "modern_stacked" -> cy = drawStackedClock(canvas, cx, cy)
-                "modern_glow" -> cy = drawGlowClock(canvas, cx, cy)
-                else -> cy = drawDigitalClock(canvas, cx, cy)
+                "digital"           -> cy = drawDigitalClock(canvas, cx, cy)
+                "digital_glow_cyan" -> cy = drawGlowCyanClock(canvas, cx, cy)
+                "modern_stacked"    -> cy = drawStackedClock(canvas, cx, cy)
+                "modern_glow"       -> cy = drawGlowClock(canvas, cx, cy)
+                "analog"            -> cy = drawAnalogClock(canvas, cx, cy)
+                "glow_rose"         -> cy = drawGlowRoseClock(canvas, cx, cy)
+                "digital_amber"     -> cy = drawAmberClock(canvas, cx, cy)
+                "matrix"            -> cy = drawMatrixClock(canvas, cx, cy)
+                "minimal_dot"       -> cy = drawMinimalDotClock(canvas, cx, cy)
+                "dual_tone"         -> cy = drawDualToneClock(canvas, cx, cy)
+                else                -> cy = drawDigitalClock(canvas, cx, cy)
             }
             cy += 8.dp
         }
@@ -212,9 +263,9 @@ class AodOverlayView(context: Context) : View(context) {
         timePaint.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
         
         val alpha = (255 * brightness).toInt()
-        val r = Color.red(activeTextColor)
-        val g = Color.green(activeTextColor)
-        val b = Color.blue(activeTextColor)
+        val r = Color.red(activeClockColor)
+        val g = Color.green(activeClockColor)
+        val b = Color.blue(activeClockColor)
         timePaint.color = Color.argb(alpha, r, g, b)
         
         val hourY = cy - timePaint.ascent() / 2f
@@ -233,15 +284,151 @@ class AodOverlayView(context: Context) : View(context) {
         timePaint.textAlign = Paint.Align.CENTER
         
         val alpha = (255 * brightness).toInt()
-        val r = Color.red(activeTextColor)
-        val g = Color.green(activeTextColor)
-        val b = Color.blue(activeTextColor)
+        val r = Color.red(activeClockColor)
+        val g = Color.green(activeClockColor)
+        val b = Color.blue(activeClockColor)
         timePaint.color = Color.argb(alpha, r, g, b)
         timePaint.setShadowLayer(15f, 0f, 0f, Color.argb(alpha, r, g, b))
         
         val textY = cy - (timePaint.descent() + timePaint.ascent()) / 2f
         canvas.drawText(text, cx, textY, timePaint)
         timePaint.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
+        return textY + timePaint.descent() + 8.dp
+    }
+
+    private fun drawGlowCyanClock(canvas: Canvas, cx: Float, cy: Float): Float {
+        val format = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val text = format.format(Date())
+        timePaint.textSize = 72.sp
+        timePaint.textAlign = Paint.Align.CENTER
+        val alpha = (255 * brightness).toInt()
+        val r = Color.red(activeClockColor)
+        val g = Color.green(activeClockColor)
+        val b = Color.blue(activeClockColor)
+        timePaint.color = Color.argb(alpha, r, g, b)
+        timePaint.setShadowLayer(20f, 0f, 0f, Color.argb((alpha * 0.8f).toInt(), r, g, b))
+        val textY = cy - (timePaint.descent() + timePaint.ascent()) / 2f
+        canvas.drawText(text, cx, textY, timePaint)
+        timePaint.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
+        return textY + timePaint.descent() + 8.dp
+    }
+
+    private fun drawGlowRoseClock(canvas: Canvas, cx: Float, cy: Float): Float {
+        val format = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val text = format.format(Date())
+        timePaint.textSize = 72.sp
+        timePaint.textAlign = Paint.Align.CENTER
+        val alpha = (255 * brightness).toInt()
+        val r = Color.red(activeClockColor)
+        val g = Color.green(activeClockColor)
+        val b = Color.blue(activeClockColor)
+        timePaint.color = Color.argb(alpha, r, g, b)
+        timePaint.setShadowLayer(18f, 0f, 0f, Color.argb((alpha * 0.7f).toInt(), r, g, b))
+        val textY = cy - (timePaint.descent() + timePaint.ascent()) / 2f
+        canvas.drawText(text, cx, textY, timePaint)
+        timePaint.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
+        val lineAlpha = (120 * brightness).toInt()
+        val linePaint = Paint().apply {
+            isAntiAlias = true
+            color = Color.argb(lineAlpha, r, g, b)
+            strokeWidth = 1.5f.dp
+        }
+        canvas.drawLine(cx - 60.dp, textY + timePaint.descent() + 6.dp, cx + 60.dp, textY + timePaint.descent() + 6.dp, linePaint)
+        return textY + timePaint.descent() + 16.dp
+    }
+
+    private fun drawAmberClock(canvas: Canvas, cx: Float, cy: Float): Float {
+        val format = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val text = format.format(Date())
+        timePaint.textSize = 68.sp
+        timePaint.textAlign = Paint.Align.CENTER
+        val alpha = (255 * brightness).toInt()
+        val r = Color.red(activeClockColor)
+        val g = Color.green(activeClockColor)
+        val b = Color.blue(activeClockColor)
+        timePaint.color = Color.argb(alpha, r, g, b)
+        timePaint.setShadowLayer(8f, 0f, 0f, Color.argb((alpha * 0.6f).toInt(), r, g, b))
+        val textY = cy - (timePaint.descent() + timePaint.ascent()) / 2f
+        canvas.drawText(text, cx, textY, timePaint)
+        timePaint.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
+        return textY + timePaint.descent() + 8.dp
+    }
+
+    private fun drawMatrixClock(canvas: Canvas, cx: Float, cy: Float): Float {
+        val format = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val text = format.format(Date())
+        timePaint.textSize = 72.sp
+        timePaint.textAlign = Paint.Align.CENTER
+        val alpha = (255 * brightness).toInt()
+        val r = Color.red(activeClockColor)
+        val g = Color.green(activeClockColor)
+        val b = Color.blue(activeClockColor)
+        timePaint.color = Color.argb(alpha, r, g, b)
+        timePaint.setShadowLayer(25f, 0f, 0f, Color.argb(alpha, r, g, b))
+        val textY = cy - (timePaint.descent() + timePaint.ascent()) / 2f
+        canvas.drawText(text, cx, textY, timePaint)
+        timePaint.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
+        val dimAlpha = (80 * brightness).toInt()
+        val smallPaint = Paint(subPaint).apply {
+            textSize = 12.sp
+            textAlign = Paint.Align.CENTER
+            color = Color.argb(dimAlpha, r, g, b)
+        }
+        val chars = listOf("0","1","0","1","0","1","0","1","0","1","0","1")
+        chars.forEachIndexed { i, c ->
+            val col = i % 4
+            val row = i / 4
+            canvas.drawText(c, cx - 18.dp + col * 12.dp, textY + timePaint.descent() + 10.dp + row * 14.dp, smallPaint)
+        }
+        return textY + timePaint.descent() + 10.dp + 3 * 14.dp
+    }
+
+    private fun drawMinimalDotClock(canvas: Canvas, cx: Float, cy: Float): Float {
+        val format = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val text = format.format(Date())
+        timePaint.textSize = 72.sp
+        timePaint.textAlign = Paint.Align.CENTER
+        val alpha = (255 * brightness).toInt()
+        val r = Color.red(activeClockColor)
+        val g = Color.green(activeClockColor)
+        val b = Color.blue(activeClockColor)
+        timePaint.color = Color.argb(alpha, r, g, b)
+        timePaint.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
+        val textY = cy - (timePaint.descent() + timePaint.ascent()) / 2f
+        canvas.drawText(text, cx, textY, timePaint)
+        val dotAlpha = (100 * brightness).toInt()
+        val dotPaint = Paint().apply {
+            isAntiAlias = true
+            style = Paint.Style.FILL
+            color = Color.argb(dotAlpha, r, g, b)
+        }
+        val dotY = textY + timePaint.descent() + 10.dp
+        canvas.drawCircle(cx - 20.dp, dotY, 3.dp, dotPaint)
+        canvas.drawCircle(cx, dotY, 3.dp, dotPaint)
+        canvas.drawCircle(cx + 20.dp, dotY, 3.dp, dotPaint)
+        return dotY + 3.dp + 8.dp
+    }
+
+    private fun drawDualToneClock(canvas: Canvas, cx: Float, cy: Float): Float {
+        val cal = Calendar.getInstance()
+        val hours = String.format(Locale.getDefault(), "%02d", cal.get(Calendar.HOUR_OF_DAY))
+        val minutes = String.format(Locale.getDefault(), "%02d", cal.get(Calendar.MINUTE))
+        timePaint.textSize = 72.sp
+        timePaint.textAlign = Paint.Align.CENTER
+        timePaint.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
+        val alpha = (255 * brightness).toInt()
+        val r = Color.red(activeClockColor)
+        val g = Color.green(activeClockColor)
+        val b = Color.blue(activeClockColor)
+        timePaint.color = Color.argb(alpha, r, g, b)
+        val charW = timePaint.measureText("00") / 2f
+        val totalW = timePaint.measureText("00:00")
+        val textY = cy - (timePaint.descent() + timePaint.ascent()) / 2f
+        canvas.drawText(hours, cx - totalW / 2f + charW, textY, timePaint)
+        val dimAlpha = (alpha * 0.45f).toInt()
+        timePaint.color = Color.argb(dimAlpha, r, g, b)
+        canvas.drawText(":", cx, textY, timePaint)
+        canvas.drawText(minutes, cx + totalW / 2f - charW, textY, timePaint)
         return textY + timePaint.descent() + 8.dp
     }
 
@@ -252,9 +439,9 @@ class AodOverlayView(context: Context) : View(context) {
         timePaint.textAlign = Paint.Align.CENTER
         
         val alpha = (255 * brightness).toInt()
-        val r = Color.red(activeTextColor)
-        val g = Color.green(activeTextColor)
-        val b = Color.blue(activeTextColor)
+        val r = Color.red(activeClockColor)
+        val g = Color.green(activeClockColor)
+        val b = Color.blue(activeClockColor)
         timePaint.color = Color.argb(alpha, r, g, b)
         timePaint.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
         
@@ -266,9 +453,9 @@ class AodOverlayView(context: Context) : View(context) {
     private fun drawAnalogClock(canvas: Canvas, cx: Float, cy: Float): Float {
         val radius = 80.dp
         
-        val r = Color.red(activeTextColor)
-        val g = Color.green(activeTextColor)
-        val b = Color.blue(activeTextColor)
+        val r = Color.red(activeClockColor)
+        val g = Color.green(activeClockColor)
+        val b = Color.blue(activeClockColor)
         
         val baseAlpha = (255 * brightness).toInt()
         val lowAlpha = (50 * brightness).toInt()
@@ -282,7 +469,7 @@ class AodOverlayView(context: Context) : View(context) {
         val hours = cal.get(Calendar.HOUR)
         val minutes = cal.get(Calendar.MINUTE)
 
-        val hourAngle = Math.toRadians((hours * 30 + minutes * 0.5 - 90).toDouble())
+        val hourAngle = Math.toRadians(hours * 30 + minutes * 0.5 - 90)
         clockHandPaint.color = Color.argb(baseAlpha, r, g, b)
         clockHandPaint.strokeWidth = 4.dp
         canvas.drawLine(cx, cy,
@@ -305,9 +492,9 @@ class AodOverlayView(context: Context) : View(context) {
         datePaint.textSize = 18.sp
         datePaint.textAlign = Paint.Align.CENTER
         
-        val r = Color.red(activeTextColor)
-        val g = Color.green(activeTextColor)
-        val b = Color.blue(activeTextColor)
+        val r = Color.red(activeClockColor)
+        val g = Color.green(activeClockColor)
+        val b = Color.blue(activeClockColor)
         val medAlpha = (180 * brightness).toInt()
         datePaint.color = Color.argb(medAlpha, r, g, b)
         
@@ -315,97 +502,284 @@ class AodOverlayView(context: Context) : View(context) {
         return cy + datePaint.descent() - datePaint.ascent()
     }
 
+    private fun measureBatteryIconWidth(): Float {
+        return when (batteryStyle) {
+            "horizontal_classic" -> 20f.dp
+            "vertical_classic" -> 10f.dp
+            "minimal_bar" -> 24f.dp
+            "circular" -> 14f.dp
+            "dotted" -> 24f.dp
+            "pill" -> 22f.dp
+            "neon_outline" -> 20f.dp
+            "segmented" -> 20f.dp
+            "leaf" -> 16f.dp
+            "text_only" -> 0f
+            else -> 20f.dp
+        }
+    }
+
+    private fun drawBatteryIcon(canvas: Canvas, cx: Float, cy: Float, paint: Paint) {
+        val r = Color.red(activeBatteryColor)
+        val g = Color.green(activeBatteryColor)
+        val b = Color.blue(activeBatteryColor)
+        val medAlpha = (180 * brightness).toInt()
+        paint.color = Color.argb(medAlpha, r, g, b)
+        val level = batteryLevel
+
+        when (batteryStyle) {
+            "horizontal_classic" -> {
+                val bw = 18f.dp
+                val bh = 10f.dp
+                val cw = 2f.dp
+                val ch = 4f.dp
+                val top = cy - bh / 2f
+                paint.style = Paint.Style.STROKE
+                paint.strokeWidth = 1f.dp
+                canvas.drawRoundRect(cx, top, cx + bw, top + bh, 2f.dp, 2f.dp, paint)
+                paint.style = Paint.Style.FILL
+                canvas.drawRoundRect(cx + bw, cy - ch / 2f, cx + bw + cw, cy + ch / 2f, 1f.dp, 1f.dp, paint)
+                val lw = (bw - 3f.dp) * (level / 100f)
+                canvas.drawRoundRect(cx + 1.5f.dp, top + 1.5f.dp, cx + 1.5f.dp + lw, top + bh - 1.5f.dp, 1f.dp, 1f.dp, paint)
+            }
+            "vertical_classic" -> {
+                val bw = 10f.dp
+                val bh = 16f.dp
+                val cw = 4f.dp
+                val ch = 2f.dp
+                val top = cy - bh / 2f
+                paint.style = Paint.Style.STROKE
+                paint.strokeWidth = 1f.dp
+                canvas.drawRoundRect(cx, top, cx + bw, top + bh, 2f.dp, 2f.dp, paint)
+                paint.style = Paint.Style.FILL
+                canvas.drawRoundRect(cx + bw / 2f - cw / 2f, top - ch, cx + bw / 2f + cw / 2f, top, 1f.dp, 1f.dp, paint)
+                val lh = (bh - 3f.dp) * (level / 100f)
+                canvas.drawRoundRect(cx + 1.5f.dp, top + bh - 1.5f.dp - lh, cx + bw - 1.5f.dp, top + bh - 1.5f.dp, 1f.dp, 1f.dp, paint)
+            }
+            "minimal_bar" -> {
+                val bw = 24f.dp
+                val bh = 4f.dp
+                val top = cy - bh / 2f
+                paint.style = Paint.Style.FILL
+                paint.color = Color.argb((80 * brightness).toInt(), r, g, b)
+                canvas.drawRoundRect(cx, top, cx + bw, top + bh, 2f.dp, 2f.dp, paint)
+                paint.color = Color.argb(medAlpha, r, g, b)
+                val lw = bw * (level / 100f)
+                canvas.drawRoundRect(cx, top, cx + lw, top + bh, 2f.dp, 2f.dp, paint)
+            }
+            "circular" -> {
+                val radius = 7f.dp
+                paint.style = Paint.Style.STROKE
+                paint.strokeWidth = 1.5f.dp
+                paint.color = Color.argb((80 * brightness).toInt(), r, g, b)
+                canvas.drawCircle(cx + radius, cy, radius, paint)
+                paint.color = Color.argb(medAlpha, r, g, b)
+                val sweep = 360f * (level / 100f)
+                canvas.drawArc(cx, cy - radius, cx + radius * 2f, cy + radius, -90f, sweep, false, paint)
+            }
+            "dotted" -> {
+                val dots = 5
+                val activeDots = Math.ceil(((level / 100f) * dots).toDouble()).toInt()
+                val dotRadius = 1.5f.dp
+                val spacing = 4.5f.dp
+                paint.style = Paint.Style.FILL
+                for (i in 0 until dots) {
+                    paint.color = Color.argb(if (i < activeDots) medAlpha else (80 * brightness).toInt(), r, g, b)
+                    canvas.drawCircle(cx + dotRadius + i * spacing, cy, dotRadius, paint)
+                }
+            }
+            "pill" -> {
+                val bw = 22f.dp
+                val bh = 10f.dp
+                val top = cy - bh / 2f
+                paint.style = Paint.Style.STROKE
+                paint.strokeWidth = 1f.dp
+                canvas.drawRoundRect(cx, top, cx + bw, top + bh, bh / 2f, bh / 2f, paint)
+                paint.style = Paint.Style.FILL
+                val lw = (bw - 4f.dp) * (level / 100f)
+                if (lw > 0) {
+                    canvas.drawRoundRect(cx + 2f.dp, top + 2f.dp, cx + 2f.dp + lw, top + bh - 2f.dp, (bh - 4f.dp) / 2f, (bh - 4f.dp) / 2f, paint)
+                }
+            }
+            "neon_outline" -> {
+                val bw = 20f.dp
+                val bh = 12f.dp
+                val top = cy - bh / 2f
+                paint.style = Paint.Style.STROKE
+                paint.strokeWidth = 1.5f.dp
+                paint.setShadowLayer(8f.dp, 0f, 0f, paint.color)
+                canvas.drawRoundRect(cx, top, cx + bw, top + bh, 3f.dp, 3f.dp, paint)
+                paint.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
+                paint.style = Paint.Style.FILL
+                val lw = (bw - 4f.dp) * (level / 100f)
+                canvas.drawRoundRect(cx + 2f.dp, top + 2f.dp, cx + 2f.dp + lw, top + bh - 2f.dp, 1.5f.dp, 1.5f.dp, paint)
+            }
+            "segmented" -> {
+                val bw = 20f.dp
+                val bh = 10f.dp
+                val segments = 4
+                val top = cy - bh / 2f
+                val activeSegments = Math.ceil(((level / 100f) * segments).toDouble()).toInt()
+                val segW = (bw - (segments - 1) * 2f.dp) / segments
+                paint.style = Paint.Style.FILL
+                for (i in 0 until segments) {
+                    paint.color = Color.argb(if (i < activeSegments) medAlpha else (80 * brightness).toInt(), r, g, b)
+                    val sx = cx + i * (segW + 2f.dp)
+                    canvas.drawRect(sx, top, sx + segW, top + bh, paint)
+                }
+            }
+            "leaf" -> {
+                val bw = 16f.dp
+                val bh = 10f.dp
+                val top = cy - bh / 2f
+                paint.style = Paint.Style.STROKE
+                paint.strokeWidth = 1.5f.dp
+                val path = android.graphics.Path()
+                path.moveTo(cx, top + bh)
+                path.cubicTo(cx, top, cx + bw / 2f, top, cx + bw, top)
+                path.cubicTo(cx + bw, top + bh, cx + bw / 2f, top + bh, cx, top + bh)
+                canvas.drawPath(path, paint)
+                paint.style = Paint.Style.FILL
+                val lw = bw * (level / 100f)
+                canvas.save()
+                canvas.clipRect(cx, top, cx + lw, top + bh)
+                canvas.drawPath(path, paint)
+                canvas.restore()
+            }
+            "text_only" -> {}
+            else -> {
+                val bw = 18f.dp
+                val bh = 10f.dp
+                val cw = 2f.dp
+                val ch = 4f.dp
+                val top = cy - bh / 2f
+                paint.style = Paint.Style.STROKE
+                paint.strokeWidth = 1f.dp
+                canvas.drawRoundRect(cx, top, cx + bw, top + bh, 2f.dp, 2f.dp, paint)
+                paint.style = Paint.Style.FILL
+                canvas.drawRoundRect(cx + bw, cy - ch / 2f, cx + bw + cw, cy + ch / 2f, 1f.dp, 1f.dp, paint)
+                val lw = (bw - 3f.dp) * (level / 100f)
+                canvas.drawRoundRect(cx + 1.5f.dp, top + 1.5f.dp, cx + 1.5f.dp + lw, top + bh - 1.5f.dp, 1f.dp, 1f.dp, paint)
+            }
+        }
+    }
+
     private fun drawStatusRow(canvas: Canvas, cx: Float, cy: Float) {
-        subPaint.textSize = 14.sp
+        subPaint.textSize = 14f.sp
         subPaint.textAlign = Paint.Align.LEFT
 
-        val r = Color.red(activeTextColor)
-        val g = Color.green(activeTextColor)
-        val b = Color.blue(activeTextColor)
+        val r = Color.red(activeClockColor)
+        val g = Color.green(activeClockColor)
+        val b = Color.blue(activeClockColor)
         val medAlpha = (180 * brightness).toInt()
-        val chargeAlpha = (200 * brightness).toInt()
-        
+
         val items = mutableListOf<String>()
         if (showNotifications && notificationCount > 0) {
             items.add("🔔 $notificationCount")
         }
 
+        val boltSize = 10f.dp
+        val textGap = 5f.dp
+        val percentText = "$batteryLevel%"
+        subPaint.textSize = 13f.sp
+        val percentW = subPaint.measureText(percentText)
+
+        val chargingInfoText: String? = if (showWattage && batteryIsCharging) {
+            val hasMa = chargingCurrentMa > 0
+            val hasW = chargingWatts > 0.05f
+            when {
+                hasMa && hasW -> {
+                    val wStr = if (chargingWatts >= 10f) "${chargingWatts.toInt()}W"
+                               else String.format("%.1fW", chargingWatts)
+                    "${chargingCurrentMa}mA · $wStr"
+                }
+                hasMa -> "${chargingCurrentMa}mA"
+                hasW -> {
+                    val wStr = if (chargingWatts >= 10f) "${chargingWatts.toInt()}W"
+                               else String.format("%.1fW", chargingWatts)
+                    wStr
+                }
+                else -> null
+            }
+        } else null
+        val chargingInfoW = if (chargingInfoText != null) subPaint.measureText(chargingInfoText) + 8f.dp else 0f
+
         var totalWidth = 0f
         if (showBattery) {
-            totalWidth += 24.dp
-            totalWidth += subPaint.measureText(" $batteryLevel%")
-            if (items.isNotEmpty()) totalWidth += 16.dp
+            val iconW = measureBatteryIconWidth()
+            val extraGap = if (batteryIsCharging) boltSize + 4f.dp else 0f
+            totalWidth += iconW + (if (iconW > 0) textGap else 0f) + percentW + chargingInfoW + extraGap
+            if (items.isNotEmpty()) totalWidth += 16f.dp
         }
-        
         if (items.isNotEmpty()) {
-            val notifText = items.joinToString("   ")
-            totalWidth += subPaint.measureText(notifText)
+            totalWidth += subPaint.measureText(items.joinToString("   "))
         }
 
         var currentX = cx - totalWidth / 2f
-        val startY = cy + 4.dp
+        val midY = cy + 4f.dp
 
         if (showBattery) {
             val batPaint = Paint(subPaint)
-            batPaint.color = if (batteryIsCharging) Color.argb(chargeAlpha, 100, 255, 100) else Color.argb(medAlpha, r, g, b)
+            val iconW = measureBatteryIconWidth()
             
-            batPaint.style = Paint.Style.STROKE
-            batPaint.strokeWidth = 1.5f.dp
-            val bodyWidth = 18.dp
-            val bodyHeight = 10.dp
-            val iconY = startY - bodyHeight
-            canvas.drawRoundRect(currentX, iconY, currentX + bodyWidth, iconY + bodyHeight, 2.dp, 2.dp, batPaint)
-            
-            batPaint.style = Paint.Style.FILL
-            canvas.drawRect(currentX + bodyWidth, iconY + 3.dp, currentX + bodyWidth + 2.dp, iconY + 7.dp, batPaint)
-            
-            val levelWidth = (bodyWidth - 4.dp) * (batteryLevel / 100f)
-            canvas.drawRoundRect(currentX + 2.dp, iconY + 2.dp, currentX + 2.dp + levelWidth, iconY + bodyHeight - 2.dp, 1.dp, 1.dp, batPaint)
-            
+            drawBatteryIcon(canvas, currentX, midY, batPaint)
+            currentX += iconW
+
             if (batteryIsCharging) {
-                val path = android.graphics.Path()
-                val cxBolt = currentX + bodyWidth / 2f
-                val cyBolt = iconY + bodyHeight / 2f
-                
-                val boltW = 5.dp
-                val boltH = 10.dp
-                
-                path.moveTo(cxBolt + 2.dp, cyBolt - boltH/2)
-                path.lineTo(cxBolt - boltW/2, cyBolt + 1.dp)
-                path.lineTo(cxBolt, cyBolt + 1.dp)
-                path.lineTo(cxBolt - 2.dp, cyBolt + boltH/2)
-                path.lineTo(cxBolt + boltW/2, cyBolt - 1.dp)
-                path.lineTo(cxBolt, cyBolt - 1.dp)
-                path.close()
-                
-                val boltPaint = Paint(batPaint)
+                val boltPaint = Paint()
+                boltPaint.isAntiAlias = true
                 boltPaint.style = Paint.Style.FILL
-                boltPaint.color = Color.WHITE
-                boltPaint.setShadowLayer(2f, 0f, 0f, Color.argb(100, 0, 0, 0))
-                
-                canvas.save()
-                canvas.rotate(90f, cxBolt, cyBolt)
-                canvas.drawPath(path, boltPaint)
-                canvas.restore()
+                val br = Color.red(activeBatteryColor)
+                val bg = Color.green(activeBatteryColor)
+                val bb = Color.blue(activeBatteryColor)
+                boltPaint.color = Color.argb(medAlpha, br, bg, bb)
+
+                val boltCx = currentX + 3f.dp + boltSize / 2f
+                val boltHalfH = boltSize / 2f
+                val boltPath = android.graphics.Path()
+                boltPath.moveTo(boltCx + boltSize * 0.30f, midY - boltHalfH)
+                boltPath.lineTo(boltCx - boltSize * 0.20f, midY)
+                boltPath.lineTo(boltCx + boltSize * 0.05f, midY)
+                boltPath.lineTo(boltCx - boltSize * 0.30f, midY + boltHalfH)
+                boltPath.lineTo(boltCx + boltSize * 0.20f, midY - 0.06f * boltSize)
+                boltPath.lineTo(boltCx - boltSize * 0.05f, midY - 0.06f * boltSize)
+                boltPath.close()
+                canvas.drawPath(boltPath, boltPaint)
+                currentX += boltSize + 4f.dp
             }
+
+            if (iconW > 0) currentX += textGap
             
-            currentX += bodyWidth + 6.dp
-            
-            subPaint.color = batPaint.color
-            canvas.drawText("$batteryLevel%", currentX, startY, subPaint)
-            currentX += subPaint.measureText("$batteryLevel%") + 16.dp
+            val textR = Color.red(activeBatteryColor)
+            val textG = Color.green(activeBatteryColor)
+            val textB = Color.blue(activeBatteryColor)
+            subPaint.color = Color.argb(medAlpha, textR, textG, textB)
+            subPaint.textAlign = Paint.Align.LEFT
+            val textY = midY - (subPaint.descent() + subPaint.ascent()) / 2f
+            canvas.drawText(percentText, currentX, textY, subPaint)
+            currentX += percentW
+
+            if (chargingInfoText != null) {
+                subPaint.color = Color.argb((medAlpha * 0.80f).toInt(), textR, textG, textB)
+                canvas.drawText(chargingInfoText, currentX + 6f.dp, textY, subPaint)
+                currentX += chargingInfoW
+            }
+
+            currentX += 16f.dp
         }
-        
+
         if (items.isNotEmpty()) {
             subPaint.color = Color.argb(medAlpha, r, g, b)
             val notifText = items.joinToString("   ")
-            canvas.drawText(notifText, currentX, startY, subPaint)
+            val textY = midY - (subPaint.descent() + subPaint.ascent()) / 2f
+            canvas.drawText(notifText, currentX, textY, subPaint)
         }
     }
 
     private val Float.dp: Float get() = this * resources.displayMetrics.density
     private val Int.dp: Float get() = this * resources.displayMetrics.density
+    @Suppress("DEPRECATION")
     private val Float.sp: Float get() = this * resources.displayMetrics.scaledDensity
+    @Suppress("DEPRECATION")
     private val Int.sp: Float get() = this * resources.displayMetrics.scaledDensity
 
     override fun onDetachedFromWindow() {

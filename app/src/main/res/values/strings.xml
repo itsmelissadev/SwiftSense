@@ -356,10 +356,10 @@
     <string name="aod_section_behavior">Behavior</string>
     
     <string name="aod_clock_style">Clock Style</string>
-    <string name="aod_clock_style_digital">Digital</string>
-    <string name="aod_clock_style_analog">Analog Minimal</string>
+    <string name="aod_clock_style_digital">Classic Digital</string>
+    <string name="aod_clock_style_analog">Classic Analog</string>
     <string name="aod_clock_style_modern_stacked">Modern Stacked</string>
-    <string name="aod_clock_style_modern_glow">Modern Glow</string>
+    <string name="aod_clock_style_modern_glow">Glowing Modern</string>
     
     <string name="aod_theme">Theme</string>
     <string name="aod_theme_minimal">Minimal (Dark)</string>
@@ -409,4 +409,33 @@
     <string name="aod_service_channel">AOD Background Service</string>
     
     <string name="optional_permission">Optional</string>
+
+    <string name="aod_clock_styles">Clock Styles</string>
+    <string name="aod_clock_color">Clock Color</string>
+    <string name="aod_battery_styles">Battery Styles</string>
+    <string name="aod_battery_color">Battery Color</string>
+    <string name="aod_show_wattage">Show Charge Wattage</string>
+
+    <string name="aod_clock_style_digital_glow_cyan">Neon Digital</string>
+    <string name="aod_clock_style_glow_rose">Rose Glow</string>
+    <string name="aod_clock_style_digital_amber">Retro Digital</string>
+    <string name="aod_clock_style_matrix">Matrix</string>
+    <string name="aod_clock_style_minimal_dot">Minimal Dot</string>
+    <string name="aod_clock_style_dual_tone">Dual Tone</string>
+
+    <string name="aod_battery_style_horizontal_classic">Horizontal Classic</string>
+    <string name="aod_battery_style_vertical_classic">Vertical Classic</string>
+    <string name="aod_battery_style_minimal_bar">Minimal Bar</string>
+    <string name="aod_battery_style_circular">Circular</string>
+    <string name="aod_battery_style_dotted">Dotted</string>
+    <string name="aod_battery_style_pill">Pill</string>
+    <string name="aod_battery_style_neon_outline">Neon Outline</string>
+    <string name="aod_battery_style_segmented">Segmented</string>
+    <string name="aod_battery_style_leaf">Leaf</string>
+    <string name="aod_battery_style_text_only">Text Only</string>
+
+    <string name="aod_dialog_close">Close</string>
+
+    <string name="aod_run_as_foreground_service">Run in Foreground</string>
+    <string name="aod_run_as_foreground_service_desc">Keep the service alive more aggressively by running it as a foreground service with a persistent notification.</string>
 </resources>

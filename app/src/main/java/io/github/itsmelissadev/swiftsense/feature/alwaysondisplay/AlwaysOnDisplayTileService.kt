@@ -15,6 +15,7 @@ class AlwaysOnDisplayTileService : TileService() {
         updateTile(isEnabled)
     }
 
+    @Suppress("DEPRECATION")
     override fun onClick() {
         super.onClick()
         val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {

@@ -2,6 +2,9 @@ package io.github.itsmelissadev.swiftsense.feature.amoledscreenprotect
 
 import android.content.Intent
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,11 +18,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Shield
@@ -46,6 +51,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -55,12 +63,17 @@ import io.github.itsmelissadev.swiftsense.data.PreferenceManager
 import io.github.itsmelissadev.swiftsense.ui.components.FeatureCard
 import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseSection
 import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseSelectionDialog
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTextField
 import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTopAppBar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import kotlin.random.Random
+
+data class AmoledFilterSpec(
+    val key: String,
+    val label: String
+)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -85,7 +98,6 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
 
     val activeRegions by preferenceManager.amoledRegions.collectAsState(initial = setOf("full_screen"))
     var showRefreshModeDialog by remember { mutableStateOf(false) }
-    var showFilterTypeDialog by remember { mutableStateOf(false) }
     var showCycleDurationDialog by remember { mutableStateOf(false) }
     var isRunning by remember { mutableStateOf(AmoledProtectService.isServiceRunning) }
 
@@ -95,6 +107,31 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
             delay(1000)
         }
     }
+
+    val filterSpecs = listOf(
+        AmoledFilterSpec("checker_grid", stringResource(R.string.amoled_filter_checker_grid)),
+        AmoledFilterSpec("dots", stringResource(R.string.amoled_filter_dots)),
+        AmoledFilterSpec("horizontal_lines", stringResource(R.string.amoled_filter_horizontal)),
+        AmoledFilterSpec("vertical_lines", stringResource(R.string.amoled_filter_vertical)),
+        AmoledFilterSpec("grid", stringResource(R.string.amoled_filter_grid)),
+        AmoledFilterSpec("diagonal", stringResource(R.string.amoled_filter_diagonal)),
+        AmoledFilterSpec("noise", stringResource(R.string.amoled_filter_noise)),
+        AmoledFilterSpec("pixel_shift", stringResource(R.string.amoled_filter_pixel_shift))
+    )
+
+    val durations = listOf(
+        10 to stringResource(R.string.amoled_duration_10s),
+        30 to stringResource(R.string.amoled_duration_30s),
+        60 to stringResource(R.string.amoled_duration_1m),
+        120 to stringResource(R.string.amoled_duration_2m),
+        180 to stringResource(R.string.amoled_duration_3m),
+        300 to stringResource(R.string.amoled_duration_5m)
+    )
+
+    val modes = listOf(
+        "smooth" to stringResource(R.string.amoled_mode_smooth),
+        "jump" to stringResource(R.string.amoled_mode_jump)
+    )
 
     Scaffold(
         topBar = {
@@ -138,9 +175,7 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
                             IconButton(
                                 onClick = {
                                     scope.launch {
-                                        preferenceManager.setAmoledWarningDismissed(
-                                            true
-                                        )
+                                        preferenceManager.setAmoledWarningDismissed(true)
                                     }
                                 },
                                 modifier = Modifier.size(24.dp)
@@ -177,80 +212,107 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
 
             SwiftSenseSection(title = stringResource(R.string.amoled_filter_settings)) {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    val filterTypes = listOf(
-                        "checker_grid" to stringResource(R.string.amoled_filter_checker_grid),
-                        "dots" to stringResource(R.string.amoled_filter_dots),
-                        "horizontal_lines" to stringResource(R.string.amoled_filter_horizontal),
-                        "vertical_lines" to stringResource(R.string.amoled_filter_vertical),
-                        "grid" to stringResource(R.string.amoled_filter_grid),
-                        "diagonal" to stringResource(R.string.amoled_filter_diagonal),
-                        "noise" to stringResource(R.string.amoled_filter_noise),
-                        "pixel_shift" to stringResource(R.string.amoled_filter_pixel_shift)
+                    Text(
+                        stringResource(R.string.amoled_filter_type),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary
                     )
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        SwiftSenseTextField(
-                            value = filterTypes.find { it.first == filterType }?.second ?: "",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = stringResource(R.string.amoled_filter_type),
-                            trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) }
-                        )
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clickable { showFilterTypeDialog = true }
-                        )
+
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        items(filterSpecs) { spec ->
+                            val isSelected = filterType == spec.key
+                            AmoledFilterPreviewCard(
+                                spec = spec,
+                                isSelected = isSelected,
+                                intensity = densitySlider,
+                                filterOpacity = opacitySlider,
+                                onClick = {
+                                    scope.launch { preferenceManager.setAmoledFilterType(spec.key) }
+                                }
+                            )
+                        }
                     }
 
-                    val durations = listOf(
-                        10 to stringResource(R.string.amoled_duration_10s),
-                        30 to stringResource(R.string.amoled_duration_30s),
-                        60 to stringResource(R.string.amoled_duration_1m),
-                        120 to stringResource(R.string.amoled_duration_2m),
-                        180 to stringResource(R.string.amoled_duration_3m),
-                        300 to stringResource(R.string.amoled_duration_5m)
-                    )
+                    val durSelected = durations.find { it.first == cycleDuration }?.second ?: ""
                     Box(modifier = Modifier.fillMaxWidth()) {
-                        SwiftSenseTextField(
-                            value = durations.find { it.first == cycleDuration }?.second ?: "",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = stringResource(R.string.amoled_cycle_duration),
-                            trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) }
-                        )
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clickable { showCycleDurationDialog = true }
-                        )
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MaterialTheme.colorScheme.surface,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 14.dp)
+                                    .clickable { showCycleDurationDialog = true },
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        stringResource(R.string.amoled_cycle_duration),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        durSelected,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                                Icon(
+                                    Icons.Default.Info,
+                                    null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
                     }
 
-                    val modes = listOf(
-                        "smooth" to stringResource(R.string.amoled_mode_smooth),
-                        "jump" to stringResource(R.string.amoled_mode_jump)
-                    )
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        SwiftSenseTextField(
-                            value = modes.find { it.first == refreshMode }?.second ?: "",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = stringResource(R.string.amoled_refresh_mode),
-                            trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) }
-                        )
-                        Box(
+                    val modeSelected = modes.find { it.first == refreshMode }?.second ?: ""
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
                             modifier = Modifier
-                                .matchParentSize()
-                                .clickable { showRefreshModeDialog = true }
-                        )
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp)
+                                .clickable { showRefreshModeDialog = true },
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    stringResource(R.string.amoled_refresh_mode),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    modeSelected,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            Icon(
+                                Icons.Default.Info,
+                                null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
 
                     Text(
-                        text = if (refreshMode == "smooth") stringResource(R.string.amoled_mode_smooth_desc) else stringResource(
-                            R.string.amoled_mode_jump_desc
-                        ),
+                        text = if (refreshMode == "smooth") stringResource(R.string.amoled_mode_smooth_desc) else stringResource(R.string.amoled_mode_jump_desc),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(top = 4.dp)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
                 }
             }
@@ -280,9 +342,7 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
                             onValueChange = { densitySlider = it },
                             onValueChangeFinished = {
                                 scope.launch {
-                                    preferenceManager.setAmoledIntensity(
-                                        densitySlider
-                                    )
+                                    preferenceManager.setAmoledIntensity(densitySlider)
                                 }
                             },
                             colors = SliderDefaults.colors(
@@ -315,9 +375,7 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
                             onValueChange = { opacitySlider = it },
                             onValueChangeFinished = {
                                 scope.launch {
-                                    preferenceManager.setAmoledOpacity(
-                                        opacitySlider
-                                    )
+                                    preferenceManager.setAmoledOpacity(opacitySlider)
                                 }
                             },
                             colors = SliderDefaults.colors(
@@ -390,10 +448,6 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
     }
 
     if (showRefreshModeDialog) {
-        val modes = listOf(
-            "smooth" to stringResource(R.string.amoled_mode_smooth),
-            "jump" to stringResource(R.string.amoled_mode_jump)
-        )
         SwiftSenseSelectionDialog(
             title = stringResource(R.string.amoled_refresh_mode),
             options = modes,
@@ -405,37 +459,7 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
         )
     }
 
-    if (showFilterTypeDialog) {
-        val filterTypes = listOf(
-            "checker_grid" to stringResource(R.string.amoled_filter_checker_grid),
-            "dots" to stringResource(R.string.amoled_filter_dots),
-            "horizontal_lines" to stringResource(R.string.amoled_filter_horizontal),
-            "vertical_lines" to stringResource(R.string.amoled_filter_vertical),
-            "grid" to stringResource(R.string.amoled_filter_grid),
-            "diagonal" to stringResource(R.string.amoled_filter_diagonal),
-            "noise" to stringResource(R.string.amoled_filter_noise),
-            "pixel_shift" to stringResource(R.string.amoled_filter_pixel_shift)
-        )
-        SwiftSenseSelectionDialog(
-            title = stringResource(R.string.amoled_filter_type),
-            options = filterTypes,
-            selected = filterType,
-            onSelectedChange = { type ->
-                scope.launch { preferenceManager.setAmoledFilterType(type) }
-            },
-            onDismissRequest = { showFilterTypeDialog = false }
-        )
-    }
-
     if (showCycleDurationDialog) {
-        val durations = listOf(
-            10 to stringResource(R.string.amoled_duration_10s),
-            30 to stringResource(R.string.amoled_duration_30s),
-            60 to stringResource(R.string.amoled_duration_1m),
-            120 to stringResource(R.string.amoled_duration_2m),
-            180 to stringResource(R.string.amoled_duration_3m),
-            300 to stringResource(R.string.amoled_duration_5m)
-        )
         SwiftSenseSelectionDialog(
             title = stringResource(R.string.amoled_cycle_duration),
             options = durations,
@@ -448,4 +472,168 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
     }
 }
 
+@Composable
+fun AmoledFilterPreviewCard(
+    spec: AmoledFilterSpec,
+    isSelected: Boolean,
+    intensity: Float,
+    filterOpacity: Float,
+    onClick: () -> Unit
+) {
+    val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color(0xFF2A2A2A)
+    val borderWidth = if (isSelected) 2.dp else 1.dp
+    val overlayAlpha = (filterOpacity * 0.85f).coerceIn(0.1f, 0.95f)
+    val dotSpacing = (1f - intensity * 0.6f).coerceIn(0.15f, 1f)
 
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(80.dp, 110.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .border(borderWidth, borderColor, RoundedCornerShape(12.dp))
+                .background(Color.Black)
+                .clickable { onClick() },
+            contentAlignment = Alignment.Center
+        ) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val w = size.width
+                val h = size.height
+                val step = (w * dotSpacing * 0.18f).coerceAtLeast(3f)
+                val color = Color.White.copy(alpha = overlayAlpha)
+
+                when (spec.key) {
+                    "checker_grid" -> {
+                        var row = 0
+                        var y = 0f
+                        while (y < h) {
+                            var x = if (row % 2 == 0) 0f else step
+                            while (x < w) {
+                                drawCircle(color = color, radius = 1f, center = Offset(x, y))
+                                x += step * 2f
+                            }
+                            y += step
+                            row++
+                        }
+                    }
+                    "dots" -> {
+                        var y = 0f
+                        while (y < h) {
+                            var x = 0f
+                            while (x < w) {
+                                drawCircle(color = color, radius = 1.2f, center = Offset(x, y))
+                                x += step * 1.5f
+                            }
+                            y += step * 1.5f
+                        }
+                    }
+                    "horizontal_lines" -> {
+                        var y = 0f
+                        while (y < h) {
+                            drawLine(
+                                color = color,
+                                start = Offset(0f, y),
+                                end = Offset(w, y),
+                                strokeWidth = 1f
+                            )
+                            y += step * 1.5f
+                        }
+                    }
+                    "vertical_lines" -> {
+                        var x = 0f
+                        while (x < w) {
+                            drawLine(
+                                color = color,
+                                start = Offset(x, 0f),
+                                end = Offset(x, h),
+                                strokeWidth = 1f
+                            )
+                            x += step * 1.5f
+                        }
+                    }
+                    "grid" -> {
+                        var y = 0f
+                        while (y < h) {
+                            drawLine(color = color, start = Offset(0f, y), end = Offset(w, y), strokeWidth = 0.7f)
+                            y += step * 1.5f
+                        }
+                        var x = 0f
+                        while (x < w) {
+                            drawLine(color = color, start = Offset(x, 0f), end = Offset(x, h), strokeWidth = 0.7f)
+                            x += step * 1.5f
+                        }
+                    }
+                    "diagonal" -> {
+                        val diag = step * 2f
+                        var offset = -h
+                        while (offset < w + h) {
+                            drawLine(
+                                color = color,
+                                start = Offset(offset, 0f),
+                                end = Offset(offset + h, h),
+                                strokeWidth = 0.8f
+                            )
+                            offset += diag
+                        }
+                    }
+                    "noise" -> {
+                        val rng = Random(42)
+                        val count = (w * h * intensity * 0.08f).toInt().coerceIn(10, 800)
+                        repeat(count) {
+                            val nx = rng.nextFloat() * w
+                            val ny = rng.nextFloat() * h
+                            drawCircle(color = color, radius = 0.8f, center = Offset(nx, ny))
+                        }
+                    }
+                    "pixel_shift" -> {
+                        val blockSize = step * 1.2f
+                        val rng = Random(7)
+                        var y = 0f
+                        while (y < h) {
+                            var x = 0f
+                            while (x < w) {
+                                if (rng.nextBoolean()) {
+                                    drawRect(
+                                        color = color,
+                                        topLeft = Offset(x, y),
+                                        size = androidx.compose.ui.geometry.Size(blockSize.coerceAtLeast(1f), blockSize.coerceAtLeast(1f))
+                                    )
+                                }
+                                x += blockSize * 2f
+                            }
+                            y += blockSize * 2f
+                        }
+                    }
+                }
+            }
+
+            if (isSelected) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(4.dp)
+                        .size(14.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "✓",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            }
+        }
+
+        Text(
+            text = spec.label,
+            style = MaterialTheme.typography.labelSmall,
+            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+            maxLines = 1
+        )
+    }
+}

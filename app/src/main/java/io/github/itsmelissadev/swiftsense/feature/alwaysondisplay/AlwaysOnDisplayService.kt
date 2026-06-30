@@ -11,6 +11,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import androidx.core.app.NotificationCompat
+import android.content.pm.ServiceInfo
+import android.os.Build
+import io.github.itsmelissadev.swiftsense.MainActivity
+import io.github.itsmelissadev.swiftsense.R
 
 class AlwaysOnDisplayService : AccessibilityService() {
 
@@ -21,8 +30,15 @@ class AlwaysOnDisplayService : AccessibilityService() {
     private var dismissPowerButton = true
     
     
+    private var isForegroundRunning = false
+
     companion object {
+        private var instance: AlwaysOnDisplayService? = null
         var isAodVisible = false
+            set(value) {
+                field = value
+                instance?.updateForegroundNotification(value)
+            }
         var lastLaunchTime = 0L
     }
 
@@ -56,6 +72,7 @@ class AlwaysOnDisplayService : AccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
+        instance = this
         preferenceManager = PreferenceManager(this)
 
         preferenceJob = scope.launch {
@@ -67,6 +84,15 @@ class AlwaysOnDisplayService : AccessibilityService() {
             launch {
                 preferenceManager.aodDismissPowerButton.collect { dismiss ->
                     dismissPowerButton = dismiss
+                }
+            }
+            launch {
+                preferenceManager.aodAsForegroundService.collect { runAsForeground ->
+                    if (runAsForeground) {
+                        startForegroundService()
+                    } else {
+                        stopForegroundService()
+                    }
                 }
             }
         }
@@ -113,8 +139,78 @@ class AlwaysOnDisplayService : AccessibilityService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        instance = null
         preferenceJob?.cancel()
         try { unregisterReceiver(screenStateReceiver) } catch (e: Exception) {}
+        stopForegroundService()
         dismissAodActivity()
+    }
+
+    private val NOTIFICATION_ID = 2002
+    private val CHANNEL_ID = "aod_foreground_service_channel"
+
+    private fun createNotification(isActive: Boolean = false): Notification {
+        val mainPI = PendingIntent.getActivity(
+            this,
+            0,
+            Intent(this, MainActivity::class.java),
+            PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val contentText = getString(
+            if (isActive) R.string.aod_status_active
+            else R.string.aod_service_notification_text
+        )
+
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle(getString(R.string.aod_service_notification_title))
+            .setContentText(contentText)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setContentIntent(mainPI)
+            .setOngoing(true)
+            .build()
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                getString(R.string.aod_service_channel),
+                NotificationManager.IMPORTANCE_LOW
+            )
+            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+        }
+    }
+
+    private fun startForegroundService() {
+        createNotificationChannel()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(
+                NOTIFICATION_ID,
+                createNotification(isAodVisible),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            )
+        } else {
+            startForeground(NOTIFICATION_ID, createNotification(isAodVisible))
+        }
+        isForegroundRunning = true
+    }
+
+    private fun stopForegroundService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+        } else {
+            @Suppress("DEPRECATION")
+            stopForeground(true)
+        }
+        isForegroundRunning = false
+    }
+
+    private fun updateForegroundNotification(isActive: Boolean) {
+        if (isForegroundRunning) {
+            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.notify(NOTIFICATION_ID, createNotification(isActive))
+        }
     }
 }

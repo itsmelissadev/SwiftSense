@@ -354,10 +354,10 @@
     <string name="aod_section_behavior">Davranış</string>
 
     <string name="aod_clock_style">Saat Stili</string>
-    <string name="aod_clock_style_digital">Dijital</string>
-    <string name="aod_clock_style_analog">Analog Minimal</string>
-    <string name="aod_clock_style_modern_stacked">Modern Alt Alta</string>
-    <string name="aod_clock_style_modern_glow">Modern Parlak</string>
+    <string name="aod_clock_style_digital">Klasik Dijital</string>
+    <string name="aod_clock_style_analog">Klasik Analog</string>
+    <string name="aod_clock_style_modern_stacked">Modern Yığın</string>
+    <string name="aod_clock_style_modern_glow">Parlak Modern</string>
     <string name="aod_theme">Tema</string>
     <string name="aod_theme_minimal">Minimal (Koyu)</string>
     <string name="aod_theme_bold">Kalın</string>
@@ -409,4 +409,33 @@
     <string name="aod_service_channel">AOD Arka Plan Servisi</string>
 
     <string name="optional_permission">İsteğe Bağlı</string>
+
+    <string name="aod_clock_styles">Saat Stilleri</string>
+    <string name="aod_clock_color">Saat Rengi</string>
+    <string name="aod_battery_styles">Pil Stilleri</string>
+    <string name="aod_battery_color">Pil Rengi</string>
+    <string name="aod_show_wattage">Şarj Watt Göster</string>
+
+    <string name="aod_clock_style_digital_glow_cyan">Neon Dijital</string>
+    <string name="aod_clock_style_glow_rose">Rose Parlaklık</string>
+    <string name="aod_clock_style_digital_amber">Retro Dijital</string>
+    <string name="aod_clock_style_matrix">Matrix</string>
+    <string name="aod_clock_style_minimal_dot">Minimal Nokta</string>
+    <string name="aod_clock_style_dual_tone">İki Tonlu</string>
+
+    <string name="aod_battery_style_horizontal_classic">Yatay Klasik</string>
+    <string name="aod_battery_style_vertical_classic">Dikey Klasik</string>
+    <string name="aod_battery_style_minimal_bar">Minimal Çizgi</string>
+    <string name="aod_battery_style_circular">Yuvarlak</string>
+    <string name="aod_battery_style_dotted">Noktalı</string>
+    <string name="aod_battery_style_pill">Hap</string>
+    <string name="aod_battery_style_neon_outline">Neon Çerçeve</string>
+    <string name="aod_battery_style_segmented">Bölmeli</string>
+    <string name="aod_battery_style_leaf">Yaprak</string>
+    <string name="aod_battery_style_text_only">Sadece Yazı</string>
+
+    <string name="aod_dialog_close">Kapat</string>
+
+    <string name="aod_run_as_foreground_service">Ön Planda Çalıştır</string>
+    <string name="aod_run_as_foreground_service_desc">Servisi kalıcı bir bildirimle ön planda çalıştırarak sistem tarafından kapatılmasını daha agresif şekilde engelleyin.</string>
 </resources>
