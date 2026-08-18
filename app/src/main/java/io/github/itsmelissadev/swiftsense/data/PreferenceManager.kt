@@ -27,7 +27,13 @@ class PreferenceManager(private val context: Context) {
         val SHIZUKU_SENSOR_BOOST = booleanPreferencesKey("shizuku_sensor_boost")
         const val SENSOR_STATES_PREFIX = "sensor_state_"
         private val DISABLED_APPS = stringSetPreferencesKey("disabled_apps")
+        val APP_MANAGER_WARNING_DISMISSED = booleanPreferencesKey("app_manager_warning_dismissed")
+        val APP_MANAGER_CUSTOM_LISTS = stringSetPreferencesKey("app_manager_custom_lists")
+        val APP_MANAGER_ACTIVE_LIST_ID = stringPreferencesKey("app_manager_active_list_id")
         private val STOPPER_APPS = stringSetPreferencesKey("stopper_apps")
+        val IS_STOPPER_SERVICE_RUNNING = booleanPreferencesKey("is_stopper_service_running")
+        val STOPPER_INTERVAL = intPreferencesKey("stopper_interval")
+        val STOPPER_MODE = stringPreferencesKey("stopper_mode")
         private val RESOLUTION_PLANS = stringSetPreferencesKey("resolution_plans")
         private val SYSTEM_MACROS = stringSetPreferencesKey("system_macros")
         val AMOLED_INTENSITY = floatPreferencesKey("amoled_intensity")
@@ -37,6 +43,12 @@ class PreferenceManager(private val context: Context) {
         val AMOLED_REFRESH_MODE = stringPreferencesKey("amoled_refresh_mode")
         val AMOLED_WARNING_DISMISSED = booleanPreferencesKey("amoled_warning_dismissed")
         val AMOLED_REGIONS = stringSetPreferencesKey("amoled_regions")
+        val AMOLED_CUSTOM_GAP_HEIGHT = floatPreferencesKey("amoled_custom_gap_height")
+        val AMOLED_CUSTOM_POSITION = floatPreferencesKey("amoled_custom_position")
+        val AMOLED_TINT_ENABLED = booleanPreferencesKey("amoled_tint_enabled")
+        val AMOLED_TINT_COLOR = stringPreferencesKey("amoled_tint_color")
+        val AMOLED_TINT_CUSTOM_HEX = stringPreferencesKey("amoled_tint_custom_hex")
+        val AMOLED_TINT_INTENSITY = floatPreferencesKey("amoled_tint_intensity")
         val GYRO_SIM_ENABLED = booleanPreferencesKey("gyro_sim_enabled")
         val GYRO_SIM_SENSITIVITY = floatPreferencesKey("gyro_sim_sensitivity")
         val GYRO_SIM_INVERT_X = booleanPreferencesKey("gyro_sim_invert_x")
@@ -122,6 +134,32 @@ class PreferenceManager(private val context: Context) {
         }
     }
 
+    val appManagerWarningDismissed: Flow<Boolean> =
+        preferences.map { it[APP_MANAGER_WARNING_DISMISSED] ?: false }
+
+    suspend fun setAppManagerWarningDismissed(dismissed: Boolean) {
+        context.dataStore.edit { it[APP_MANAGER_WARNING_DISMISSED] = dismissed }
+    }
+
+    val appManagerCustomListsJson: Flow<Set<String>> =
+        preferences.map { it[APP_MANAGER_CUSTOM_LISTS] ?: emptySet() }
+
+    val appManagerActiveListId: Flow<String?> =
+        preferences.map { it[APP_MANAGER_ACTIVE_LIST_ID] }
+
+    suspend fun saveAppManagerCustomLists(lists: Set<String>, activeId: String?) {
+        context.dataStore.edit { prefs ->
+            prefs[APP_MANAGER_CUSTOM_LISTS] = lists
+            if (activeId != null) {
+                prefs[APP_MANAGER_ACTIVE_LIST_ID] = activeId
+            }
+        }
+    }
+
+    suspend fun setAppManagerActiveListId(id: String) {
+        context.dataStore.edit { it[APP_MANAGER_ACTIVE_LIST_ID] = id }
+    }
+
     val stopperApps: Flow<Set<String>> = preferences.map { it[STOPPER_APPS] ?: emptySet() }
 
     suspend fun setStopperApps(apps: Set<String>) {
@@ -137,6 +175,25 @@ class PreferenceManager(private val context: Context) {
                 prefs[STOPPER_APPS] = current + packageName
             }
         }
+    }
+
+    val isStopperServiceRunning: Flow<Boolean> =
+        preferences.map { it[IS_STOPPER_SERVICE_RUNNING] ?: false }
+
+    suspend fun setStopperServiceRunning(running: Boolean) {
+        context.dataStore.edit { it[IS_STOPPER_SERVICE_RUNNING] = running }
+    }
+
+    val stopperInterval: Flow<Int> = preferences.map { it[STOPPER_INTERVAL] ?: 10 }
+
+    suspend fun setStopperInterval(interval: Int) {
+        context.dataStore.edit { it[STOPPER_INTERVAL] = interval }
+    }
+
+    val stopperMode: Flow<String> = preferences.map { it[STOPPER_MODE] ?: "FORCE" }
+
+    suspend fun setStopperMode(mode: String) {
+        context.dataStore.edit { it[STOPPER_MODE] = mode }
     }
 
     val systemMacros: Flow<Set<String>> = preferences.map { it[SYSTEM_MACROS] ?: emptySet() }
@@ -224,6 +281,40 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun setAmoledRegions(regions: Set<String>) {
         context.dataStore.edit { it[AMOLED_REGIONS] = regions }
+    }
+
+    val amoledCustomGapHeight: Flow<Float> =
+        preferences.map { it[AMOLED_CUSTOM_GAP_HEIGHT] ?: 0.40f }
+
+    suspend fun setAmoledCustomGapHeight(height: Float) {
+        context.dataStore.edit { it[AMOLED_CUSTOM_GAP_HEIGHT] = height }
+    }
+
+    val amoledCustomPosition: Flow<Float> =
+        preferences.map { it[AMOLED_CUSTOM_POSITION] ?: 0.50f }
+
+    suspend fun setAmoledCustomPosition(position: Float) {
+        context.dataStore.edit { it[AMOLED_CUSTOM_POSITION] = position }
+    }
+
+    val amoledTintEnabled: Flow<Boolean> = preferences.map { it[AMOLED_TINT_ENABLED] ?: false }
+    suspend fun setAmoledTintEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[AMOLED_TINT_ENABLED] = enabled }
+    }
+
+    val amoledTintColor: Flow<String> = preferences.map { it[AMOLED_TINT_COLOR] ?: "amber" }
+    suspend fun setAmoledTintColor(color: String) {
+        context.dataStore.edit { it[AMOLED_TINT_COLOR] = color }
+    }
+
+    val amoledTintCustomHex: Flow<String> = preferences.map { it[AMOLED_TINT_CUSTOM_HEX] ?: "#FFA500" }
+    suspend fun setAmoledTintCustomHex(hex: String) {
+        context.dataStore.edit { it[AMOLED_TINT_CUSTOM_HEX] = hex }
+    }
+
+    val amoledTintIntensity: Flow<Float> = preferences.map { it[AMOLED_TINT_INTENSITY] ?: 0.35f }
+    suspend fun setAmoledTintIntensity(intensity: Float) {
+        context.dataStore.edit { it[AMOLED_TINT_INTENSITY] = intensity }
     }
 
     val gyroSimEnabled: Flow<Boolean> = preferences.map { it[GYRO_SIM_ENABLED] ?: false }

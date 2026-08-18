@@ -62,6 +62,9 @@ class AmoledProtectService : AccessibilityService() {
         const val REGION_FULL_SCREEN = "full_screen"
         const val REGION_STATUS_BAR = "status_bar"
         const val REGION_NAVIGATION_BAR = "navigation_bar"
+        const val REGION_CUSTOM = "custom"
+        const val REGION_CUSTOM_TOP = "custom_top"
+        const val REGION_CUSTOM_BOTTOM = "custom_bottom"
 
         private const val ANIMATION_STEPS = 120
     }
@@ -130,6 +133,54 @@ class AmoledProtectService : AccessibilityService() {
                     restartAnimation()
                 }
             }
+
+            launch {
+                preferenceManager.amoledCustomGapHeight.collect {
+                    updateCustomOverlays()
+                }
+            }
+
+            launch {
+                preferenceManager.amoledCustomPosition.collect {
+                    updateCustomOverlays()
+                }
+            }
+
+            launch {
+                preferenceManager.amoledTintEnabled.collect { enabled ->
+                    val color = preferenceManager.amoledTintColor.first()
+                    val hex = preferenceManager.amoledTintCustomHex.first()
+                    val intensity = preferenceManager.amoledTintIntensity.first()
+                    overlayViews.values.forEach { it.updateTint(enabled, color, hex, intensity) }
+                }
+            }
+
+            launch {
+                preferenceManager.amoledTintColor.collect { color ->
+                    val enabled = preferenceManager.amoledTintEnabled.first()
+                    val hex = preferenceManager.amoledTintCustomHex.first()
+                    val intensity = preferenceManager.amoledTintIntensity.first()
+                    overlayViews.values.forEach { it.updateTint(enabled, color, hex, intensity) }
+                }
+            }
+
+            launch {
+                preferenceManager.amoledTintCustomHex.collect { hex ->
+                    val enabled = preferenceManager.amoledTintEnabled.first()
+                    val color = preferenceManager.amoledTintColor.first()
+                    val intensity = preferenceManager.amoledTintIntensity.first()
+                    overlayViews.values.forEach { it.updateTint(enabled, color, hex, intensity) }
+                }
+            }
+
+            launch {
+                preferenceManager.amoledTintIntensity.collect { intensity ->
+                    val enabled = preferenceManager.amoledTintEnabled.first()
+                    val color = preferenceManager.amoledTintColor.first()
+                    val hex = preferenceManager.amoledTintCustomHex.first()
+                    overlayViews.values.forEach { it.updateTint(enabled, color, hex, intensity) }
+                }
+            }
         }
     }
 
@@ -145,24 +196,125 @@ class AmoledProtectService : AccessibilityService() {
         val density = preferenceManager.amoledIntensity.first()
         val opacity = preferenceManager.amoledOpacity.first()
         val filterType = preferenceManager.amoledFilterType.first()
+        val tintEnabled = preferenceManager.amoledTintEnabled.first()
+        val tintColor = preferenceManager.amoledTintColor.first()
+        val tintHex = preferenceManager.amoledTintCustomHex.first()
+        val tintIntensity = preferenceManager.amoledTintIntensity.first()
 
         for (region in regions) {
-            val view = AmoledFilterView(this@AmoledProtectService)
-            view.updateDensity(density)
-            view.updateOpacity(opacity)
-            view.updateFilterType(filterType)
+            if (region == REGION_CUSTOM) {
+                val screenHeight = getScreenHeight()
+                val gapRatio = preferenceManager.amoledCustomGapHeight.first()
+                val posRatio = preferenceManager.amoledCustomPosition.first()
+                val (topHeight, bottomHeight) = calculateCustomHeights(screenHeight, gapRatio, posRatio)
 
-            val params = createLayoutParams(region)
-            try {
-                windowManager?.addView(view, params)
-                overlayViews[region] = view
-            } catch (e: Exception) {
-                e.printStackTrace()
+                val topView = AmoledFilterView(this@AmoledProtectService)
+                topView.updateDensity(density)
+                topView.updateOpacity(opacity)
+                topView.updateFilterType(filterType)
+                topView.updateTint(tintEnabled, tintColor, tintHex, tintIntensity)
+                val topParams = createLayoutParams(REGION_CUSTOM_TOP, topHeight)
+                try {
+                    windowManager?.addView(topView, topParams)
+                    overlayViews[REGION_CUSTOM_TOP] = topView
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+
+                val bottomView = AmoledFilterView(this@AmoledProtectService)
+                bottomView.updateDensity(density)
+                bottomView.updateOpacity(opacity)
+                bottomView.updateFilterType(filterType)
+                bottomView.updateTint(tintEnabled, tintColor, tintHex, tintIntensity)
+                val bottomParams = createLayoutParams(REGION_CUSTOM_BOTTOM, bottomHeight)
+                try {
+                    windowManager?.addView(bottomView, bottomParams)
+                    overlayViews[REGION_CUSTOM_BOTTOM] = bottomView
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            } else {
+                val view = AmoledFilterView(this@AmoledProtectService)
+                view.updateDensity(density)
+                view.updateOpacity(opacity)
+                view.updateFilterType(filterType)
+                view.updateTint(tintEnabled, tintColor, tintHex, tintIntensity)
+
+                val params = createLayoutParams(region)
+                try {
+                    windowManager?.addView(view, params)
+                    overlayViews[region] = view
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
         }
     }
 
-    private fun createLayoutParams(region: String): WindowManager.LayoutParams {
+    private fun getScreenHeight(): Int {
+        val wm = windowManager ?: getSystemService(WINDOW_SERVICE) as WindowManager
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val windowMetrics = wm.currentWindowMetrics
+            windowMetrics.bounds.height()
+        } else {
+            val dm = DisplayMetrics()
+            @Suppress("DEPRECATION")
+            wm.defaultDisplay.getRealMetrics(dm)
+            dm.heightPixels
+        }
+    }
+
+    private fun calculateCustomHeights(screenHeight: Int, gapRatio: Float, positionRatio: Float): Pair<Int, Int> {
+        val gapPx = (screenHeight * gapRatio).toInt()
+        val centerPx = (screenHeight * positionRatio).toInt()
+        val gapTop = (centerPx - gapPx / 2).coerceIn(0, screenHeight - gapPx)
+        val gapBottom = gapTop + gapPx
+        val topHeight = gapTop.coerceAtLeast(0)
+        val bottomHeight = (screenHeight - gapBottom).coerceAtLeast(0)
+        return Pair(topHeight, bottomHeight)
+    }
+
+    private suspend fun updateCustomOverlays() {
+        val currentRegions = preferenceManager.amoledRegions.first()
+        if (currentRegions.contains(REGION_CUSTOM)) {
+            val gapRatio = preferenceManager.amoledCustomGapHeight.first()
+            val posRatio = preferenceManager.amoledCustomPosition.first()
+            applyLiveCustom(gapRatio, posRatio)
+        }
+    }
+
+    private fun applyLiveCustom(gapRatio: Float, posRatio: Float) {
+        val topView = overlayViews[REGION_CUSTOM_TOP]
+        val bottomView = overlayViews[REGION_CUSTOM_BOTTOM]
+        if (topView == null && bottomView == null) return
+
+        val screenHeight = getScreenHeight()
+        val (topHeight, bottomHeight) = calculateCustomHeights(screenHeight, gapRatio, posRatio)
+
+        topView?.let { view ->
+            val params = view.layoutParams as? WindowManager.LayoutParams
+            if (params != null && params.height != topHeight) {
+                params.height = topHeight
+                try {
+                    windowManager?.updateViewLayout(view, params)
+                } catch (_: Exception) {
+                }
+            }
+        }
+
+        bottomView?.let { view ->
+            val params = view.layoutParams as? WindowManager.LayoutParams
+            if (params != null && params.height != bottomHeight) {
+                params.height = bottomHeight
+                try {
+                    windowManager?.updateViewLayout(view, params)
+                } catch (_: Exception) {
+                }
+            }
+        }
+    }
+
+    private fun createLayoutParams(region: String, customHeight: Int = 0): WindowManager.LayoutParams {
         return when (region) {
             REGION_STATUS_BAR -> {
                 val statusBarHeight = getStatusBarHeight()
@@ -193,6 +345,52 @@ class AmoledProtectService : AccessibilityService() {
                 WindowManager.LayoutParams(
                     WindowManager.LayoutParams.MATCH_PARENT,
                     navBarHeight,
+                    WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    PixelFormat.TRANSLUCENT
+                ).apply {
+                    gravity = Gravity.BOTTOM or Gravity.START
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        layoutInDisplayCutoutMode =
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                            } else {
+                                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                            }
+                    }
+                }
+            }
+
+            REGION_CUSTOM_TOP -> {
+                WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    customHeight,
+                    WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    PixelFormat.TRANSLUCENT
+                ).apply {
+                    gravity = Gravity.TOP or Gravity.START
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        layoutInDisplayCutoutMode =
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                            } else {
+                                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                            }
+                    }
+                }
+            }
+
+            REGION_CUSTOM_BOTTOM -> {
+                WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    customHeight,
                     WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                             WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
@@ -340,9 +538,48 @@ class AmoledProtectService : AccessibilityService() {
         private var maxShiftX = 20f
         private var maxShiftY = 20f
 
+        private var tintEnabled = false
+        private var tintColor = "amber"
+        private var tintCustomHex = "#FFA500"
+        private var tintIntensity = 0.35f
+        private val tintPaint = Paint()
+
+        fun updateTint(enabled: Boolean, color: String, customHex: String, intensity: Float) {
+            tintEnabled = enabled
+            tintColor = color
+            tintCustomHex = customHex
+            tintIntensity = intensity
+            rebuildTint()
+            invalidate()
+        }
+
+        private fun rebuildTint() {
+            if (!tintEnabled || tintIntensity <= 0f) {
+                return
+            }
+            val alpha = (tintIntensity * 255).toInt().coerceIn(0, 255)
+            val baseColor = when (tintColor) {
+                "amber" -> Color.parseColor("#FFA500")
+                "red" -> Color.parseColor("#FF2A2A")
+                "sepia" -> Color.parseColor("#E8A858")
+                "dimmer" -> Color.parseColor("#151515")
+                "custom" -> {
+                    try {
+                        Color.parseColor(tintCustomHex)
+                    } catch (_: Exception) {
+                        Color.parseColor("#FFA500")
+                    }
+                }
+                else -> Color.parseColor("#FFA500")
+            }
+            tintPaint.color = Color.argb(alpha, Color.red(baseColor), Color.green(baseColor), Color.blue(baseColor))
+        }
+
         private var patternBitmap: Bitmap? = null
         private val noiseBitmaps = arrayOfNulls<Bitmap>(6)
         private val noiseShaders = arrayOfNulls<BitmapShader>(6)
+        private val inversionBitmaps = arrayOfNulls<Bitmap>(2)
+        private val inversionShaders = arrayOfNulls<BitmapShader>(2)
         private val pixelShiftFilters = arrayOfNulls<ColorMatrixColorFilter>(6)
 
         private fun clearPatterns() {
@@ -355,6 +592,11 @@ class AmoledProtectService : AccessibilityService() {
                 noiseBitmaps[i] = null
                 noiseShaders[i] = null
                 pixelShiftFilters[i] = null
+            }
+            for (i in 0 until 2) {
+                inversionBitmaps[i]?.recycle()
+                inversionBitmaps[i] = null
+                inversionShaders[i] = null
             }
         }
 
@@ -390,6 +632,9 @@ class AmoledProtectService : AccessibilityService() {
             if (currentFilterType == "noise") {
                 val index = (frameCount % 6)
                 paint.shader = noiseShaders[index]
+            } else if (currentFilterType == "dynamic_inversion") {
+                val phase = (frameCount / 12) % 2
+                paint.shader = inversionShaders[phase]
             } else if (currentFilterType == "pixel_shift") {
                 val index = (frameCount % 6)
                 pixelShiftPaint.colorFilter = pixelShiftFilters[index]
@@ -406,16 +651,16 @@ class AmoledProtectService : AccessibilityService() {
             val dm: DisplayMetrics = resources.displayMetrics
             val screenDensity = dm.density
 
-            val baseSizePx = ((1f - currentDensity) * 11f + 1f).toInt().coerceIn(1, 12)
-            val sizePx = (baseSizePx * screenDensity).toInt().coerceAtLeast(1)
+            val maxSizePx = (12f * screenDensity).toInt().coerceAtLeast(4)
+            val sizePx = Math.round((1f - currentDensity) * (maxSizePx - 1) + 1).toInt().coerceAtLeast(1)
 
-            maxShiftX = sizePx.toFloat() * 2f
-            maxShiftY = sizePx.toFloat() * 2f
+            maxShiftX = (sizePx * 2f).coerceAtLeast(2f)
+            maxShiftY = (sizePx * 2f).coerceAtLeast(2f)
 
             if (currentFilterType == "pixel_shift") {
                 useShaderDraw = false
                 paint.shader = null
-                val strength = currentDensity * 0.12f
+                val strength = (currentDensity * 0.25f).coerceIn(0.02f, 0.45f)
 
                 for (phase in 0 until 6) {
                     val matrix = when (phase) {
@@ -482,7 +727,7 @@ class AmoledProtectService : AccessibilityService() {
 
             if (currentFilterType == "noise") {
                 val ts = (sizePx * 4).coerceAtLeast(4)
-                val noiseDensity = 0.2f + currentDensity * 0.5f
+                val noiseDensity = (0.15f + currentDensity * 0.75f).coerceIn(0.1f, 0.95f)
 
                 for (i in 0 until 6) {
                     val bmp = Bitmap.createBitmap(ts, ts, Bitmap.Config.ARGB_8888)
@@ -506,6 +751,26 @@ class AmoledProtectService : AccessibilityService() {
                 return
             }
 
+            if (currentFilterType == "dynamic_inversion") {
+                val squareSize = sizePx.coerceAtLeast(1)
+                val tileSize = squareSize * 2
+                for (phase in 0..1) {
+                    val bmp = Bitmap.createBitmap(tileSize, tileSize, Bitmap.Config.ARGB_8888)
+                    for (x in 0 until tileSize) {
+                        for (y in 0 until tileSize) {
+                            if (((x / squareSize) + (y / squareSize)) % 2 == phase) {
+                                bmp.setPixel(x, y, Color.argb(alpha, 0, 0, 0))
+                            }
+                        }
+                    }
+                    inversionBitmaps[phase] = bmp
+                    inversionShaders[phase] = BitmapShader(bmp, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT)
+                }
+                paint.shader = inversionShaders[0]
+                invalidate()
+                return
+            }
+
             val bitmap: Bitmap = when (currentFilterType) {
                 "dots" -> {
                     val ts = (sizePx * 2).coerceAtLeast(2)
@@ -520,42 +785,35 @@ class AmoledProtectService : AccessibilityService() {
                     }
                 }
 
-                "horizontal_lines" -> {
-                    val ts = (sizePx * 2).coerceAtLeast(2)
-                    Bitmap.createBitmap(1, ts, Bitmap.Config.ARGB_8888).apply {
-                        for (y in 0 until ts) {
-                            if (y < sizePx) setPixel(0, y, Color.argb(alpha, 0, 0, 0))
-                        }
-                    }
-                }
-
-                "vertical_lines" -> {
-                    val ts = (sizePx * 2).coerceAtLeast(2)
-                    createBitmap(ts, 1).apply {
-                        for (x in 0 until ts) {
-                            if (x < sizePx) this[x, 0] = Color.argb(alpha, 0, 0, 0)
-                        }
-                    }
-                }
-
-                "grid" -> {
-                    val ts = (sizePx * 3).coerceAtLeast(3)
-                    createBitmap(ts, ts).apply {
-                        for (i in 0 until ts) {
-                            for (j in 0 until sizePx.coerceAtMost(ts)) {
-                                this[i, j] = Color.argb(alpha, 0, 0, 0)
-                                setPixel(j, i, Color.argb(alpha, 0, 0, 0))
+                "pentile_matrix" -> {
+                    val squareSize = sizePx.coerceAtLeast(1)
+                    val tileSize = squareSize * 2
+                    Bitmap.createBitmap(tileSize, tileSize, Bitmap.Config.ARGB_8888).apply {
+                        for (x in 0 until tileSize) {
+                            for (y in 0 until tileSize) {
+                                val dx = Math.abs(x - squareSize + 0.5f)
+                                val dy = Math.abs(y - squareSize + 0.5f)
+                                if ((dx + dy) <= squareSize) {
+                                    setPixel(x, y, Color.argb(alpha, 0, 0, 0))
+                                }
                             }
                         }
                     }
                 }
 
-                "diagonal" -> {
-                    val ts = (sizePx * 4).coerceAtLeast(4)
-                    Bitmap.createBitmap(ts, ts, Bitmap.Config.ARGB_8888).apply {
-                        for (i in 0 until ts) {
-                            for (w in 0 until sizePx.coerceAtMost(ts)) {
-                                setPixel(i, (i + w) % ts, Color.argb(alpha, 0, 0, 0))
+                "blue_shield" -> {
+                    val squareSize = sizePx.coerceAtLeast(1)
+                    val tileSize = (squareSize * 2).coerceAtLeast(2)
+                    val blueCutAlpha = (alpha * 0.95f).toInt().coerceIn(0, 255)
+                    val warmAlpha = (alpha * 0.5f).toInt().coerceIn(0, 255)
+                    Bitmap.createBitmap(tileSize, tileSize, Bitmap.Config.ARGB_8888).apply {
+                        for (x in 0 until tileSize) {
+                            for (y in 0 until tileSize) {
+                                if ((x + y) % 2 == 0) {
+                                    setPixel(x, y, Color.argb(blueCutAlpha, 0, 0, 0))
+                                } else {
+                                    setPixel(x, y, Color.argb(warmAlpha, 255, 175, 0))
+                                }
                             }
                         }
                     }
@@ -576,9 +834,16 @@ class AmoledProtectService : AccessibilityService() {
                 }
 
                 else -> {
-                    Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888).apply {
-                        setPixel(0, 0, Color.argb(alpha, 0, 0, 0))
-                        setPixel(2, 2, Color.argb(alpha, 0, 0, 0))
+                    val squareSize = sizePx.coerceAtLeast(1)
+                    val tileSize = squareSize * 2
+                    Bitmap.createBitmap(tileSize, tileSize, Bitmap.Config.ARGB_8888).apply {
+                        for (x in 0 until tileSize) {
+                            for (y in 0 until tileSize) {
+                                if (((x / squareSize) + (y / squareSize)) % 2 == 0) {
+                                    setPixel(x, y, Color.argb(alpha, 0, 0, 0))
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -591,6 +856,9 @@ class AmoledProtectService : AccessibilityService() {
 
         override fun onDraw(canvas: Canvas) {
             super.onDraw(canvas)
+            if (tintEnabled && tintIntensity > 0f) {
+                canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), tintPaint)
+            }
             if (useShaderDraw) {
                 canvas.withTranslation(shiftX, shiftY) {
                     drawRect(-shiftX, -shiftY, width.toFloat(), height.toFloat(), paint)

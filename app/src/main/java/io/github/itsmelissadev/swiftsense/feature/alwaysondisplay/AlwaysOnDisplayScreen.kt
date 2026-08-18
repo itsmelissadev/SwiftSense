@@ -155,7 +155,7 @@ fun AlwaysOnDisplayScreen(onNavigateBack: () -> Unit) {
     LaunchedEffect(Unit) {
         while (isActive) {
             isEnabled = AccessibilityUtil.isAccessibilityServiceEnabled(context, AlwaysOnDisplayService::class.java)
-            delay(1000)
+            delay(500)
         }
     }
 
@@ -227,11 +227,28 @@ fun AlwaysOnDisplayScreen(onNavigateBack: () -> Unit) {
                 description = stringResource(if (isEnabled) R.string.service_status else R.string.feature_always_on_display_desc),
                 icon = ImageVector.vectorResource(id = R.drawable.ic_aod_24px),
                 containerColor = if (isEnabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.05f) else null,
-                onClick = {
-                    val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                checked = isEnabled,
+                onCheckedChange = { targetState ->
+                    if (AccessibilityUtil.isShizukuAvailable()) {
+                        scope.launch {
+                            val success = AccessibilityUtil.toggleAccessibilityServiceWithShizuku(
+                                context,
+                                AlwaysOnDisplayService::class.java,
+                                targetState
+                            )
+                            if (!success) {
+                                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                context.startActivity(intent)
+                            }
+                        }
+                    } else {
+                        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        context.startActivity(intent)
                     }
-                    context.startActivity(intent)
                 }
             )
 

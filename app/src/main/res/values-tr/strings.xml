@@ -90,6 +90,7 @@
     <string name="action_import">İçe Aktar</string>
     <string name="action_export">Dışa Aktar</string>
     <string name="action_cancel">İptal</string>
+    <string name="action_save">Kaydet</string>
     <string name="toast_import_success">%d öğe listeye eklendi.</string>
     <string name="search_apps">Uygulama ara…</string>
 
@@ -107,6 +108,40 @@
 
     <string name="app_manager_warning_title">Küçük Bir Uyarı</string>
     <string name="app_manager_warning_text">Sistem uygulamalarını devre dışı bırakırken lütfen dikkatli ol. Kritik bir uygulamayı kapatmak cihazının kararsız çalışmasına neden olabilir.</string>
+
+    <string name="filter_all">Tümü</string>
+    <string name="filter_user">Kullanıcı</string>
+    <string name="filter_system">Sistem</string>
+    <string name="filter_disabled">Devre Dışı</string>
+    <string name="filter_enabled">Etkin</string>
+
+    <string name="custom_lists">Özel Listeler</string>
+    <string name="active_list">Aktif Liste</string>
+    <string name="default_list_name">Varsayılan Liste</string>
+    <string name="create_list">Liste Oluştur</string>
+    <string name="new_list">Yeni Liste</string>
+    <string name="rename_list">Listeyi Yeniden Adlandır</string>
+    <string name="delete_list">Listeyi Sil</string>
+    <string name="list_name">Liste Adı</string>
+    <string name="toast_list_created">Liste başarıyla oluşturuldu.</string>
+    <string name="toast_list_deleted">Liste silindi.</string>
+    <string name="toast_list_renamed">Liste yeniden adlandırıldı.</string>
+    <string name="confirm_delete_list_title">Listeyi Sil?</string>
+    <string name="confirm_delete_list_desc">Bu listeyi silmek istediğinizden emin misiniz?</string>
+    <string name="select_all">Tümünü Seç</string>
+    <string name="deselect_all">Seçimi Temizle</string>
+
+    <string name="app_details">Uygulama Bilgileri</string>
+    <string name="open_app">Uygulamayı Aç</string>
+    <string name="app_settings">Uygulama Ayarları</string>
+    <string name="version_info">Sürüm %1$s (%2$d)</string>
+    <string name="target_sdk_info">Hedef SDK %d</string>
+    <string name="min_sdk_info">Min SDK %d</string>
+    <string name="copied_to_clipboard">Panoya kopyalandı</string>
+    <string name="add_to_list">Listeye Ekle</string>
+    <string name="remove_from_list">Listeden Çıkar</string>
+    <string name="toast_app_status_updated">Uygulama durumu güncellendi.</string>
+    <string name="toast_error_occurred">Bir hata oluştu.</string>
 
     <string name="resolution_width">Genişlik</string>
     <string name="resolution_height">Yükseklik</string>
@@ -147,6 +182,15 @@
     
     <string name="feature_app_stopper">Arkaplan Durdurucu</string>
     <string name="feature_app_stopper_desc">Belleği boşaltmak ve CPU kullanımını azaltmak için arkaplan uygulamalarını kapatın.</string>
+    <string name="stopper_service_title">Arkaplan Durdurucu Servisi</string>
+    <string name="stopper_service_desc">Seçilen arkaplan uygulamalarını belirlenen aralıklarla otomatik olarak durdurur.</string>
+    <string name="stopper_service_running">Servis çalışıyor (%1$d uygulama, %2$d sn aralıkla)</string>
+    <string name="stopper_service_stopped">Servis durduruldu</string>
+    <string name="stopper_interval">Kontrol Aralığı</string>
+    <string name="interval_3s">3 Saniye (Agresif)</string>
+    <string name="stopper_notif_title">Arkaplan Durdurucu Aktif</string>
+    <string name="stopper_notif_desc">%1$d uygulama izleniyor (%2$d sn aralıkla)</string>
+    <string name="stopper_notif_channel">Arkaplan Durdurucu Servisi</string>
     <string name="feature_cache_cleaner">Önbellek Temizleyici</string>
     <string name="feature_cache_cleaner_desc">Depolama alanını boşaltmak için sistem ve uygulama önbelleğini temizleyin.</string>
 
@@ -161,8 +205,6 @@
     <string name="stop_mode">Durdurma Modu</string>
     <string name="mode_simple">Basit</string>
     <string name="mode_force">Durmaya Zorla</string>
-    <string name="select_all">Hepsini Seç</string>
-    <string name="deselect_all">Tüm Seçimleri Kaldır</string>
     <string name="selected_count">%d uygulama seçildi</string>
     <string name="no_apps_found">Uygulama bulunamadı.</string>
 
@@ -212,13 +254,12 @@
     <string name="amoled_filter_settings">Filtre Ayarları</string>
 
     <string name="amoled_filter_type">Filtre Efekti</string>
-    <string name="amoled_filter_dots">Noktalar</string>
-    <string name="amoled_filter_horizontal">Yatay Çizgiler</string>
-    <string name="amoled_filter_vertical">Dikey Çizgiler</string>
-    <string name="amoled_filter_grid">Izgara</string>
-    <string name="amoled_filter_diagonal">Çapraz</string>
-    <string name="amoled_filter_noise">Gürültü</string>
-    <string name="amoled_filter_checker_grid">Kare Izgara</string>
+    <string name="amoled_filter_checker_grid">Dama Izgarası</string>
+    <string name="amoled_filter_dots">Mikro Noktalar</string>
+    <string name="amoled_filter_pentile">Elmas PenTile</string>
+    <string name="amoled_filter_inversion">Dinamik Faz Değişimi</string>
+    <string name="amoled_filter_blue_shield">Mavi Alt Piksel Kalkanı</string>
+    <string name="amoled_filter_noise">Dinamik Gürültü</string>
     <string name="amoled_filter_pixel_shift">Piksel Kaydırma</string>
 
     <string name="amoled_pixel_density">Piksel Yoğunluğu</string>
@@ -262,6 +303,22 @@
     <string name="amoled_region_fullscreen">Tam Ekran</string>
     <string name="amoled_region_statusbar">Durum Çubuğu</string>
     <string name="amoled_region_navbar">Navigasyon Barı</string>
+    <string name="amoled_region_custom">Özel</string>
+    <string name="amoled_custom_settings">Özel Bölge Ayarları</string>
+    <string name="amoled_custom_gap_height">Açıklık / Boşluk Yüksekliği</string>
+    <string name="amoled_custom_gap_desc">Video veya medya içerikleri için korumasız bırakılacak alanın yüksekliği.</string>
+    <string name="amoled_custom_position">Dikey Pozisyon</string>
+    <string name="amoled_custom_position_desc">Korumasız pencerenin ekran üzerindeki dikey merkez konumu.</string>
+    <string name="amoled_custom_preview">Özel Alan Önizlemesi</string>
+    <string name="amoled_custom_video_area">Video / Boşluk Alanı</string>
+    <string name="amoled_custom_protected_area">Koruma Katmanı</string>
+    <string name="amoled_aspect_ratio">En-Boy Oranı</string>
+    <string name="amoled_aspect_ratio_custom">Özel</string>
+    <string name="amoled_aspect_ratio_16_9">16:9</string>
+    <string name="amoled_aspect_ratio_18_9">18:9</string>
+    <string name="amoled_aspect_ratio_21_9">21:9</string>
+    <string name="amoled_aspect_ratio_4_3">4:3</string>
+    <string name="amoled_aspect_ratio_1_1">1:1</string>
     <string name="status_locked">KİLİTLİ</string>
     <string name="status_unlocked">KİLİT AÇIK</string>
     <string name="resolution_plan_format">%1$s x %2$s • %3$d DPI</string>
@@ -346,7 +403,7 @@
     <string name="interval_5m">5 Dakika</string>
     <string name="interval_10m">10 Dakika</string>
 
-    <string name="feature_always_on_display">Her Zaman Açık Ekran (Beta)</string>
+    <string name="feature_always_on_display">Her Zaman Açık Ekran</string>
     <string name="feature_always_on_display_desc">Cihaz kilitliyken saat, tarih ve pil durumunu gösteren özelleştirilebilir ekran.</string>
 
     <string name="aod_section_settings">Görünüm Ayarları</string>
@@ -438,4 +495,17 @@
 
     <string name="aod_run_as_foreground_service">Ön Planda Çalıştır</string>
     <string name="aod_run_as_foreground_service_desc">Servisi kalıcı bir bildirimle ön planda çalıştırarak sistem tarafından kapatılmasını daha agresif şekilde engelleyin.</string>
+
+    <string name="amoled_tint_section_title">Piksel Renk Tonlama ve Beyaz Kırıcı</string>
+    <string name="amoled_tint_switch_title">Renk Filtresini Etkinleştir</string>
+    <string name="amoled_tint_switch_desc">Açıkta kalan piksellerin yaydığı beyaz ve mavi ışığı kırarak ek koruma sağlar.</string>
+    <string name="amoled_tint_preset_amber">Sıcak Kehribar</string>
+    <string name="amoled_tint_preset_red">Koyu Kızıl</string>
+    <string name="amoled_tint_preset_sepia">Sepya / Kağıt</string>
+    <string name="amoled_tint_preset_dimmer">Karartıcı</string>
+    <string name="amoled_tint_preset_custom">Özel Renk</string>
+    <string name="amoled_tint_intensity">Filtre Yoğunluğu</string>
+    <string name="amoled_tint_custom_color_title">Özel Renk Seç</string>
+    <string name="amoled_preset_colors">Hazır Renkler</string>
+    <string name="hex_color_label">Hex (#RRGGBB)</string>
 </resources>

@@ -70,6 +70,23 @@
             tools:targetApi="34" />
 
         <service
+            android:name=".feature.appstopper.AppStopperService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            tools:targetApi="34" />
+
+        <service
+            android:name=".feature.appstopper.AppStopperTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_bolt_24px"
+            android:label="@string/feature_app_stopper"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <service
             android:name=".feature.amoledscreenprotect.AmoledProtectService"
             android:exported="true"
             android:foregroundServiceType="specialUse"

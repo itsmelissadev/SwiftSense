@@ -1,80 +1,80 @@
 # SwiftSense
 
-SwiftSense is an **open-source, privacy-focused** optimization toolkit designed to enhance Android
-performance, minimize system latency, and provide advanced system tools.
+SwiftSense is an offline, privacy-first Android utility designed for fine-grained system tuning, AMOLED display protection, and hardware-level optimizations without root (via Shizuku).
 
 ---
 
-### Key Features
+## Features
 
-* **AMOLED Screen Protect:** Prevents screen burn-in and limits static pixels using a subtle overlay
-  mesh. Highly customizable with various patterns (Dots, Grid, Pixel Shift), adjustable opacity, and
-  dynamic shift cycles to extend display lifespan.
-* **Always-On Display (Beta):** A customizable lock screen overlay showing time, date, battery, and 
-  notifications. Features advanced burn-in protections (Bounce, Random Jump, RGB Shift) and smart 
-  wake integrations (Power Button, Double Tap).
-* **Sensor Optimization:** Boosts sensor sampling rates (Gyroscope, Accelerometer, etc.) to their
-  hardware limits. Includes a **Live Frequency Monitor** to track real-time sensor speeds in Hz.
-* **Advanced App Manager:** Easily enable or disable system and user applications via **Shizuku**.
-  Perfect for freezing resource-heavy apps before gaming.
-* **Gaming Screen Recorder:** A low-latency, high-performance recording engine. Optimized for games
-  with hardware-accelerated encoding (HEVC/AVC), customizable quality (up to 1080p, 60 FPS, 15 Mbps),
-  and support for internal audio. Includes a Quick Settings Tile for instant access.
-* **Screen Resolution Tuner:** Modify your device's display resolution and DPI. Create and save *
-  *Resolution Plans** for different scenarios (e.g., Gaming vs. Battery Saving).
-* **Cache Cleaner:** Reclaim storage by clearing system and app caches via Shizuku.
-* **Background Killer:** Free up RAM and reduce CPU usage by force-stopping background
-  applications.
-* **System Table Macros:** View and modify Android's `System`, `Secure`, and `Global` settings
-  tables. Create and **Edit Macros** to apply multiple system tweaks with a single tap. Features *
-  *Import/Export** for sharing JSON macro configurations.
-* **Total Privacy:** SwiftSense **never** connects to the internet. All data, app lists, and
-  optimizations stay strictly on your device.
+### AMOLED Screen Protection
+- **Subpixel Mesh Filters:** Protects OLED/AMOLED panels against burn-in using physically aligned micro-mesh patterns (Diamond PenTile, Dynamic Phase Inversion, Blue Subpixel Shield, Checker Matrix, Micro Dots).
+- **Pixel Tint & White Attenuation:** Softens harsh white and high-energy blue subpixels with customizable color overlays (Amber, Red, Sepia, Dimmer, or custom hex).
+- **Dynamic Shifting:** Continuous or periodic micro-movements to equalize diode wear.
+- **Custom Viewports:** Apply protection across the entire screen, status bar, navigation bar, or a specific vertical area.
 
----
+### Always-On Display (Beta)
+- Lightweight lock screen overlay displaying time, date, battery status, and notifications.
+- Built-in burn-in protection modes (Smooth Bounce, Random Jump, RGB Shift).
+- Custom battery indicator styles with live charging speed (wattage / mA).
+- Double-tap and power button wake integrations.
 
-### Technical Details & Requirements
+### Background App Stopper
+- Automated background service to periodically or reactively stop selected background apps when launched.
+- Quick Settings tile for instant batch force-stop or monitoring toggle.
+- Search and category filters (User, System, Active) with safe exclusions for critical services.
 
-| Feature                | Requirement  | Purpose                       |
-|:-----------------------|:-------------|:------------------------------|
-| **Always-On Display**  | Android 8.0+ | Smart lock screen overlay     |
-| **AMOLED Protect**     | Android 8.0+ | Prevent screen burn-in        |
-| **Sensor Boost**       | Android 8.0+ | Low-latency data processing   |
-| **App & System Tools** | **Shizuku**  | Advanced system-level control |
-| **Resolution/Tables**  | **Shizuku**  | Display and System tweaks     |
-| **Cache/Killer**       | **Shizuku**  | Storage and RAM optimization  |
-| **Screen Recorder**   | Android 10+  | Gaming-optimized recording    |
+### App Manager
+- Package inspection sheet with UID, install paths, target SDK, and status flags.
+- Fast batch enable/disable and freeze operations powered by Shizuku without artificial execution delays.
 
----
+### Sensor Boost
+- Unlocks sensor sampling rates (gyroscope, accelerometer) to their maximum hardware limits for lower input latency.
+- Real-time sensor frequency monitor (Hz).
 
-### Why SwiftSense?
+### Screen Resolution & DPI Tuner
+- Adjust display resolution and density on the fly.
+- Save and switch between custom profiles (e.g. Performance vs. Battery Saving).
 
-SwiftSense is built for power users who want to squeeze every bit of performance out of their
-hardware. Whether you're a competitive mobile gamer or someone looking to breathe new life into an
-older device, SwiftSense provides a clean, effective, and secure interface for deep system
-optimization.
+### System Table Macros
+- View and modify Android `System`, `Secure`, and `Global` settings tables.
+- Create, run, export, and import multi-setting tweak macros via JSON.
+
+### Screen Recorder
+- Hardware-accelerated (HEVC/AVC) screen recorder with minimal overhead.
+- Supports internal audio capture and customizable resolution, framerate, and bitrate (up to 1080p, 60 FPS).
+- Includes Quick Settings tile for quick capture.
 
 ---
 
-### Security & Privacy
+## Feature Requirements
 
-* **Shizuku Integration:** Performs system-level tasks (like disabling apps, changing resolution, or
-  clearing cache)
-  through a secure, user-authorized bridge.
-* **No Internet Access:** The app does not request internet permission. Your data never leaves the
-  device.
-* **No Analytics:** We don't track you. Period.
-
----
-
-### Installation Note
-
-Since SwiftSense performs deep system optimizations, **Google Play Protect** may occasionally flag
-the installation. This is a common false positive for tools requiring Shizuku or advanced
-permissions. SwiftSense is fully open-source and safe to use.
+| Feature | Requirement | Purpose |
+| :--- | :--- | :--- |
+| **Always-On Display** | Android 8.0+ | Lock screen overlay |
+| **AMOLED Screen Protect** | Android 8.0+ | Anti-burn-in overlay |
+| **Sensor Boost** | Android 8.0+ | High-rate sensor sampling |
+| **Background App Stopper** | Shizuku | Automated background app freezing |
+| **App Manager** | Shizuku | Package enable/disable control |
+| **Resolution & DPI Tuner** | Shizuku | Display scaling and density tweaks |
+| **System Table Macros** | Shizuku | System/Secure/Global settings editor |
+| **Screen Recorder** | Android 10+ | Internal audio & screen capture |
 
 ---
 
-### License
+## Privacy & Security
 
-This project is licensed under the **GNU GPLv3**. As an open-source project, any derivative works must also be shared under the same license terms. See the `LICENSE` file for more details.
+- **No Internet Permission:** SwiftSense does not declare `android.permission.INTERNET`. All data remains strictly on your device.
+- **No Analytics or Telemetry:** No tracking, telemetry, or remote logging.
+- **Rootless System Access:** Operates securely through user-authorized [Shizuku](https://shizuku.rikka.app/) APIs.
+
+---
+
+## Google Play Protect Notice
+
+Because SwiftSense interacts with system-level settings and utilizes Shizuku, **Google Play Protect** may occasionally display a warning during installation. This is a common false positive for advanced system utility applications. SwiftSense is fully open-source, contains no trackers or network capabilities, and is safe to use.
+
+---
+
+## License
+
+This project is open-source and licensed under the [GNU General Public License v3.0](LICENSE).

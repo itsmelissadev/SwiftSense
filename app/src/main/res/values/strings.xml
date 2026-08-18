@@ -90,6 +90,7 @@
     <string name="action_import">Import</string>
     <string name="action_export">Export</string>
     <string name="action_cancel">Cancel</string>
+    <string name="action_save">Save</string>
     <string name="toast_import_success">%d items added to the list.</string>
     <string name="search_apps">Search apps…</string>
 
@@ -107,6 +108,40 @@
 
     <string name="app_manager_warning_title">A Little Warning</string>
     <string name="app_manager_warning_text">Please be careful when disabling system apps. Disabling a critical app might cause your device to become unstable.</string>
+
+    <string name="filter_all">All</string>
+    <string name="filter_user">User</string>
+    <string name="filter_system">System</string>
+    <string name="filter_disabled">Disabled</string>
+    <string name="filter_enabled">Enabled</string>
+
+    <string name="custom_lists">Custom Lists</string>
+    <string name="active_list">Active List</string>
+    <string name="default_list_name">Default List</string>
+    <string name="create_list">Create List</string>
+    <string name="new_list">New List</string>
+    <string name="rename_list">Rename List</string>
+    <string name="delete_list">Delete List</string>
+    <string name="list_name">List Name</string>
+    <string name="toast_list_created">List created successfully.</string>
+    <string name="toast_list_deleted">List deleted.</string>
+    <string name="toast_list_renamed">List renamed.</string>
+    <string name="confirm_delete_list_title">Delete List?</string>
+    <string name="confirm_delete_list_desc">Are you sure you want to delete this list?</string>
+    <string name="select_all">Select All</string>
+    <string name="deselect_all">Deselect All</string>
+
+    <string name="app_details">App Details</string>
+    <string name="open_app">Open App</string>
+    <string name="app_settings">App Info</string>
+    <string name="version_info">Version %1$s (%2$d)</string>
+    <string name="target_sdk_info">Target SDK %d</string>
+    <string name="min_sdk_info">Min SDK %d</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="add_to_list">Add to List</string>
+    <string name="remove_from_list">Remove from List</string>
+    <string name="toast_app_status_updated">App status updated successfully.</string>
+    <string name="toast_error_occurred">An error occurred.</string>
 
     <string name="resolution_width">Width</string>
     <string name="resolution_height">Height</string>
@@ -149,6 +184,15 @@
 
     <string name="feature_app_stopper">Background Killer</string>
     <string name="feature_app_stopper_desc">Close background applications to free up memory and reduce CPU usage.</string>
+    <string name="stopper_service_title">Background Killer Service</string>
+    <string name="stopper_service_desc">Continuously stops selected background applications at set intervals.</string>
+    <string name="stopper_service_running">Service running (%1$d apps, %2$ds interval)</string>
+    <string name="stopper_service_stopped">Service stopped</string>
+    <string name="stopper_interval">Check Interval</string>
+    <string name="interval_3s">3 Seconds (Aggressive)</string>
+    <string name="stopper_notif_title">Background Killer Active</string>
+    <string name="stopper_notif_desc">Monitoring %1$d apps (%2$ds interval)</string>
+    <string name="stopper_notif_channel">Background Killer Service</string>
     <string name="feature_cache_cleaner">Cache Cleaner</string>
     <string name="feature_cache_cleaner_desc">Clear system and app cache to free up storage space.</string>
 
@@ -163,8 +207,6 @@
     <string name="stop_mode">Stop Mode</string>
     <string name="mode_simple">Simple Kill</string>
     <string name="mode_force">Force Stop</string>
-    <string name="select_all">Select All</string>
-    <string name="deselect_all">Deselect All</string>
     <string name="selected_count">%d apps selected</string>
     <string name="no_apps_found">No apps found.</string>
 
@@ -214,13 +256,12 @@
     <string name="amoled_filter_settings">Filter Settings</string>
 
     <string name="amoled_filter_type">Filter Effect</string>
-    <string name="amoled_filter_dots">Dots</string>
-    <string name="amoled_filter_horizontal">Horizontal Lines</string>
-    <string name="amoled_filter_vertical">Vertical Lines</string>
-    <string name="amoled_filter_grid">Grid</string>
-    <string name="amoled_filter_diagonal">Diagonal</string>
-    <string name="amoled_filter_noise">Noise</string>
-    <string name="amoled_filter_checker_grid">Checker Grid</string>
+    <string name="amoled_filter_checker_grid">Checker Matrix</string>
+    <string name="amoled_filter_dots">Micro Dots</string>
+    <string name="amoled_filter_pentile">Diamond PenTile</string>
+    <string name="amoled_filter_inversion">Dynamic Inversion</string>
+    <string name="amoled_filter_blue_shield">Blue Subpixel Shield</string>
+    <string name="amoled_filter_noise">Dynamic Noise</string>
     <string name="amoled_filter_pixel_shift">Pixel Shift</string>
 
     <string name="amoled_pixel_density">Pixel Density</string>
@@ -264,6 +305,22 @@
     <string name="amoled_region_fullscreen">Full Screen</string>
     <string name="amoled_region_statusbar">Status Bar</string>
     <string name="amoled_region_navbar">Navigation Bar</string>
+    <string name="amoled_region_custom">Custom</string>
+    <string name="amoled_custom_settings">Custom Region Settings</string>
+    <string name="amoled_custom_gap_height">Clear Window Height</string>
+    <string name="amoled_custom_gap_desc">Height of the unprotected window for video or media content.</string>
+    <string name="amoled_custom_position">Vertical Position</string>
+    <string name="amoled_custom_position_desc">Vertical center position of the clear window on the screen.</string>
+    <string name="amoled_custom_preview">Custom Area Preview</string>
+    <string name="amoled_custom_video_area">Video / Clear Area</string>
+    <string name="amoled_custom_protected_area">Protected Layer</string>
+    <string name="amoled_aspect_ratio">Aspect Ratio</string>
+    <string name="amoled_aspect_ratio_custom">Custom</string>
+    <string name="amoled_aspect_ratio_16_9">16:9</string>
+    <string name="amoled_aspect_ratio_18_9">18:9</string>
+    <string name="amoled_aspect_ratio_21_9">21:9</string>
+    <string name="amoled_aspect_ratio_4_3">4:3</string>
+    <string name="amoled_aspect_ratio_1_1">1:1</string>
     <string name="status_locked">LOCKED</string>
     <string name="status_unlocked">UNLOCKED</string>
     <string name="resolution_plan_format">%1$s x %2$s • %3$d DPI</string>
@@ -348,7 +405,7 @@
     <string name="interval_5m">5 Minutes</string>
     <string name="interval_10m">10 Minutes</string>
     
-    <string name="feature_always_on_display">Always On Display (Beta)</string>
+    <string name="feature_always_on_display">Always On Display</string>
     <string name="feature_always_on_display_desc">Customizable overlay screen showing time and battery when device is locked.</string>
     
     <string name="aod_section_settings">Display Settings</string>
@@ -438,4 +495,17 @@
 
     <string name="aod_run_as_foreground_service">Run in Foreground</string>
     <string name="aod_run_as_foreground_service_desc">Keep the service alive more aggressively by running it as a foreground service with a persistent notification.</string>
+
+    <string name="amoled_tint_section_title">Pixel Tint &amp; White Attenuation</string>
+    <string name="amoled_tint_switch_title">Enable Color Tint</string>
+    <string name="amoled_tint_switch_desc">Attenuates harsh white and blue light emitted by unmasked pixels for extra protection.</string>
+    <string name="amoled_tint_preset_amber">Warm Amber</string>
+    <string name="amoled_tint_preset_red">Deep Red</string>
+    <string name="amoled_tint_preset_sepia">Sepia / Paper</string>
+    <string name="amoled_tint_preset_dimmer">Dimmer</string>
+    <string name="amoled_tint_preset_custom">Custom</string>
+    <string name="amoled_tint_intensity">Tint Intensity</string>
+    <string name="amoled_tint_custom_color_title">Select Custom Color</string>
+    <string name="amoled_preset_colors">Preset Colors</string>
+    <string name="hex_color_label">Hex (#RRGGBB)</string>
 </resources>
