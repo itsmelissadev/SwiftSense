@@ -73,6 +73,7 @@ fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
     val sensorList = remember {
         val types = listOf(
             Sensor.TYPE_GYROSCOPE,
+            Sensor.TYPE_GYROSCOPE_UNCALIBRATED,
             Sensor.TYPE_ACCELEROMETER,
             Sensor.TYPE_MAGNETIC_FIELD,
             Sensor.TYPE_ROTATION_VECTOR,
@@ -175,6 +176,7 @@ fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
 
                 val (sensorName, sensorIcon) = when (sensor.type) {
                     Sensor.TYPE_GYROSCOPE -> stringResource(R.string.sensor_gyroscope) to Icons.Rounded.ScreenRotation
+                    Sensor.TYPE_GYROSCOPE_UNCALIBRATED -> stringResource(R.string.sensor_gyroscope_uncalibrated) to Icons.Rounded.ScreenRotation
                     Sensor.TYPE_ACCELEROMETER -> stringResource(R.string.sensor_accelerometer) to Icons.AutoMirrored.Rounded.DirectionsRun
                     Sensor.TYPE_MAGNETIC_FIELD -> stringResource(R.string.sensor_magnetic_field) to Icons.Rounded.Sensors
                     Sensor.TYPE_ROTATION_VECTOR -> stringResource(R.string.sensor_rotation_vector) to Icons.Rounded.ViewInAr

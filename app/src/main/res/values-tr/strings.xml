@@ -52,6 +52,7 @@
     <string name="show_live_hz_desc">Her sensörün o anki gerçek hızını takip etmeni sağlar.</string>
 
     <string name="sensor_gyroscope">Jiroskop</string>
+    <string name="sensor_gyroscope_uncalibrated">Kalibrasyonsuz Jiroskop</string>
     <string name="sensor_accelerometer">İvmeölçer</string>
     <string name="sensor_magnetic_field">Manyetik Alan</string>
     <string name="sensor_rotation_vector">Dönüş Vektörü</string>

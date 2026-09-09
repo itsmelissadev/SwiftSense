@@ -8,7 +8,7 @@ import android.app.Service
 import android.content.Intent
 import android.hardware.Sensor
 import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
+import android.hardware.SensorEventListener2
 import android.hardware.SensorManager
 import android.os.Handler
 import android.os.HandlerThread
@@ -34,8 +34,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
-class BoostSensorsService : Service(), SensorEventListener {
+class BoostSensorsService : Service(), SensorEventListener2 {
     private lateinit var sensorManager: SensorManager
     private lateinit var preferenceManager: PreferenceManager
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -50,6 +53,7 @@ class BoostSensorsService : Service(), SensorEventListener {
     private val eventCounts = SparseIntArray()
     private val lastTimestamps = SparseLongArray()
     private val lock = Any()
+    private val isCleanedUp = AtomicBoolean(false)
 
     @Volatile
     private var showLiveHz = false
@@ -120,6 +124,7 @@ class BoostSensorsService : Service(), SensorEventListener {
             ) { prefs, speed ->
                 val sensorTypes = listOf(
                     Sensor.TYPE_GYROSCOPE,
+                    Sensor.TYPE_GYROSCOPE_UNCALIBRATED,
                     Sensor.TYPE_ACCELEROMETER,
                     Sensor.TYPE_MAGNETIC_FIELD,
                     Sensor.TYPE_ROTATION_VECTOR,
@@ -146,11 +151,26 @@ class BoostSensorsService : Service(), SensorEventListener {
     }
 
     private fun updateSensorListeners(activeSensors: List<Sensor>, speed: String) {
+        if (isCleanedUp.get()) return
+
         val newSensorTypes = activeSensors.map { it.type }.toSet()
 
         val toUnregister = currentRegisteredSensors.filter { !newSensorTypes.contains(it) }
         toUnregister.forEach { type ->
-            sensorManager.getDefaultSensor(type)?.let { sensorManager.unregisterListener(this, it) }
+            sensorManager.getDefaultSensor(type)?.let { sensor ->
+                try {
+                    sensorManager.flush(this)
+                    sensorManager.registerListener(
+                        this,
+                        sensor,
+                        SensorManager.SENSOR_DELAY_NORMAL,
+                        sensorHandler
+                    )
+                    sensorManager.flush(this)
+                    sensorManager.unregisterListener(this, sensor)
+                } catch (_: Exception) {
+                }
+            }
             liveHz.remove(type)
             lastTimestamps.delete(type)
             eventCounts.delete(type)
@@ -179,7 +199,7 @@ class BoostSensorsService : Service(), SensorEventListener {
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
-        if (event == null || !showLiveHz) return
+        if (event == null || !showLiveHz || isCleanedUp.get()) return
 
         synchronized(lock) {
             val type = event.sensor.type
@@ -201,6 +221,8 @@ class BoostSensorsService : Service(), SensorEventListener {
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+
+    override fun onFlushCompleted(sensor: Sensor?) {}
 
     private fun updateNotification(activeSensors: List<Sensor>) {
         val sensorNames = activeSensors.joinToString(", ") { getSensorName(it.type) }
@@ -238,6 +260,7 @@ class BoostSensorsService : Service(), SensorEventListener {
     private fun getSensorName(type: Int): String {
         return when (type) {
             Sensor.TYPE_GYROSCOPE -> getString(R.string.sensor_gyroscope)
+            Sensor.TYPE_GYROSCOPE_UNCALIBRATED -> getString(R.string.sensor_gyroscope_uncalibrated)
             Sensor.TYPE_ACCELEROMETER -> getString(R.string.sensor_accelerometer)
             Sensor.TYPE_MAGNETIC_FIELD -> getString(R.string.sensor_magnetic_field)
             Sensor.TYPE_ROTATION_VECTOR -> getString(R.string.sensor_rotation_vector)
@@ -256,20 +279,72 @@ class BoostSensorsService : Service(), SensorEventListener {
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
 
-    override fun onDestroy() {
-        _isRunning.value = false
+    private fun safeCleanupSensors() {
+        if (!isCleanedUp.compareAndSet(false, true)) return
+
         observationJob?.cancel()
+        observationJob = null
         liveHzJob?.cancel()
-        sensorManager.unregisterListener(this)
+        liveHzJob = null
+
+        val registeredCopy = synchronized(lock) {
+            currentRegisteredSensors.toList()
+        }
+
+        if (registeredCopy.isNotEmpty()) {
+            registeredCopy.forEach { type ->
+                sensorManager.getDefaultSensor(type)?.let { sensor ->
+                    try {
+                        sensorManager.flush(this)
+                        sensorManager.registerListener(
+                            this,
+                            sensor,
+                            SensorManager.SENSOR_DELAY_NORMAL,
+                            sensorHandler
+                        )
+                        sensorManager.flush(this)
+                    } catch (_: Exception) {
+                    }
+                }
+            }
+        }
+
+        try {
+            sensorManager.unregisterListener(this)
+        } catch (_: Exception) {
+        }
+
+        sensorHandler?.let { handler ->
+            val latch = CountDownLatch(1)
+            handler.post {
+                latch.countDown()
+            }
+            try {
+                latch.await(200, TimeUnit.MILLISECONDS)
+            } catch (_: InterruptedException) {
+            }
+        }
+
         sensorThread?.quitSafely()
-        serviceScope.cancel()
+        try {
+            sensorThread?.join(200)
+        } catch (_: InterruptedException) {
+        }
+        sensorThread = null
+        sensorHandler = null
 
         synchronized(lock) {
+            currentRegisteredSensors.clear()
             eventCounts.clear()
             lastTimestamps.clear()
             liveHz.clear()
         }
+    }
 
+    override fun onDestroy() {
+        _isRunning.value = false
+        safeCleanupSensors()
+        serviceScope.cancel()
         super.onDestroy()
     }
 

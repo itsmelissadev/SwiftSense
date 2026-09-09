@@ -52,6 +52,7 @@
     <string name="show_live_hz_desc">Allows you to track the real-time speed (Hz) of each sensor.</string>
 
     <string name="sensor_gyroscope">Gyroscope</string>
+    <string name="sensor_gyroscope_uncalibrated">Uncalibrated Gyroscope</string>
     <string name="sensor_accelerometer">Accelerometer</string>
     <string name="sensor_magnetic_field">Magnetic Field</string>
     <string name="sensor_rotation_vector">Rotation Vector</string>
