@@ -44,6 +44,11 @@ SwiftSense is an offline, privacy-first Android utility designed for fine-graine
 - Supports internal audio capture and customizable resolution, framerate, and bitrate (up to 1080p, 60 FPS).
 - Includes Quick Settings tile for quick capture.
 
+### Privacy Quick Settings Tiles
+- **Camera Access Tile:** Instantly toggle global camera access on or off via Shizuku (`cmd sensor_privacy`).
+- **Microphone Access Tile:** Instantly toggle global microphone access on or off via Shizuku (`cmd sensor_privacy`).
+- **Persistent Local State:** Retains the toggle state seamlessly across sessions using local DataStore storage.
+
 ---
 
 ## Feature Requirements
@@ -58,6 +63,7 @@ SwiftSense is an offline, privacy-first Android utility designed for fine-graine
 | **Resolution & DPI Tuner** | Shizuku | Display scaling and density tweaks |
 | **System Table Macros** | Shizuku | System/Secure/Global settings editor |
 | **Screen Recorder** | Android 10+ | Internal audio & screen capture |
+| **Privacy Tiles (Camera & Mic)** | Shizuku + Android 12+ | Global hardware sensor privacy toggles |
 
 ---
 

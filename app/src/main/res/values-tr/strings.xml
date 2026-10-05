@@ -509,4 +509,7 @@
     <string name="amoled_tint_custom_color_title">Özel Renk Seç</string>
     <string name="amoled_preset_colors">Hazır Renkler</string>
     <string name="hex_color_label">Hex (#RRGGBB)</string>
+    <string name="tile_camera_access">Kamera Erişimi</string>
+    <string name="tile_microphone_access">Mikrofon Erişimi</string>
+    <string name="sensor_privacy_requires_android_12">Bu özellik Android 12 veya üzerini gerektirir.</string>
 </resources>

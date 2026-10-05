@@ -169,6 +169,28 @@
             </intent-filter>
         </service>
 
+        <service
+            android:name=".feature.privacy.CameraTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_camera_24px"
+            android:label="@string/tile_camera_access"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".feature.privacy.MicrophoneTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_mic_24px"
+            android:label="@string/tile_microphone_access"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
     </application>
 
 </manifest>

@@ -89,6 +89,8 @@ class PreferenceManager(private val context: Context) {
         val AOD_DISMISS_DOUBLE_TAP = booleanPreferencesKey("aod_dismiss_double_tap")
         val AOD_SHOW_WATTAGE = booleanPreferencesKey("aod_show_wattage")
         val AOD_AS_FOREGROUND_SERVICE = booleanPreferencesKey("aod_as_foreground_service")
+        val GLOBAL_CAMERA_ENABLED = booleanPreferencesKey("global_camera_enabled")
+        val GLOBAL_MICROPHONE_ENABLED = booleanPreferencesKey("global_microphone_enabled")
     }
 
     val preferences: Flow<Preferences> = context.dataStore.data
@@ -462,4 +464,10 @@ class PreferenceManager(private val context: Context) {
 
     val aodAsForegroundService: Flow<Boolean> = preferences.map { it[AOD_AS_FOREGROUND_SERVICE] ?: false }
     suspend fun setAodAsForegroundService(enabled: Boolean) { context.dataStore.edit { it[AOD_AS_FOREGROUND_SERVICE] = enabled } }
+
+    val isGlobalCameraEnabled: Flow<Boolean> = preferences.map { it[GLOBAL_CAMERA_ENABLED] ?: true }
+    suspend fun setGlobalCameraEnabled(enabled: Boolean) { context.dataStore.edit { it[GLOBAL_CAMERA_ENABLED] = enabled } }
+
+    val isGlobalMicrophoneEnabled: Flow<Boolean> = preferences.map { it[GLOBAL_MICROPHONE_ENABLED] ?: true }
+    suspend fun setGlobalMicrophoneEnabled(enabled: Boolean) { context.dataStore.edit { it[GLOBAL_MICROPHONE_ENABLED] = enabled } }
 }
