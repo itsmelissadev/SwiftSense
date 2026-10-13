@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 
 data class ColorOption(val name: String, val color: Color)
 
@@ -48,7 +49,6 @@ val PresetColors = listOf(
     ColorOption("Gold", Color(0xFFFFD700))
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ColorPickerDialog(
     title: String,
@@ -58,6 +58,10 @@ fun ColorPickerDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismissRequest,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+        modifier = Modifier
+            .fillMaxWidth(0.92f)
+            .widthIn(max = 560.dp),
         title = {
             Text(
                 text = title,

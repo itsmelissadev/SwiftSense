@@ -3,8 +3,7 @@ package io.github.itsmelissadev.swiftsense.feature.privacy
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Process
-import io.github.itsmelissadev.swiftsense.service.shizuku.ShizukuShellRunner
-import rikka.shizuku.Shizuku
+import io.github.itsmelissadev.swiftsense.service.shell.ShellBridge
 
 object SensorPrivacyHelper {
 
@@ -13,11 +12,7 @@ object SensorPrivacyHelper {
     }
 
     fun isShizukuAvailable(): Boolean {
-        return try {
-            Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
-        } catch (_: Exception) {
-            false
-        }
+        return ShellBridge.ready.value
     }
 
     fun setSensorEnabled(sensor: String, enabled: Boolean): Result<Unit> {
@@ -26,7 +21,7 @@ object SensorPrivacyHelper {
         }
 
         if (!isShizukuAvailable()) {
-            return Result.failure(IllegalStateException("Shizuku is not running or not authorized"))
+            return Result.failure(IllegalStateException("Execution backend is not ready"))
         }
 
         val userId = try {
@@ -37,7 +32,7 @@ object SensorPrivacyHelper {
 
         val action = if (enabled) "disable" else "enable"
         val command = "cmd sensor_privacy $action $userId $sensor"
-        val result = ShizukuShellRunner.runCommand(command)
+        val result = ShellBridge.run(command)
 
         if (result.isSuccess) {
             return Result.success(Unit)
@@ -45,7 +40,7 @@ object SensorPrivacyHelper {
 
         if (userId != 0) {
             val fallbackCommand = "cmd sensor_privacy $action 0 $sensor"
-            val fallbackResult = ShizukuShellRunner.runCommand(fallbackCommand)
+            val fallbackResult = ShellBridge.run(fallbackCommand)
             if (fallbackResult.isSuccess) {
                 return Result.success(Unit)
             }

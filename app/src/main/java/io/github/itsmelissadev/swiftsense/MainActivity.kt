@@ -12,8 +12,10 @@ import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalConfiguration
@@ -26,28 +28,48 @@ import androidx.navigation.compose.rememberNavController
 import io.github.itsmelissadev.swiftsense.data.PreferenceManager
 import io.github.itsmelissadev.swiftsense.feature.alwaysondisplay.AlwaysOnDisplayScreen
 import io.github.itsmelissadev.swiftsense.feature.amoledscreenprotect.AmoledScreenProtectScreen
+import android.content.Intent
+import android.net.Uri
+import io.github.itsmelissadev.swiftsense.feature.apkinstaller.ApkInstallerScreen
 import io.github.itsmelissadev.swiftsense.feature.appmanager.AppManagerScreen
 import io.github.itsmelissadev.swiftsense.feature.appstopper.AppStopperScreen
 import io.github.itsmelissadev.swiftsense.feature.boostsensors.BoostSensorsScreen
 import io.github.itsmelissadev.swiftsense.feature.cachecleaner.CacheCleanerScreen
 import io.github.itsmelissadev.swiftsense.feature.screenresolution.ScreenResolutionScreen
 import io.github.itsmelissadev.swiftsense.feature.systemtables.SystemTableMacroScreen
+import io.github.itsmelissadev.swiftsense.service.adb.AdbManager
 import io.github.itsmelissadev.swiftsense.ui.screens.OnboardingScreen
 import io.github.itsmelissadev.swiftsense.ui.screens.PermissionScreen
 import io.github.itsmelissadev.swiftsense.ui.screens.SettingsScreen
 import io.github.itsmelissadev.swiftsense.ui.screens.MainScreen
 import io.github.itsmelissadev.swiftsense.ui.theme.SwiftSenseTheme
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     private lateinit var preferenceManager: PreferenceManager
+    private val incomingApkUriState = mutableStateOf<Uri?>(null)
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.action == Intent.ACTION_VIEW) {
+            incomingApkUriState.value = intent.data
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
 
+        if (intent?.action == Intent.ACTION_VIEW) {
+            incomingApkUriState.value = intent.data
+        }
+
         preferenceManager = PreferenceManager(this)
+        io.github.itsmelissadev.swiftsense.service.shell.ShellBridge.init(this)
+        AdbManager.init(this)
         enableEdgeToEdge()
 
         setContent {
@@ -55,11 +77,27 @@ class MainActivity : ComponentActivity() {
                 initial = null
             )
             val themeMode by preferenceManager.themeMode.collectAsState(initial = "system")
+            val dynamicColor by preferenceManager.dynamicColor.collectAsState(initial = false)
+            val themeAccentColor by preferenceManager.themeAccentColor.collectAsState(initial = "pistachio")
             val language by preferenceManager.language.collectAsState(initial = "system")
+            val shellMode by preferenceManager.shellMode.collectAsState(
+                initial = preferenceManager.getShellModeSync()
+            )
+
+            LaunchedEffect(shellMode) {
+                io.github.itsmelissadev.swiftsense.service.shell.ShellBridge.refreshNow()
+            }
 
             val scope = rememberCoroutineScope()
             val navController = rememberNavController()
             val context = LocalContext.current
+
+            val incomingApkUri by incomingApkUriState
+            LaunchedEffect(incomingApkUri) {
+                if (incomingApkUri != null) {
+                    navController.navigate("apk_installer")
+                }
+            }
 
             val configuration = LocalConfiguration.current
             val localizedConfiguration = remember(language, configuration) {
@@ -81,7 +119,11 @@ class MainActivity : ComponentActivity() {
                 LocalConfiguration provides localizedConfiguration,
                 LocalActivityResultRegistryOwner provides this
             ) {
-                SwiftSenseTheme(themeMode = themeMode) {
+                SwiftSenseTheme(
+                    themeMode = themeMode,
+                    dynamicColor = dynamicColor,
+                    themeAccentColor = themeAccentColor
+                ) {
                     if (isOnboardingCompleted != null) {
                         val startDestination = remember(isOnboardingCompleted) {
                             when {
@@ -129,6 +171,7 @@ class MainActivity : ComponentActivity() {
                                     onNavigateToAmoledScreenProtect = { navController.navigate("amoled_screen_protect") },
                                     onNavigateToAlwaysOnDisplay = { navController.navigate("always_on_display") },
                                     onNavigateToScreenRecorder = { navController.navigate("screen_recorder") },
+                                    onNavigateToApkInstaller = { navController.navigate("apk_installer") },
                                     onNavigateToSettings = { navController.navigate("settings") }
                                 )
                             }
@@ -136,7 +179,10 @@ class MainActivity : ComponentActivity() {
                                 BoostSensorsScreen(onNavigateBack = { navController.popBackStack() })
                             }
                             composable("app_manager") {
-                                AppManagerScreen(onNavigateBack = { navController.popBackStack() })
+                                AppManagerScreen(
+                                    onNavigateBack = { navController.popBackStack() },
+                                    onNavigateToApkInstaller = { navController.navigate("apk_installer") }
+                                )
                             }
                             composable("screen_resolution") {
                                 ScreenResolutionScreen(onNavigateBack = { navController.popBackStack() })
@@ -160,9 +206,24 @@ class MainActivity : ComponentActivity() {
                                 io.github.itsmelissadev.swiftsense.feature.screenrecorder.ScreenRecorderScreen(
                                     onNavigateBack = { navController.popBackStack() })
                             }
+                            composable("apk_installer") {
+                                ApkInstallerScreen(
+                                    initialUri = incomingApkUri,
+                                    onNavigateBack = {
+                                        incomingApkUriState.value = null
+                                        navController.popBackStack()
+                                    }
+                                )
+                            }
                             composable("settings") {
                                 SettingsScreen(
                                     preferenceManager = preferenceManager,
+                                    onNavigateBack = { navController.popBackStack() },
+                                    onNavigateToUpdates = { navController.navigate("updates") }
+                                )
+                            }
+                            composable("updates") {
+                                io.github.itsmelissadev.swiftsense.feature.updates.AppUpdatesScreen(
                                     onNavigateBack = { navController.popBackStack() }
                                 )
                             }

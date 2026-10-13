@@ -8,7 +8,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,16 +31,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Deselect
 import androidx.compose.material.icons.filled.DoneAll
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SelectAll
+import androidx.compose.material.icons.rounded.Speed
+import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -54,6 +51,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -73,18 +71,21 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import io.github.itsmelissadev.swiftsense.R
 import io.github.itsmelissadev.swiftsense.data.PreferenceManager
-import io.github.itsmelissadev.swiftsense.service.shizuku.ShizukuShellRunner
-import io.github.itsmelissadev.swiftsense.ui.components.FeatureCard
-import io.github.itsmelissadev.swiftsense.ui.components.ShizukuStatusWidget
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseButton
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseSelectionDialog
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTextField
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTopAppBar
+import io.github.itsmelissadev.swiftsense.service.shell.ShellBridge
+import io.github.itsmelissadev.swiftsense.ui.components.ExecutionStatusWidget
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveButton
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveCardGroup
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveHeader
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveHeroToggleCard
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressivePreferenceItem
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveSearchBar
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveSelectionDialog
+import io.github.itsmelissadev.swiftsense.ui.theme.ExpressivePalette
+import io.github.itsmelissadev.swiftsense.utils.UserManagerHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import rikka.shizuku.Shizuku
 
 data class AppInfo(
     val packageName: String,
@@ -104,7 +105,6 @@ enum class StopperFilter(val titleRes: Int) {
     SELECTED(R.string.common_selected)
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppStopperScreen(
     onNavigateBack: () -> Unit
@@ -127,34 +127,63 @@ fun AppStopperScreen(
 
     var apps by remember { mutableStateOf<List<AppInfo>>(emptyList()) }
     val selectedPackages by preferenceManager.stopperApps.collectAsState(initial = emptySet())
+    val storedTargetUserId by preferenceManager.stopperTargetUserId.collectAsState(initial = UserManagerHelper.getCurrentProcessUserId())
+    var selectedUserId by remember(storedTargetUserId) { mutableIntStateOf(storedTargetUserId) }
+    var userProfiles by remember { mutableStateOf(UserManagerHelper.getInitialUserProfiles(context)) }
+    var showUserSelectionDialog by remember { mutableStateOf(false) }
+
     var isLoadingApps by remember { mutableStateOf(true) }
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf(StopperFilter.ALL) }
 
-    val isShizukuReady = Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+    val isReady by ShellBridge.ready.collectAsState()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(isReady) {
+        if (isReady) {
+            withContext(Dispatchers.IO) {
+                userProfiles = UserManagerHelper.getUserProfiles(context)
+            }
+        }
+    }
+
+    LaunchedEffect(selectedUserId, isReady) {
+        isLoadingApps = true
         withContext(Dispatchers.IO) {
             val pm = context.packageManager
-            val installedApps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
-            val filteredApps = installedApps.filter { app ->
-                val isSelf = app.packageName == context.packageName
-                val isShizuku = app.packageName.contains("shizuku", ignoreCase = true)
-                val isCritical = app.flags and ApplicationInfo.FLAG_SYSTEM != 0 &&
-                        (app.packageName.contains("android.launcher") ||
-                                app.packageName == "android" ||
-                                app.packageName.contains("systemui"))
-                !isSelf && !isShizuku && !isCritical
-            }.map { app ->
-                AppInfo(
-                    packageName = app.packageName,
-                    label = pm.getApplicationLabel(app).toString(),
-                    icon = pm.getApplicationIcon(app).toBitmap().asImageBitmap(),
-                    isSystem = app.flags and ApplicationInfo.FLAG_SYSTEM != 0
-                )
-            }.sortedBy { it.label.lowercase() }
+            val installed = try {
+                if (isReady && selectedUserId != UserManagerHelper.getCurrentProcessUserId()) {
+                    val rawPackages = ShellBridge.run("pm list packages --user $selectedUserId")
+                    val output = rawPackages.getOrNull() ?: ""
+                    val pkgNames = output.lines()
+                        .filter { it.startsWith("package:") }
+                        .map { it.removePrefix("package:").trim() }
 
-            apps = filteredApps
+                    pkgNames.mapNotNull { pkg ->
+                        try {
+                            pm.getApplicationInfo(pkg, 0)
+                        } catch (_: Exception) {
+                            null
+                        }
+                    }
+                } else {
+                    pm.getInstalledApplications(PackageManager.GET_META_DATA)
+                }
+            } catch (_: Exception) {
+                pm.getInstalledApplications(PackageManager.GET_META_DATA)
+            }
+
+            val appList = installed
+                .filter { it.packageName != context.packageName }
+                .map { appInfo ->
+                    val label = appInfo.loadLabel(pm).toString()
+                    val iconDrawable = appInfo.loadIcon(pm)
+                    val bitmap = iconDrawable.toBitmap(96, 96).asImageBitmap()
+                    val isSystem = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+                    AppInfo(appInfo.packageName, label, bitmap, isSystem)
+                }
+                .sortedBy { it.label.lowercase() }
+
+            apps = appList
             isLoadingApps = false
         }
     }
@@ -177,10 +206,36 @@ fun AppStopperScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            SwiftSenseTopAppBar(
+            ExpressiveHeader(
                 title = stringResource(R.string.feature_app_stopper),
-                onNavigateBack = onNavigateBack
+                onNavigateBack = onNavigateBack,
+                actions = {
+                    if (userProfiles.size > 1) {
+                        IconButton(onClick = {
+                            scope.launch(Dispatchers.IO) {
+                                userProfiles = UserManagerHelper.getUserProfiles(context)
+                            }
+                            showUserSelectionDialog = true
+                        }) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        Icons.Default.AccountCircle,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             )
         },
         bottomBar = {
@@ -190,11 +245,18 @@ fun AppStopperScreen(
                 exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
             ) {
                 Surface(
-                    modifier = Modifier.navigationBarsPadding()
+                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .navigationBarsPadding()
+                            .padding(horizontal = 20.dp, vertical = 16.dp)
+                    ) {
                         if (isRunning) {
-                            Column(modifier = Modifier.padding(bottom = 14.dp)) {
+                            Column(modifier = Modifier.padding(bottom = 12.dp)) {
                                 Text(
                                     text = currentProcessingApp,
                                     style = MaterialTheme.typography.titleSmall,
@@ -207,14 +269,15 @@ fun AppStopperScreen(
                                     progress = { processingProgress },
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(4.dp),
+                                        .height(6.dp)
+                                        .clip(CircleShape),
                                     color = MaterialTheme.colorScheme.primary,
-                                    trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                                    trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
                                 )
                             }
                         }
 
-                        SwiftSenseButton(
+                        ExpressiveButton(
                             text = stringResource(R.string.stop_now),
                             onClick = {
                                 scope.launch {
@@ -227,13 +290,13 @@ fun AppStopperScreen(
                                         currentProcessingApp = app.label
                                         processingProgress = (index + 1) / total
                                         withContext(Dispatchers.IO) {
-                                            ShizukuShellRunner.runCommand("$cmdPrefix ${app.packageName}")
+                                            ShellBridge.run("$cmdPrefix --user $selectedUserId ${app.packageName}")
                                         }
                                     }
                                     isRunning = false
                                 }
                             },
-                            enabled = selectedPackages.isNotEmpty() && isShizukuReady && !isRunning,
+                            enabled = selectedPackages.isNotEmpty() && isReady && !isRunning,
                             modifier = Modifier.fillMaxWidth(),
                             icon = Icons.Default.DoneAll
                         )
@@ -247,14 +310,16 @@ fun AppStopperScreen(
                 .fillMaxSize()
                 .padding(innerPadding),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item { ShizukuStatusWidget() }
+            if (!isReady) {
+                item { ExecutionStatusWidget() }
+            }
 
             item {
-                FeatureCard(
+                ExpressiveHeroToggleCard(
                     title = stringResource(R.string.stopper_service_title),
-                    description = if (isStopperServiceRunning) {
+                    subtitle = if (isStopperServiceRunning) {
                         stringResource(
                             R.string.stopper_service_running,
                             selectedPackages.size,
@@ -263,12 +328,14 @@ fun AppStopperScreen(
                     } else {
                         stringResource(R.string.stopper_service_desc)
                     },
-                    icon = Icons.Default.Bolt,
                     checked = isStopperServiceRunning,
-                    enabled = isShizukuReady,
+                    enabled = isReady,
                     onCheckedChange = { active ->
                         scope.launch {
                             preferenceManager.setStopperServiceRunning(active)
+                            if (active) {
+                                preferenceManager.setStopperTargetUserId(selectedUserId)
+                            }
                             val intent = Intent(context, AppStopperService::class.java)
                             if (active) {
                                 context.startForegroundService(intent)
@@ -281,76 +348,58 @@ fun AppStopperScreen(
             }
 
             item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Box(modifier = Modifier.weight(1f)) {
-                        SwiftSenseTextField(
-                            value = stringResource(
+                Text(
+                    text = stringResource(R.string.settings_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 12.dp, bottom = 4.dp)
+                )
+
+                ExpressiveCardGroup {
+                    item {
+                        ExpressivePreferenceItem(
+                            title = stringResource(R.string.stop_mode),
+                            description = stringResource(
                                 when (currentStopMode) {
                                     StopMode.SIMPLE -> R.string.mode_simple
                                     StopMode.FORCE -> R.string.mode_force
                                 }
                             ),
-                            onValueChange = {},
-                            readOnly = true,
-                            label = stringResource(R.string.stop_mode),
-                            trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clickable { showModeDialog = true }
+                            icon = Icons.Rounded.Speed,
+                            badgeColors = ExpressivePalette.AmberLight,
+                            onClick = { showModeDialog = true }
                         )
                     }
 
-                    Box(modifier = Modifier.weight(1f)) {
-                        val intervalLabel = when (stopperInterval) {
-                            3 -> stringResource(R.string.interval_3s)
-                            5 -> stringResource(R.string.interval_5s)
-                            10 -> stringResource(R.string.interval_10s)
-                            30 -> stringResource(R.string.interval_30s)
-                            60 -> stringResource(R.string.interval_1m)
-                            120 -> stringResource(R.string.interval_2m)
-                            300 -> stringResource(R.string.interval_5m)
-                            else -> "$stopperInterval s"
-                        }
-                        SwiftSenseTextField(
-                            value = intervalLabel,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = stringResource(R.string.stopper_interval),
-                            trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clickable { showIntervalDialog = true }
+                    val intervalLabel = when (stopperInterval) {
+                        3 -> stringResource(R.string.interval_3s)
+                        5 -> stringResource(R.string.interval_5s)
+                        10 -> stringResource(R.string.interval_10s)
+                        30 -> stringResource(R.string.interval_30s)
+                        60 -> stringResource(R.string.interval_1m)
+                        120 -> stringResource(R.string.interval_2m)
+                        300 -> stringResource(R.string.interval_5m)
+                        else -> "$stopperInterval s"
+                    }
+
+                    item {
+                        ExpressivePreferenceItem(
+                            title = stringResource(R.string.stopper_interval),
+                            description = intervalLabel,
+                            icon = Icons.Rounded.Timer,
+                            badgeColors = ExpressivePalette.BlueLight,
+                            onClick = { showIntervalDialog = true }
                         )
                     }
                 }
             }
 
             item {
-                SwiftSenseTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    label = stringResource(R.string.search_apps),
-                    leadingIcon = Icons.Default.Search,
-                    trailingIcon = {
-                        if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { searchQuery = "" }) {
-                                Icon(
-                                    Icons.Default.Clear,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        }
-                    }
+                ExpressiveSearchBar(
+                    query = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    placeholder = stringResource(R.string.search_apps)
                 )
             }
 
@@ -372,12 +421,10 @@ fun AppStopperScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(6.dp))
                             .clickable {
                                 scope.launch {
                                     val visiblePackages = filteredList.map { it.packageName }.toSet()
@@ -409,12 +456,10 @@ fun AppStopperScreen(
                     }
 
                     Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(6.dp))
                             .clickable {
                                 scope.launch {
                                     val visiblePackages = filteredList.map { it.packageName }.toSet()
@@ -450,30 +495,52 @@ fun AppStopperScreen(
             if (isLoadingApps) {
                 item {
                     Box(
-                        Modifier
+                        modifier = Modifier
                             .fillMaxWidth()
-                            .padding(36.dp),
+                            .padding(top = 40.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(strokeWidth = 4.dp)
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(36.dp)
+                        )
                     }
+                }
+            } else if (filteredList.isEmpty()) {
+                item {
+                    Text(
+                        text = stringResource(R.string.no_apps_found),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 40.dp)
+                    )
+                }
+            } else {
+                items(filteredList, key = { it.packageName }) { app ->
+                    val isSelected = selectedPackages.contains(app.packageName)
+                    AppItem(
+                        app = app,
+                        isSelected = isSelected,
+                        onToggle = {
+                            scope.launch {
+                                preferenceManager.toggleStopperApp(app.packageName)
+                            }
+                        }
+                    )
                 }
             }
 
-            items(filteredList, key = { it.packageName }) { app ->
-                AppItem(
-                    app = app,
-                    isSelected = selectedPackages.contains(app.packageName),
-                    onToggle = {
-                        scope.launch { preferenceManager.toggleStopperApp(app.packageName) }
-                    }
-                )
+            item {
+                Spacer(modifier = Modifier.height(80.dp))
             }
         }
     }
 
     if (showModeDialog) {
-        SwiftSenseSelectionDialog(
+        ExpressiveSelectionDialog(
             title = stringResource(R.string.stop_mode),
             options = listOf(
                 StopMode.SIMPLE to stringResource(R.string.mode_simple),
@@ -488,7 +555,7 @@ fun AppStopperScreen(
     }
 
     if (showIntervalDialog) {
-        SwiftSenseSelectionDialog(
+        ExpressiveSelectionDialog(
             title = stringResource(R.string.stopper_interval),
             options = listOf(
                 3 to stringResource(R.string.interval_3s),
@@ -504,6 +571,25 @@ fun AppStopperScreen(
                 scope.launch { preferenceManager.setStopperInterval(interval) }
             },
             onDismissRequest = { showIntervalDialog = false }
+        )
+    }
+
+    if (showUserSelectionDialog) {
+        val options = userProfiles.map { user ->
+            val activeTag = if (user.isCurrentProcess) " ${stringResource(R.string.user_profile_current_tag)}" else ""
+            user.id to "${user.name} (${user.id})$activeTag"
+        }
+        ExpressiveSelectionDialog(
+            title = stringResource(R.string.select_user_profile),
+            options = options,
+            selected = selectedUserId,
+            onSelectedChange = { newId ->
+                selectedUserId = newId
+                scope.launch {
+                    preferenceManager.setStopperTargetUserId(newId)
+                }
+            },
+            onDismissRequest = { showUserSelectionDialog = false }
         )
     }
 }
@@ -522,7 +608,7 @@ private fun StopperFilterBar(
         modifier = Modifier
             .fillMaxWidth()
             .horizontalScroll(scrollState),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         StopperFilter.values().forEach { filter ->
             val count = when (filter) {
@@ -534,33 +620,28 @@ private fun StopperFilterBar(
             val isSelected = selectedFilter == filter
             Surface(
                 onClick = { onFilterSelected(filter) },
-                shape = RoundedCornerShape(6.dp),
-                color = if (isSelected) MaterialTheme.colorScheme.onBackground
-                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                border = BorderStroke(
-                    1.dp,
-                    if (isSelected) MaterialTheme.colorScheme.onBackground
-                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
-                )
+                shape = CircleShape,
+                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                else MaterialTheme.colorScheme.surfaceContainerHigh
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
                         text = stringResource(filter.titleRes),
                         style = MaterialTheme.typography.bodySmall,
-                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                        color = if (isSelected) MaterialTheme.colorScheme.background
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
                         else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = "$count",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = if (isSelected) MaterialTheme.colorScheme.background.copy(alpha = 0.8f)
-                        else MaterialTheme.colorScheme.outline.copy(alpha = 0.8f)
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                 }
             }
@@ -574,13 +655,9 @@ fun AppItem(app: AppInfo, isSelected: Boolean, onToggle: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onToggle() },
-        color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.06f) else MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(6.dp),
-        border = BorderStroke(
-            1.dp,
-            if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-            else MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
-        )
+        color = if (isSelected) MaterialTheme.colorScheme.surfaceContainerHigh
+        else MaterialTheme.colorScheme.surfaceContainer,
+        shape = RoundedCornerShape(20.dp)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -590,7 +667,9 @@ fun AppItem(app: AppInfo, isSelected: Boolean, onToggle: () -> Unit) {
                 Image(
                     bitmap = app.icon,
                     contentDescription = null,
-                    modifier = Modifier.size(32.dp).alpha(if (isSelected) 1f else 0.7f)
+                    modifier = Modifier
+                        .size(36.dp)
+                        .alpha(if (isSelected) 1f else 0.85f)
                 )
                 if (isSelected) {
                     Box(
@@ -602,7 +681,7 @@ fun AppItem(app: AppInfo, isSelected: Boolean, onToggle: () -> Unit) {
                     ) {
                         Icon(
                             Icons.Default.Check,
-                            null,
+                            contentDescription = null,
                             modifier = Modifier.size(10.dp),
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
@@ -612,7 +691,7 @@ fun AppItem(app: AppInfo, isSelected: Boolean, onToggle: () -> Unit) {
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    app.label,
+                    text = app.label,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
@@ -620,9 +699,9 @@ fun AppItem(app: AppInfo, isSelected: Boolean, onToggle: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    app.packageName,
+                    text = app.packageName,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )

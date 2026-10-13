@@ -11,6 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -46,6 +47,7 @@ import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -66,17 +68,18 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.itsmelissadev.swiftsense.R
 import io.github.itsmelissadev.swiftsense.data.PreferenceManager
-import io.github.itsmelissadev.swiftsense.service.shizuku.ShizukuShellRunner
+import io.github.itsmelissadev.swiftsense.service.shell.ShellBridge
+import io.github.itsmelissadev.swiftsense.ui.components.ExecutionStatusWidget
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveButton
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveDialog
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveDialogButton
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveHeader
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveOutlinedButton
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveSearchBar
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveSelectionDialog
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveTextField
 import io.github.itsmelissadev.swiftsense.ui.components.FeatureCard
-import io.github.itsmelissadev.swiftsense.ui.components.ShadcnDialog
-import io.github.itsmelissadev.swiftsense.ui.components.ShadcnDialogButton
-import io.github.itsmelissadev.swiftsense.ui.components.ShizukuStatusWidget
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseButton
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseOutlinedButton
 import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseSectionHeader
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseSelectionDialog
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTextField
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTopAppBar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -186,13 +189,15 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
     var showAutoApplyMacroDialog by remember { mutableStateOf(false) }
     var showAutoApplyIntervalDialog by remember { mutableStateOf(false) }
 
+    val isReady by ShellBridge.ready.collectAsState()
+
     var tableData by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
 
     val refreshTable: () -> Unit = {
         isLoading = true
         scope.launch(Dispatchers.IO) {
-            val result = ShizukuShellRunner.runCommand("settings list ${selectedTable.key}")
+            val result = ShellBridge.run("settings list ${selectedTable.key}")
             if (result.isSuccess) {
                 val output = result.getOrNull() ?: ""
                 tableData = output.lines()
@@ -244,9 +249,9 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
             Scaffold(
                 topBar = {
                     Column {
-                        SwiftSenseTopAppBar(
+                        ExpressiveHeader(
                             title = stringResource(R.string.feature_system_tables),
-                            onNavigateBack = onNavigateBack,
+                            onBackClick = onNavigateBack,
                             actions = {
                                 if (selectedTabIndex == 0) {
                                     IconButton(onClick = {
@@ -308,12 +313,12 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                 TabRowDefaults.SecondaryIndicator(
                                     modifier = Modifier.tabIndicatorOffset(selectedTabIndex),
                                     color = MaterialTheme.colorScheme.primary,
-                                    height = 2.dp
+                                    height = 3.dp
                                 )
                             },
                             divider = {
                                 HorizontalDivider(
-                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.08f)
                                 )
                             }
                         ) {
@@ -325,14 +330,12 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                         Text(
                                             title,
                                             style = MaterialTheme.typography.titleSmall.copy(
-                                                fontWeight = if (selectedTabIndex == index) FontWeight.SemiBold else FontWeight.Medium
+                                                fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Medium
                                             )
                                         )
                                     },
-                                    selectedContentColor = MaterialTheme.colorScheme.onSurface,
-                                    unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                        alpha = 0.6f
-                                    )
+                                    selectedContentColor = MaterialTheme.colorScheme.primary,
+                                    unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -349,12 +352,13 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                         0 -> {
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize(),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                item {
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    ShizukuStatusWidget()
-                                    Spacer(modifier = Modifier.height(12.dp))
+                                if (!isReady) {
+                                    item {
+                                        ExecutionStatusWidget(bottomSpacing = 6.dp)
+                                    }
                                 }
 
                                 item {
@@ -402,7 +406,7 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
                                         Box(modifier = Modifier.weight(1f)) {
-                                            SwiftSenseTextField(
+                                            ExpressiveTextField(
                                                 value = activeAutoMacro?.name
                                                     ?: stringResource(R.string.audio_disabled),
                                                 onValueChange = {},
@@ -426,17 +430,12 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                         }
 
                                         Box(modifier = Modifier.weight(1f)) {
-                                            val intervalLabel = when (autoApplyInterval) {
-                                                5 -> stringResource(R.string.interval_5s)
-                                                10 -> stringResource(R.string.interval_10s)
-                                                30 -> stringResource(R.string.interval_30s)
-                                                60 -> stringResource(R.string.interval_1m)
-                                                120 -> stringResource(R.string.interval_2m)
-                                                300 -> stringResource(R.string.interval_5m)
-                                                600 -> stringResource(R.string.interval_10m)
-                                                else -> "$autoApplyInterval"
+                                            val intervalLabel = if (autoApplyInterval == 500) {
+                                                stringResource(R.string.interval_500ms)
+                                            } else {
+                                                stringResource(R.string.macro_interval_seconds, autoApplyInterval)
                                             }
-                                            SwiftSenseTextField(
+                                            ExpressiveTextField(
                                                 value = intervalLabel,
                                                 onValueChange = {},
                                                 readOnly = true,
@@ -463,10 +462,8 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                     Text(
                                         text = stringResource(R.string.auto_apply_desc),
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                            alpha = 0.7f
-                                        ),
-                                        modifier = Modifier.padding(bottom = 16.dp)
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(bottom = 12.dp)
                                     )
                                 }
                                 if (macros.isEmpty()) {
@@ -495,7 +492,7 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                                             val cmd =
                                                                 "settings put ${setting.table.key} ${setting.key} ${setting.targetValue}"
                                                             val result =
-                                                                ShizukuShellRunner.runCommand(cmd)
+                                                                ShellBridge.run(cmd)
                                                             if (!result.isSuccess) success = false
                                                         }
                                                     }
@@ -516,7 +513,7 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                                             val cmd =
                                                                 "settings put ${setting.table.key} ${setting.key} ${setting.defaultValue}"
                                                             val result =
-                                                                ShizukuShellRunner.runCommand(cmd)
+                                                                ShellBridge.run(cmd)
                                                             if (!result.isSuccess) success = false
                                                         }
                                                     }
@@ -549,9 +546,10 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
 
                         1 -> {
                             Column(modifier = Modifier.fillMaxSize()) {
+                                Spacer(modifier = Modifier.height(8.dp))
                                 var showTableDialog by remember { mutableStateOf(false) }
                                 Box(modifier = Modifier.fillMaxWidth()) {
-                                    SwiftSenseTextField(
+                                    ExpressiveTextField(
                                         value = stringResource(
                                             when (selectedTable) {
                                                 SystemTable.SYSTEM -> R.string.table_system
@@ -573,7 +571,7 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                 }
 
                                 if (showTableDialog) {
-                                    SwiftSenseSelectionDialog(
+                                    ExpressiveSelectionDialog(
                                         title = stringResource(R.string.select_table),
                                         options = SystemTable.entries.map { table ->
                                             table to stringResource(
@@ -592,15 +590,13 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                SwiftSenseTextField(
-                                    value = searchQuery,
-                                    onValueChange = { searchQuery = it },
-                                    label = stringResource(R.string.search_table),
-                                    leadingIcon = Icons.Default.Search,
-                                    singleLine = true
+                                ExpressiveSearchBar(
+                                    query = searchQuery,
+                                    onQueryChange = { searchQuery = it },
+                                    placeholder = stringResource(R.string.search_table)
                                 )
 
-                                Spacer(modifier = Modifier.height(16.dp))
+                                Spacer(modifier = Modifier.height(12.dp))
 
                                 if (isLoading) {
                                     Box(
@@ -618,11 +614,13 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                     }
                                     LazyColumn(
                                         modifier = Modifier.weight(1f).fillMaxWidth(),
+                                        contentPadding = PaddingValues(top = 8.dp, bottom = 32.dp),
                                         verticalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        item {
-                                            ShizukuStatusWidget()
-                                            Spacer(modifier = Modifier.height(12.dp))
+                                        if (!isReady) {
+                                            item {
+                                                ExecutionStatusWidget(bottomSpacing = 8.dp)
+                                            }
                                         }
                                         items(filteredData) { (key, value) ->
                                             Surface(
@@ -630,12 +628,8 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                                     .clickable {
                                                         editingSetting = key to value
                                                     },
-                                                shape = RoundedCornerShape(6.dp),
-                                                color = MaterialTheme.colorScheme.surface,
-                                                border = androidx.compose.foundation.BorderStroke(
-                                                    1.dp,
-                                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
-                                                )
+                                                shape = RoundedCornerShape(16.dp),
+                                                color = MaterialTheme.colorScheme.surfaceContainer
                                             ) {
                                                 Row(
                                                     modifier = Modifier.padding(
@@ -657,16 +651,14 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                                         )
                                                     }
                                                     Surface(
-                                                        color = MaterialTheme.colorScheme.primary.copy(
-                                                            alpha = 0.08f
-                                                        ),
-                                                        contentColor = MaterialTheme.colorScheme.primary,
-                                                        shape = RoundedCornerShape(4.dp)
+                                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                        shape = RoundedCornerShape(8.dp)
                                                     ) {
                                                         Text(
                                                             text = value,
                                                             modifier = Modifier.padding(
-                                                                horizontal = 8.dp,
+                                                                horizontal = 10.dp,
                                                                 vertical = 4.dp
                                                             ),
                                                             style = MaterialTheme.typography.labelMedium,
@@ -688,11 +680,11 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
 
     if (showImportDialog) {
         var jsonInput by remember { mutableStateOf("") }
-        ShadcnDialog(
+        ExpressiveDialog(
             onDismissRequest = { showImportDialog = false },
             title = stringResource(R.string.import_macros),
             content = {
-                SwiftSenseTextField(
+                ExpressiveTextField(
                     value = jsonInput,
                     onValueChange = { jsonInput = it },
                     label = stringResource(R.string.import_macros),
@@ -702,7 +694,7 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                 )
             },
             confirmButton = {
-                ShadcnDialogButton(
+                ExpressiveDialogButton(
                     text = stringResource(R.string.action_import),
                     onClick = {
                         try {
@@ -747,7 +739,7 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                 )
             },
             dismissButton = {
-                ShadcnDialogButton(
+                ExpressiveDialogButton(
                     text = stringResource(R.string.action_cancel),
                     isPrimary = false,
                     onClick = { showImportDialog = false }
@@ -769,11 +761,11 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
             jsonArray.toString(4)
         }
 
-        ShadcnDialog(
+        ExpressiveDialog(
             onDismissRequest = { showExportDialog = false },
             title = stringResource(R.string.export_macros),
             content = {
-                SwiftSenseTextField(
+                ExpressiveTextField(
                     value = allMacrosJson,
                     onValueChange = {},
                     readOnly = true,
@@ -783,7 +775,7 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                 )
             },
             confirmButton = {
-                ShadcnDialogButton(
+                ExpressiveDialogButton(
                     text = stringResource(R.string.copy_to_clipboard),
                     onClick = {
                         val clipboard =
@@ -796,7 +788,7 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                 )
             },
             dismissButton = {
-                ShadcnDialogButton(
+                ExpressiveDialogButton(
                     text = stringResource(R.string.action_cancel),
                     isPrimary = false,
                     onClick = { showExportDialog = false }
@@ -807,18 +799,18 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
 
     editingSetting?.let { (key, value) ->
         var newValue by remember { mutableStateOf(value) }
-        ShadcnDialog(
+        ExpressiveDialog(
             onDismissRequest = { editingSetting = null },
             title = stringResource(R.string.edit_setting),
             content = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
                         key,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    SwiftSenseTextField(
+                    ExpressiveTextField(
                         value = newValue,
                         onValueChange = { newValue = it },
                         label = stringResource(R.string.new_value)
@@ -826,13 +818,13 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                 }
             },
             confirmButton = {
-                ShadcnDialogButton(
+                ExpressiveDialogButton(
                     text = stringResource(R.string.action_apply),
                     onClick = {
                         scope.launch {
                             val cmd = "settings put ${selectedTable.key} $key $newValue"
                             val result = withContext(Dispatchers.IO) {
-                                ShizukuShellRunner.runCommand(cmd)
+                                ShellBridge.run(cmd)
                             }
                             if (result.isSuccess) {
                                 Toast.makeText(
@@ -848,7 +840,7 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                 )
             },
             dismissButton = {
-                ShadcnDialogButton(
+                ExpressiveDialogButton(
                     text = stringResource(R.string.action_cancel),
                     isPrimary = false,
                     onClick = { editingSetting = null }
@@ -859,7 +851,7 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
 
     if (showAutoApplyMacroDialog) {
         val macroOptions = macros.map { it.toJson() to it.name }
-        SwiftSenseSelectionDialog(
+        ExpressiveSelectionDialog(
             title = stringResource(R.string.select_macro_to_apply),
             options = macroOptions,
             selected = autoApplyJson ?: "",
@@ -874,15 +866,14 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
 
     if (showAutoApplyIntervalDialog) {
         val intervalOptions = listOf(
-            5 to stringResource(R.string.interval_5s),
-            10 to stringResource(R.string.interval_10s),
-            30 to stringResource(R.string.interval_30s),
-            60 to stringResource(R.string.interval_1m),
-            120 to stringResource(R.string.interval_2m),
-            300 to stringResource(R.string.interval_5m),
-            600 to stringResource(R.string.interval_10m)
+            500 to stringResource(R.string.interval_500ms),
+            1 to stringResource(R.string.macro_interval_seconds, 1),
+            2 to stringResource(R.string.macro_interval_seconds, 2),
+            3 to stringResource(R.string.macro_interval_seconds, 3),
+            4 to stringResource(R.string.macro_interval_seconds, 4),
+            5 to stringResource(R.string.macro_interval_seconds, 5)
         )
-        SwiftSenseSelectionDialog(
+        ExpressiveSelectionDialog(
             title = stringResource(R.string.select_interval),
             options = intervalOptions,
             selected = autoApplyInterval,
@@ -906,12 +897,8 @@ fun MacroItem(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(6.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
-        )
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -923,7 +910,7 @@ fun MacroItem(
                     Text(
                         macro.name,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
@@ -933,7 +920,7 @@ fun MacroItem(
                         ),
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Row {
@@ -941,7 +928,7 @@ fun MacroItem(
                         Icon(
                             Icons.Default.Edit,
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.size(20.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -949,20 +936,16 @@ fun MacroItem(
                         Icon(
                             Icons.Default.Delete,
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.error
                         )
                     }
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
             Surface(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f),
-                shape = RoundedCornerShape(6.dp),
-                border = androidx.compose.foundation.BorderStroke(
-                    1.dp,
-                    MaterialTheme.colorScheme.outline.copy(alpha = 0.08f)
-                ),
+                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(14.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
@@ -983,7 +966,7 @@ fun MacroItem(
                                 Surface(
                                     color = MaterialTheme.colorScheme.primaryContainer,
                                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    shape = RoundedCornerShape(4.dp)
+                                    shape = RoundedCornerShape(8.dp)
                                 ) {
                                     Text(
                                         text = stringResource(
@@ -994,7 +977,7 @@ fun MacroItem(
                                             }
                                         ),
                                         modifier = Modifier.padding(
-                                            horizontal = 6.dp,
+                                            horizontal = 8.dp,
                                             vertical = 2.dp
                                         ),
                                         style = MaterialTheme.typography.labelSmall,
@@ -1015,12 +998,12 @@ fun MacroItem(
                                 Text(
                                     text = setting.defaultValue,
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
                                 Text(
                                     text = "→",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
                                 Text(
                                     text = setting.targetValue,
@@ -1036,14 +1019,14 @@ fun MacroItem(
             Spacer(modifier = Modifier.height(16.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                SwiftSenseButton(
+                ExpressiveButton(
                     text = stringResource(R.string.action_apply),
                     onClick = onApply,
                     modifier = Modifier.weight(1f)
                 )
-                SwiftSenseOutlinedButton(
+                ExpressiveOutlinedButton(
                     text = stringResource(R.string.action_revert_macro),
                     onClick = onRevert,
                     modifier = Modifier.weight(1f)
@@ -1073,9 +1056,9 @@ fun MacroEditorPage(
 
     Scaffold(
         topBar = {
-            SwiftSenseTopAppBar(
+            ExpressiveHeader(
                 title = if (macro == null) stringResource(R.string.add_macro) else stringResource(R.string.edit_macro),
-                onNavigateBack = onDismiss,
+                onBackClick = onDismiss,
                 actions = {
                     IconButton(
                         onClick = {
@@ -1085,7 +1068,11 @@ fun MacroEditorPage(
                         },
                         enabled = name.isNotBlank() && settings.isNotEmpty()
                     ) {
-                        Icon(Icons.Default.Check, contentDescription = null)
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = null,
+                            tint = if (name.isNotBlank() && settings.isNotEmpty()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                        )
                     }
                 }
             )
@@ -1096,11 +1083,12 @@ fun MacroEditorPage(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                Spacer(modifier = Modifier.height(12.dp))
-                SwiftSenseTextField(
+                Spacer(modifier = Modifier.height(6.dp))
+                ExpressiveTextField(
                     value = name,
                     onValueChange = { name = it },
                     label = stringResource(R.string.macro_name)
@@ -1111,24 +1099,21 @@ fun MacroEditorPage(
                 Text(
                     text = stringResource(R.string.settings),
                     style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
             items(settings) { setting ->
                 Surface(
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(6.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth().clickable {
                         val idx = settings.indexOf(setting)
                         if (idx != -1) {
                             editingSetting = idx to setting
                         }
-                    },
-                    border = androidx.compose.foundation.BorderStroke(
-                        1.dp,
-                        MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
-                    )
+                    }
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -1143,7 +1128,7 @@ fun MacroEditorPage(
                                 Surface(
                                     color = MaterialTheme.colorScheme.primaryContainer,
                                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    shape = RoundedCornerShape(4.dp)
+                                    shape = RoundedCornerShape(8.dp)
                                 ) {
                                     Text(
                                         text = stringResource(
@@ -1154,7 +1139,7 @@ fun MacroEditorPage(
                                             }
                                         ),
                                         modifier = Modifier.padding(
-                                            horizontal = 6.dp,
+                                            horizontal = 8.dp,
                                             vertical = 2.dp
                                         ),
                                         style = MaterialTheme.typography.labelSmall,
@@ -1176,12 +1161,12 @@ fun MacroEditorPage(
                                 Text(
                                     text = setting.defaultValue,
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
                                 Text(
                                     text = "→",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
                                 Text(
                                     text = setting.targetValue,
@@ -1195,8 +1180,8 @@ fun MacroEditorPage(
                             Icon(
                                 Icons.Default.Close,
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp),
-                                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.error
                             )
                         }
                     }
@@ -1205,13 +1190,9 @@ fun MacroEditorPage(
 
             item {
                 Surface(
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(6.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    border = androidx.compose.foundation.BorderStroke(
-                        1.dp,
-                        MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
-                    )
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    shape = RoundedCornerShape(20.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -1220,12 +1201,13 @@ fun MacroEditorPage(
                         Text(
                             stringResource(R.string.add_new_setting),
                             style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
 
                         var showTableDialog by remember { mutableStateOf(false) }
                         Box(modifier = Modifier.fillMaxWidth()) {
-                            SwiftSenseTextField(
+                            ExpressiveTextField(
                                 value = stringResource(
                                     when (currentTable) {
                                         SystemTable.SYSTEM -> R.string.table_system
@@ -1247,7 +1229,7 @@ fun MacroEditorPage(
                         }
 
                         if (showTableDialog) {
-                            SwiftSenseSelectionDialog(
+                            ExpressiveSelectionDialog(
                                 title = stringResource(R.string.select_table),
                                 options = SystemTable.entries.map { t ->
                                     t to stringResource(
@@ -1264,23 +1246,23 @@ fun MacroEditorPage(
                             )
                         }
 
-                        SwiftSenseTextField(
+                        ExpressiveTextField(
                             value = currentKey,
                             onValueChange = { currentKey = it },
                             label = stringResource(R.string.setting_key)
                         )
-                        SwiftSenseTextField(
+                        ExpressiveTextField(
                             value = currentDefaultValue,
                             onValueChange = { currentDefaultValue = it },
                             label = stringResource(R.string.default_value)
                         )
-                        SwiftSenseTextField(
+                        ExpressiveTextField(
                             value = currentTargetValue,
                             onValueChange = { currentTargetValue = it },
                             label = stringResource(R.string.target_value)
                         )
 
-                        SwiftSenseButton(
+                        ExpressiveButton(
                             text = stringResource(R.string.add_new_setting),
                             onClick = {
                                 if (currentKey.isNotBlank()) {
@@ -1316,14 +1298,14 @@ fun MacroEditorPage(
         var editDefaultValue by remember { mutableStateOf(setting.defaultValue) }
         var editTargetValue by remember { mutableStateOf(setting.targetValue) }
 
-        ShadcnDialog(
+        ExpressiveDialog(
             onDismissRequest = { editingSetting = null },
             title = stringResource(R.string.edit_setting),
             content = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     var showTableDialog by remember { mutableStateOf(false) }
                     Box(modifier = Modifier.fillMaxWidth()) {
-                        SwiftSenseTextField(
+                        ExpressiveTextField(
                             value = stringResource(
                                 when (editTable) {
                                     SystemTable.SYSTEM -> R.string.table_system
@@ -1345,7 +1327,7 @@ fun MacroEditorPage(
                     }
 
                     if (showTableDialog) {
-                        SwiftSenseSelectionDialog(
+                        ExpressiveSelectionDialog(
                             title = stringResource(R.string.select_table),
                             options = SystemTable.entries.map { t ->
                                 t to stringResource(
@@ -1362,19 +1344,19 @@ fun MacroEditorPage(
                         )
                     }
 
-                    SwiftSenseTextField(
+                    ExpressiveTextField(
                         value = editKey,
                         onValueChange = { editKey = it },
                         label = stringResource(R.string.setting_key)
                     )
 
-                    SwiftSenseTextField(
+                    ExpressiveTextField(
                         value = editDefaultValue,
                         onValueChange = { editDefaultValue = it },
                         label = stringResource(R.string.default_value)
                     )
 
-                    SwiftSenseTextField(
+                    ExpressiveTextField(
                         value = editTargetValue,
                         onValueChange = { editTargetValue = it },
                         label = stringResource(R.string.target_value)
@@ -1382,7 +1364,7 @@ fun MacroEditorPage(
                 }
             },
             confirmButton = {
-                ShadcnDialogButton(
+                ExpressiveDialogButton(
                     text = stringResource(R.string.action_apply),
                     onClick = {
                         if (editKey.isNotBlank()) {
@@ -1398,7 +1380,7 @@ fun MacroEditorPage(
                 )
             },
             dismissButton = {
-                ShadcnDialogButton(
+                ExpressiveDialogButton(
                     text = stringResource(R.string.action_cancel),
                     isPrimary = false,
                     onClick = { editingSetting = null }

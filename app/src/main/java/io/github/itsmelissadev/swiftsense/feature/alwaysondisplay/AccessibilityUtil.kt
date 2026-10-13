@@ -4,8 +4,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.provider.Settings
 import android.text.TextUtils
-import io.github.itsmelissadev.swiftsense.service.shizuku.ShizukuShellRunner
-import rikka.shizuku.Shizuku
+import io.github.itsmelissadev.swiftsense.service.shell.ShellBridge
 
 object AccessibilityUtil {
     fun isAccessibilityServiceEnabled(context: Context, accessibilityService: Class<*>): Boolean {
@@ -37,11 +36,7 @@ object AccessibilityUtil {
     }
 
     fun isShizukuAvailable(): Boolean {
-        return try {
-            Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
-        } catch (_: Exception) {
-            false
-        }
+        return ShellBridge.ready.value
     }
 
     fun toggleAccessibilityServiceWithShizuku(context: Context, accessibilityService: Class<*>, enable: Boolean): Boolean {
@@ -49,7 +44,7 @@ object AccessibilityUtil {
         val serviceComponent = context.packageName + "/" + accessibilityService.canonicalName
 
         val getCmd = "settings get secure enabled_accessibility_services"
-        val result = ShizukuShellRunner.runCommand(getCmd)
+        val result = ShellBridge.run(getCmd)
         val currentServices = if (result.isSuccess) {
             result.getOrNull()?.trim()?.takeIf { it != "null" } ?: ""
         } else ""
@@ -68,7 +63,7 @@ object AccessibilityUtil {
             "settings put secure enabled_accessibility_services \"$newServicesString\" && settings put secure accessibility_enabled 1"
         }
 
-        val putResult = ShizukuShellRunner.runCommand(putCmd)
+        val putResult = ShellBridge.run(putCmd)
         return putResult.isSuccess
     }
 }

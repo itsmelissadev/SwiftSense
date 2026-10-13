@@ -7,7 +7,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,13 +16,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Info
@@ -47,7 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.itsmelissadev.swiftsense.R
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseButton
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveButton
 import kotlinx.coroutines.launch
 
 data class OnboardingPage(
@@ -70,7 +70,12 @@ fun OnboardingScreen(onFinished: () -> Unit) {
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+        ) {
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.weight(1f)
@@ -88,7 +93,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                 repeat(pages.size) { index ->
                     val isSelected = pagerState.currentPage == index
                     val width by animateDpAsState(
-                        targetValue = if (isSelected) 24.dp else 8.dp,
+                        targetValue = if (isSelected) 28.dp else 8.dp,
                         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
                         label = "dot_width"
                     )
@@ -101,7 +106,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                             .clip(CircleShape)
                             .background(
                                 if (isSelected) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.surfaceVariant
+                                else MaterialTheme.colorScheme.surfaceContainerHighest
                             )
                     )
                 }
@@ -121,6 +126,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                     Text(
                         text = stringResource(R.string.skip),
                         style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -134,7 +140,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                     label = "onboarding_button"
                 ) { isLastPage ->
                     if (isLastPage) {
-                        SwiftSenseButton(
+                        ExpressiveButton(
                             text = stringResource(R.string.get_started),
                             onClick = onFinished
                         )
@@ -146,9 +152,10 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                                 }
                             },
                             modifier = Modifier.size(56.dp),
-                            shape = RoundedCornerShape(6.dp),
+                            shape = CircleShape,
                             colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         ) {
                             Icon(
@@ -172,41 +179,39 @@ fun OnboardingPageItem(page: OnboardingPage) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Surface(
-            modifier = Modifier.size(200.dp),
-            shape = RoundedCornerShape(6.dp),
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+        Box(
+            modifier = Modifier
+                .size(160.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center
         ) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                Icon(
-                    imageVector = page.icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(84.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
+            Icon(
+                imageVector = page.icon,
+                contentDescription = null,
+                modifier = Modifier.size(72.dp),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            )
         }
 
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
         Text(
             text = stringResource(page.title),
             style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onBackground
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Text(
             text = stringResource(page.description),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
-            lineHeight = androidx.compose.ui.unit.TextUnit.Unspecified,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 8.dp)
+            modifier = Modifier.padding(horizontal = 12.dp)
         )
     }
 }

@@ -63,11 +63,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.github.itsmelissadev.swiftsense.R
 import io.github.itsmelissadev.swiftsense.data.PreferenceManager
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveHeader
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveHeroToggleCard
 import io.github.itsmelissadev.swiftsense.ui.components.FeatureCard
 import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseSection
 import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseSelectionDialog
 import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTextField
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTopAppBar
 import android.graphics.Paint
 import android.graphics.Typeface
 import kotlinx.coroutines.delay
@@ -160,8 +161,9 @@ fun AlwaysOnDisplayScreen(onNavigateBack: () -> Unit) {
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            SwiftSenseTopAppBar(
+            ExpressiveHeader(
                 title = stringResource(R.string.feature_always_on_display),
                 onNavigateBack = onNavigateBack
             )
@@ -171,30 +173,29 @@ fun AlwaysOnDisplayScreen(onNavigateBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 20.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+                .padding(top = 16.dp, bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Spacer(modifier = Modifier.height(4.dp))
-
             if (!warningDismissed) {
                 Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.05f),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.15f))
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Default.Info,
                                 null,
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.size(18.dp),
                                 tint = MaterialTheme.colorScheme.error
                             )
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
                                 text = stringResource(R.string.aod_battery_warning_title),
                                 style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.weight(1f)
                             )
@@ -207,7 +208,7 @@ fun AlwaysOnDisplayScreen(onNavigateBack: () -> Unit) {
                                 Icon(
                                     Icons.Default.Close,
                                     null,
-                                    modifier = Modifier.size(14.dp),
+                                    modifier = Modifier.size(16.dp),
                                     tint = MaterialTheme.colorScheme.error
                                 )
                             }
@@ -216,17 +217,15 @@ fun AlwaysOnDisplayScreen(onNavigateBack: () -> Unit) {
                         Text(
                             text = stringResource(R.string.aod_battery_warning_desc),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
             }
 
-            FeatureCard(
+            ExpressiveHeroToggleCard(
                 title = stringResource(if (isEnabled) R.string.aod_status_active else R.string.aod_status_inactive),
-                description = stringResource(if (isEnabled) R.string.service_status else R.string.feature_always_on_display_desc),
-                icon = ImageVector.vectorResource(id = R.drawable.ic_aod_24px),
-                containerColor = if (isEnabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.05f) else null,
+                subtitle = stringResource(if (isEnabled) R.string.service_status else R.string.feature_always_on_display_desc),
                 checked = isEnabled,
                 onCheckedChange = { targetState ->
                     if (AccessibilityUtil.isShizukuAvailable()) {

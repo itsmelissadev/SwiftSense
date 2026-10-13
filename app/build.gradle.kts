@@ -29,8 +29,8 @@ android {
         applicationId = "io.github.itsmelissadev.swiftsense"
         minSdk = 26
         targetSdk = 37
-        versionCode = 14
-        versionName = "1.2.6"
+        versionCode = 15
+        versionName = "1.2.7"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -72,6 +72,12 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/LICENSE.md"
+            excludes += "/META-INF/LICENSE.md"
+            excludes += "META-INF/NOTICE.md"
+            excludes += "/META-INF/NOTICE.md"
+            excludes += "META-INF/INDEX.LIST"
+            excludes += "/META-INF/INDEX.LIST"
         }
     }
 }
@@ -92,4 +98,5 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.shizuku.api)
     implementation(libs.shizuku.provider)
+    implementation(libs.adb.kt)
 }

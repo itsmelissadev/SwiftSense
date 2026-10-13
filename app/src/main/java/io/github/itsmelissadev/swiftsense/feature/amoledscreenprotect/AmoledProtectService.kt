@@ -652,7 +652,7 @@ class AmoledProtectService : AccessibilityService() {
             val screenDensity = dm.density
 
             val maxSizePx = (12f * screenDensity).toInt().coerceAtLeast(4)
-            val sizePx = Math.round((1f - currentDensity) * (maxSizePx - 1) + 1).toInt().coerceAtLeast(1)
+            val sizePx = Math.round((1f - currentDensity) * (maxSizePx - 1) + 1).coerceAtLeast(1)
 
             maxShiftX = (sizePx * 2f).coerceAtLeast(2f)
             maxShiftY = (sizePx * 2f).coerceAtLeast(2f)

@@ -14,6 +14,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -34,13 +35,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.FormatListBulleted
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SelectAll
@@ -64,6 +67,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -81,20 +85,22 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import io.github.itsmelissadev.swiftsense.R
 import io.github.itsmelissadev.swiftsense.data.PreferenceManager
-import io.github.itsmelissadev.swiftsense.service.shizuku.ShizukuShellRunner
-import io.github.itsmelissadev.swiftsense.ui.components.ShadcnDialog
-import io.github.itsmelissadev.swiftsense.ui.components.ShadcnDialogButton
-import io.github.itsmelissadev.swiftsense.ui.components.ShizukuStatusWidget
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseButton
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseOutlinedButton
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseSelectionDialog
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTextField
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTopAppBar
+import io.github.itsmelissadev.swiftsense.service.shell.ShellBridge
+import io.github.itsmelissadev.swiftsense.utils.AndroidUserInfo
+import io.github.itsmelissadev.swiftsense.utils.UserManagerHelper
+import io.github.itsmelissadev.swiftsense.ui.components.ExecutionStatusWidget
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveButton
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveDialog
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveDialogButton
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveHeader
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveOutlinedButton
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveSearchBar
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveSelectionDialog
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveTextField
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import rikka.shizuku.Shizuku
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -102,7 +108,10 @@ private val iconCache = ConcurrentHashMap<String, ImageBitmap>()
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppManagerScreen(onNavigateBack: () -> Unit) {
+fun AppManagerScreen(
+    onNavigateBack: () -> Unit,
+    onNavigateToApkInstaller: () -> Unit = {}
+) {
     val context = LocalContext.current
     val pm = context.packageManager
     val preferenceManager = remember { PreferenceManager(context) }
@@ -117,8 +126,13 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
 
     val rawCustomListsJson by preferenceManager.appManagerCustomListsJson.collectAsState(initial = emptySet())
     val storedActiveListId by preferenceManager.appManagerActiveListId.collectAsState(initial = null)
+    val storedTargetUserId by preferenceManager.appManagerTargetUserId.collectAsState(initial = UserManagerHelper.getCurrentProcessUserId())
     val legacyDisabledApps by preferenceManager.disabledApps.collectAsState(initial = emptySet())
     val isWarningDismissed by preferenceManager.appManagerWarningDismissed.collectAsState(initial = false)
+
+    var selectedUserId by remember(storedTargetUserId) { mutableIntStateOf(storedTargetUserId) }
+    var userProfiles by remember { mutableStateOf(UserManagerHelper.getInitialUserProfiles(context)) }
+    var showUserSelectionDialog by remember { mutableStateOf(false) }
 
     val defaultListName = stringResource(R.string.default_list_name)
     val customLists = remember(rawCustomListsJson, legacyDisabledApps, defaultListName) {
@@ -166,7 +180,7 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
     var processingAction by remember { mutableStateOf("") }
     var processingProgress by remember { mutableFloatStateOf(0f) }
 
-    val isShizukuReady = remember { mutableStateOf(false) }
+    val isReady by ShellBridge.ready.collectAsState()
 
     fun saveLists(newLists: List<AppPackageList>, newActiveId: String? = null) {
         scope.launch {
@@ -199,50 +213,18 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
         saveLists(updatedLists)
     }
 
-    LaunchedEffect(Unit) {
-        while (true) {
-            isShizukuReady.value =
-                Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
-            delay(2000)
+    LaunchedEffect(isReady) {
+        if (isReady) {
+            withContext(Dispatchers.IO) {
+                userProfiles = UserManagerHelper.getUserProfiles(context)
+            }
         }
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(selectedUserId) {
+        isLoadingApps = true
         withContext(Dispatchers.IO) {
-            val installedApps =
-                pm.getInstalledApplications(PackageManager.GET_META_DATA or PackageManager.MATCH_DISABLED_COMPONENTS)
-            apps = installedApps
-                .filter { it.packageName != context.packageName && !it.packageName.contains("shizuku", ignoreCase = true) }
-                .map { app ->
-                var vName = ""
-                var vCode = 0L
-                try {
-                    val pInfo = pm.getPackageInfo(app.packageName, 0)
-                    vName = pInfo.versionName ?: ""
-                    vCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                        pInfo.longVersionCode
-                    } else {
-                        @Suppress("DEPRECATION")
-                        pInfo.versionCode.toLong()
-                    }
-                } catch (_: Exception) {}
-
-                val minSdk = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    app.minSdkVersion
-                } else 0
-
-                RichAppInfo(
-                    packageName = app.packageName,
-                    label = app.loadLabel(pm).toString(),
-                    isSystem = (app.flags and ApplicationInfo.FLAG_SYSTEM) != 0,
-                    isEnabled = app.enabled,
-                    appInfo = app,
-                    versionName = vName,
-                    versionCode = vCode,
-                    targetSdkVersion = app.targetSdkVersion,
-                    minSdkVersion = minSdk
-                )
-            }.sortedBy { it.label.lowercase() }
+            apps = UserManagerHelper.loadRichAppsForUser(context, selectedUserId)
             isLoadingApps = false
         }
     }
@@ -267,10 +249,22 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
 
     Scaffold(
         topBar = {
-            SwiftSenseTopAppBar(
+            ExpressiveHeader(
                 title = stringResource(R.string.feature_app_manager),
-                onNavigateBack = onNavigateBack,
+                onBackClick = onNavigateBack,
                 actions = {
+                    IconButton(onClick = {
+                        scope.launch(Dispatchers.IO) {
+                            userProfiles = UserManagerHelper.getUserProfiles(context)
+                        }
+                        showUserSelectionDialog = true
+                    }) {
+                        Icon(
+                            Icons.Default.AccountCircle,
+                            contentDescription = null,
+                            tint = if (userProfiles.size > 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     var showMenu by remember { mutableStateOf(false) }
                     Box {
                         IconButton(onClick = { showMenu = true }) {
@@ -307,6 +301,19 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                                     showImportExportDialog = true
                                 }
                             )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.feature_apk_installer)) },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Download,
+                                        contentDescription = null
+                                    )
+                                },
+                                onClick = {
+                                    showMenu = false
+                                    onNavigateToApkInstaller()
+                                }
+                            )
                         }
                     }
                 }
@@ -319,11 +326,18 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                 exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
             ) {
                 Surface(
-                    modifier = Modifier.navigationBarsPadding()
+                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .navigationBarsPadding()
+                            .padding(horizontal = 24.dp, vertical = 16.dp)
+                    ) {
                         if (isProcessing) {
-                            Column(modifier = Modifier.padding(bottom = 20.dp)) {
+                            Column(modifier = Modifier.padding(bottom = 16.dp)) {
                                 Text(
                                     text = "$processingAction: $currentProcessingApp",
                                     style = MaterialTheme.typography.titleSmall,
@@ -331,14 +345,15 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                                     overflow = TextOverflow.Ellipsis,
                                     color = MaterialTheme.colorScheme.primary
                                 )
-                                Spacer(modifier = Modifier.height(12.dp))
+                                Spacer(modifier = Modifier.height(10.dp))
                                 LinearProgressIndicator(
                                     progress = { processingProgress },
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(4.dp),
+                                        .height(6.dp)
+                                        .clip(RoundedCornerShape(3.dp)),
                                     color = MaterialTheme.colorScheme.primary,
-                                    trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                                    trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
                                 )
                             }
                         }
@@ -347,13 +362,14 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            SwiftSenseOutlinedButton(
+                            ExpressiveOutlinedButton(
                                 text = stringResource(R.string.action_enable),
                                 onClick = {
                                     scope.launch {
                                         isProcessing = true
                                         processApps(
                                             context,
+                                            selectedUserId,
                                             activePackages,
                                             true,
                                             onAppEnabled = { pkg, isEnabled ->
@@ -367,17 +383,18 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                                         isProcessing = false
                                     }
                                 },
-                                enabled = !isProcessing && isShizukuReady.value,
+                                enabled = !isProcessing && isReady,
                                 modifier = Modifier.weight(1f)
                             )
 
-                            SwiftSenseButton(
+                            ExpressiveButton(
                                 text = stringResource(R.string.action_disable),
                                 onClick = {
                                     scope.launch {
                                         isProcessing = true
                                         processApps(
                                             context,
+                                            selectedUserId,
                                             activePackages,
                                             false,
                                             onAppEnabled = { pkg, isEnabled ->
@@ -391,7 +408,7 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                                         isProcessing = false
                                     }
                                 },
-                                enabled = !isProcessing && isShizukuReady.value,
+                                enabled = !isProcessing && isReady,
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -404,26 +421,45 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item {
-                SwiftSenseTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    label = stringResource(R.string.search_apps),
-                    leadingIcon = Icons.Default.Search,
-                    trailingIcon = {
-                        if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { searchQuery = "" }) {
-                                Icon(
-                                    Icons.Default.Clear,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
+            if (userProfiles.size > 1) {
+                item {
+                    val currentProfile = userProfiles.find { it.id == selectedUserId }
+                    val profileLabel = currentProfile?.name ?: stringResource(R.string.user_profile_secondary, selectedUserId)
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.clickable { showUserSelectionDialog = true }
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.AccountCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "$profileLabel ($selectedUserId)",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
                         }
                     }
+                }
+            }
+
+            item {
+                ExpressiveSearchBar(
+                    query = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    placeholder = stringResource(R.string.search_apps)
                 )
             }
 
@@ -467,18 +503,16 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                 )
             }
 
-            item { ShizukuStatusWidget() }
+            if (!isReady) {
+                item { ExecutionStatusWidget() }
+            }
 
             if (!isWarningDismissed) {
                 item {
                     Surface(
-                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.05f),
-                        shape = RoundedCornerShape(6.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                        border = BorderStroke(
-                            1.dp,
-                            MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
-                        )
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(20.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
                             modifier = Modifier.padding(16.dp),
@@ -488,20 +522,21 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                                 Icons.Default.Warning,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(24.dp)
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(14.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     stringResource(R.string.app_manager_warning_title),
                                     style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.error
                                 )
                                 Spacer(Modifier.height(4.dp))
                                 Text(
                                     stringResource(R.string.app_manager_warning_text),
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                    color = MaterialTheme.colorScheme.onErrorContainer
                                 )
                             }
                             IconButton(
@@ -510,13 +545,13 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                                         preferenceManager.setAppManagerWarningDismissed(true)
                                     }
                                 },
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(32.dp)
                             ) {
                                 Icon(
                                     Icons.Default.Close,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
-                                    modifier = Modifier.size(16.dp)
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(18.dp)
                                 )
                             }
                         }
@@ -549,8 +584,9 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
     if (selectedAppForDetails != null) {
         AppDetailDialog(
             app = selectedAppForDetails!!,
+            targetUserId = selectedUserId,
             isInActiveList = activePackages.contains(selectedAppForDetails!!.packageName),
-            isShizukuReady = isShizukuReady.value,
+            isReady = isReady,
             onToggleActiveList = {
                 toggleAppInActiveList(selectedAppForDetails!!.packageName)
             },
@@ -566,19 +602,38 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
         )
     }
 
+    if (showUserSelectionDialog) {
+        val options = userProfiles.map { user ->
+            val activeTag = if (user.isCurrentProcess) " ${stringResource(R.string.user_profile_current_tag)}" else ""
+            user.id to "${user.name} (${user.id})$activeTag"
+        }
+        ExpressiveSelectionDialog(
+            title = stringResource(R.string.select_user_profile),
+            options = options,
+            selected = selectedUserId,
+            onSelectedChange = { newId ->
+                selectedUserId = newId
+                scope.launch {
+                    preferenceManager.setAppManagerTargetUserId(newId)
+                }
+            },
+            onDismissRequest = { showUserSelectionDialog = false }
+        )
+    }
+
     if (showCreateListDialog) {
-        ShadcnDialog(
+        ExpressiveDialog(
             onDismissRequest = { showCreateListDialog = false },
             title = stringResource(R.string.create_list),
             content = {
-                SwiftSenseTextField(
+                ExpressiveTextField(
                     value = listNameInput,
                     onValueChange = { listNameInput = it },
                     label = stringResource(R.string.list_name)
                 )
             },
             confirmButton = {
-                ShadcnDialogButton(
+                ExpressiveDialogButton(
                     text = stringResource(R.string.action_apply),
                     enabled = listNameInput.trim().isNotEmpty(),
                     onClick = {
@@ -601,7 +656,7 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                 )
             },
             dismissButton = {
-                ShadcnDialogButton(
+                ExpressiveDialogButton(
                     text = stringResource(R.string.action_cancel),
                     isPrimary = false,
                     onClick = { showCreateListDialog = false }
@@ -611,18 +666,18 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
     }
 
     if (showRenameListDialog) {
-        ShadcnDialog(
+        ExpressiveDialog(
             onDismissRequest = { showRenameListDialog = false },
             title = stringResource(R.string.rename_list),
             content = {
-                SwiftSenseTextField(
+                ExpressiveTextField(
                     value = listNameInput,
                     onValueChange = { listNameInput = it },
                     label = stringResource(R.string.list_name)
                 )
             },
             confirmButton = {
-                ShadcnDialogButton(
+                ExpressiveDialogButton(
                     text = stringResource(R.string.action_apply),
                     enabled = listNameInput.trim().isNotEmpty(),
                     onClick = {
@@ -640,7 +695,7 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                 )
             },
             dismissButton = {
-                ShadcnDialogButton(
+                ExpressiveDialogButton(
                     text = stringResource(R.string.action_cancel),
                     isPrimary = false,
                     onClick = { showRenameListDialog = false }
@@ -650,12 +705,12 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
     }
 
     if (showDeleteListDialog) {
-        ShadcnDialog(
+        ExpressiveDialog(
             onDismissRequest = { showDeleteListDialog = false },
             title = stringResource(R.string.confirm_delete_list_title),
             description = stringResource(R.string.confirm_delete_list_desc),
             confirmButton = {
-                ShadcnDialogButton(
+                ExpressiveDialogButton(
                     text = stringResource(R.string.delete_list),
                     onClick = {
                         val remaining = customLists.filter { it.id != activeList.id }
@@ -677,7 +732,7 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
                 )
             },
             dismissButton = {
-                ShadcnDialogButton(
+                ExpressiveDialogButton(
                     text = stringResource(R.string.action_cancel),
                     isPrimary = false,
                     onClick = { showDeleteListDialog = false }
@@ -688,7 +743,7 @@ fun AppManagerScreen(onNavigateBack: () -> Unit) {
 
     if (showListSelectionDialog) {
         val options = customLists.map { it.id to "${it.name} (${it.packages.size})" }
-        SwiftSenseSelectionDialog(
+        ExpressiveSelectionDialog(
             title = stringResource(R.string.custom_lists),
             options = options,
             selected = activeList.id,
@@ -732,7 +787,7 @@ private fun AppFilterBar(
         modifier = Modifier
             .fillMaxWidth()
             .horizontalScroll(scrollState),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         AppFilter.values().forEach { filter ->
             val count = when (filter) {
@@ -745,34 +800,36 @@ private fun AppFilterBar(
             val isSelected = selectedFilter == filter
             Surface(
                 onClick = { onFilterSelected(filter) },
-                shape = RoundedCornerShape(6.dp),
-                color = if (isSelected) MaterialTheme.colorScheme.onBackground
-                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                border = BorderStroke(
-                    1.dp,
-                    if (isSelected) MaterialTheme.colorScheme.onBackground
-                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
-                )
+                shape = RoundedCornerShape(20.dp),
+                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                else MaterialTheme.colorScheme.surfaceContainerHigh
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
                         text = stringResource(filter.titleRes),
                         style = MaterialTheme.typography.bodySmall,
-                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                        color = if (isSelected) MaterialTheme.colorScheme.background
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
                         else MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Text(
-                        text = "$count",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isSelected) MaterialTheme.colorScheme.background.copy(alpha = 0.8f)
-                        else MaterialTheme.colorScheme.outline.copy(alpha = 0.8f)
-                    )
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (isSelected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.surfaceContainerHighest
+                    ) {
+                        Text(
+                            text = "$count",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
                 }
             }
         }
@@ -792,78 +849,85 @@ private fun ActiveListCard(
     var showMenu by remember { mutableStateOf(false) }
 
     Surface(
-        shape = RoundedCornerShape(6.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)),
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(4.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .combinedClickable(
                         onClick = onSwitchList
                     )
             ) {
-                Icon(
-                    Icons.Default.FormatListBulleted,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp)
-                )
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.FormatListBulleted,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
                 Column {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
                             text = activeList.name,
                             style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
+                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Surface(
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                            shape = RoundedCornerShape(4.dp)
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            shape = RoundedCornerShape(10.dp)
                         ) {
                             Text(
                                 text = "${activeList.packages.size}",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                             )
                         }
                     }
                     Text(
                         text = stringResource(R.string.active_list),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(2.dp)
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 IconButton(
                     onClick = onToggleSelectAll,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(36.dp)
                 ) {
                     Icon(
                         Icons.Default.SelectAll,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(20.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -871,12 +935,12 @@ private fun ActiveListCard(
                 Box {
                     IconButton(
                         onClick = { showMenu = true },
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
                             Icons.Default.MoreVert,
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.size(20.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -889,7 +953,7 @@ private fun ActiveListCard(
                             text = { Text(stringResource(R.string.custom_lists)) },
                             leadingIcon = {
                                 Icon(
-                                    Icons.Default.FormatListBulleted,
+                                    Icons.AutoMirrored.Filled.FormatListBulleted,
                                     contentDescription = null
                                 )
                             },
@@ -959,24 +1023,19 @@ fun AppItem(
     val pm = context.packageManager
 
     Surface(
-        shape = RoundedCornerShape(6.dp),
-        color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.06f)
-        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f),
-        border = BorderStroke(
-            1.dp,
-            if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-            else MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
-        ),
+        shape = RoundedCornerShape(20.dp),
+        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+        else MaterialTheme.colorScheme.surfaceContainer,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(6.dp))
+            .clip(RoundedCornerShape(20.dp))
             .combinedClickable(
                 onClick = onToggleSelect,
                 onLongClick = onLongClick
             )
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             var icon by remember(app.packageName) { mutableStateOf(iconCache[app.packageName]) }
@@ -996,9 +1055,9 @@ fun AppItem(
 
             Box(
                 modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)),
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
                 contentAlignment = Alignment.Center
             ) {
                 if (icon != null) {
@@ -1007,8 +1066,8 @@ fun AppItem(
                     Icon(
                         Icons.Default.Android,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                        modifier = Modifier.size(24.dp)
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(26.dp)
                     )
                 }
             }
@@ -1019,7 +1078,7 @@ fun AppItem(
                 Text(
                     text = app.label,
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -1034,15 +1093,15 @@ fun AppItem(
                         text = if (app.isEnabled) stringResource(R.string.app_status_enabled)
                         else stringResource(R.string.app_status_disabled),
                         style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Medium,
+                        fontWeight = FontWeight.SemiBold,
                         color = if (app.isEnabled) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                        else MaterialTheme.colorScheme.error
                     )
 
                     Text(
                         text = "•",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
                     )
 
                     Text(
@@ -1050,7 +1109,7 @@ fun AppItem(
                         else stringResource(R.string.app_type_user),
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -1061,7 +1120,7 @@ fun AppItem(
                 colors = CheckboxDefaults.colors(
                     checkedColor = MaterialTheme.colorScheme.primary,
                     checkmarkColor = MaterialTheme.colorScheme.onPrimary,
-                    uncheckedColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                    uncheckedColor = MaterialTheme.colorScheme.outline
                 )
             )
         }
@@ -1076,23 +1135,23 @@ fun ImportExportDialog(
 ) {
     var text by remember { mutableStateOf(currentList.joinToString("\n")) }
 
-    ShadcnDialog(
+    ExpressiveDialog(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.menu_import_export),
         description = stringResource(R.string.import_hint),
         content = {
-            SwiftSenseTextField(
+            ExpressiveTextField(
                 value = text,
                 onValueChange = { text = it },
                 label = stringResource(R.string.menu_import_export),
                 singleLine = false,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(250.dp)
+                    .height(240.dp)
             )
         },
         confirmButton = {
-            ShadcnDialogButton(
+            ExpressiveDialogButton(
                 text = stringResource(R.string.action_import),
                 onClick = {
                     val newList =
@@ -1102,7 +1161,7 @@ fun ImportExportDialog(
             )
         },
         dismissButton = {
-            ShadcnDialogButton(
+            ExpressiveDialogButton(
                 text = stringResource(R.string.action_cancel),
                 isPrimary = false,
                 onClick = onDismiss
@@ -1113,13 +1172,13 @@ fun ImportExportDialog(
 
 private suspend fun processApps(
     context: Context,
+    targetUserId: Int,
     packageNames: Set<String>,
     enable: Boolean,
     onAppEnabled: (String, Boolean) -> Unit,
     onProgress: (String, String, Float) -> Unit
 ) {
     var successCount = 0
-    val pm = context.packageManager
     val actionName =
         if (enable) context.getString(R.string.action_enabling) else context.getString(R.string.action_disabling)
 
@@ -1128,21 +1187,17 @@ private suspend fun processApps(
 
     withContext(Dispatchers.IO) {
         listToProcess.forEachIndexed { index, pkg ->
-            try {
-                pm.getPackageInfo(pkg, 0)
-                val progress = (index + 1) / total
-                withContext(Dispatchers.Main) { onProgress(actionName, pkg, progress) }
+            val progress = (index + 1) / total
+            withContext(Dispatchers.Main) { onProgress(actionName, pkg, progress) }
 
-                val cmd = if (enable) "enable" else "disable-user"
-                val result = ShizukuShellRunner.runCommand("pm $cmd $pkg")
+            val cmd = if (enable) "enable" else "disable-user"
+            val result = ShellBridge.run("pm $cmd --user $targetUserId $pkg")
 
-                if (result.isSuccess) {
-                    successCount++
-                    withContext(Dispatchers.Main) {
-                        onAppEnabled(pkg, enable)
-                    }
+            if (result.isSuccess) {
+                successCount++
+                withContext(Dispatchers.Main) {
+                    onAppEnabled(pkg, enable)
                 }
-            } catch (_: PackageManager.NameNotFoundException) {
             }
         }
     }

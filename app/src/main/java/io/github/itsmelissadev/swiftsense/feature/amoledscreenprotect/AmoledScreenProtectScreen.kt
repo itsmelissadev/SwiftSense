@@ -63,13 +63,14 @@ import androidx.compose.ui.unit.dp
 import io.github.itsmelissadev.swiftsense.R
 import io.github.itsmelissadev.swiftsense.data.PreferenceManager
 import io.github.itsmelissadev.swiftsense.feature.alwaysondisplay.AccessibilityUtil
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveHeader
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveHeroToggleCard
 import io.github.itsmelissadev.swiftsense.ui.components.FeatureCard
-import io.github.itsmelissadev.swiftsense.ui.components.ShadcnDialog
-import io.github.itsmelissadev.swiftsense.ui.components.ShadcnDialogButton
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveDialog
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveDialogButton
 import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseSection
 import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseSelectionDialog
 import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTextField
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTopAppBar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -151,8 +152,9 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
     )
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            SwiftSenseTopAppBar(
+            ExpressiveHeader(
                 title = stringResource(R.string.feature_amoled_protect),
                 onNavigateBack = onNavigateBack
             )
@@ -162,30 +164,29 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 20.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+                .padding(top = 16.dp, bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Spacer(modifier = Modifier.height(4.dp))
-
             if (!isWarningDismissed) {
                 Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.05f),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.15f))
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Default.Info,
                                 null,
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.size(18.dp),
                                 tint = MaterialTheme.colorScheme.error
                             )
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
                                 text = stringResource(R.string.amoled_health_warning_title),
                                 style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.weight(1f)
                             )
@@ -200,7 +201,7 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
                                 Icon(
                                     Icons.Default.Close,
                                     null,
-                                    modifier = Modifier.size(14.dp),
+                                    modifier = Modifier.size(16.dp),
                                     tint = MaterialTheme.colorScheme.error
                                 )
                             }
@@ -209,17 +210,15 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
                         Text(
                             text = stringResource(R.string.amoled_health_warning_desc),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
             }
 
-            FeatureCard(
+            ExpressiveHeroToggleCard(
                 title = stringResource(if (isRunning) R.string.amoled_on else R.string.amoled_off),
-                description = stringResource(R.string.service_status),
-                icon = if (isRunning) Icons.Default.Shield else Icons.Default.ShieldMoon,
-                containerColor = if (isRunning) MaterialTheme.colorScheme.primary.copy(alpha = 0.05f) else null,
+                subtitle = stringResource(R.string.service_status),
                 checked = isRunning,
                 onCheckedChange = { targetState ->
                     if (AccessibilityUtil.isShizukuAvailable()) {
@@ -822,7 +821,7 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
             "#1E88E5", "#00897B", "#43A047", "#FDD835", "#6D4C41", "#212121"
         )
         var selectedHex by remember { mutableStateOf(tintCustomHex) }
-        ShadcnDialog(
+        ExpressiveDialog(
             onDismissRequest = { showCustomColorDialog = false },
             title = stringResource(R.string.amoled_tint_custom_color_title),
             content = {
@@ -888,7 +887,7 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
                 }
             },
             confirmButton = {
-                ShadcnDialogButton(
+                ExpressiveDialogButton(
                     text = stringResource(R.string.action_save),
                     isPrimary = true,
                     onClick = {
@@ -901,7 +900,7 @@ fun AmoledScreenProtectScreen(onNavigateBack: () -> Unit) {
                 )
             },
             dismissButton = {
-                ShadcnDialogButton(
+                ExpressiveDialogButton(
                     text = stringResource(R.string.action_cancel),
                     isPrimary = false,
                     onClick = { showCustomColorDialog = false }

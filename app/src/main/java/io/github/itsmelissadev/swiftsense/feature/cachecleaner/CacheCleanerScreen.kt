@@ -1,7 +1,7 @@
 package io.github.itsmelissadev.swiftsense.feature.cachecleaner
 
 import android.content.pm.PackageManager
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -11,12 +11,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -28,26 +27,27 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.itsmelissadev.swiftsense.R
-import io.github.itsmelissadev.swiftsense.service.shizuku.ShizukuShellRunner
-import io.github.itsmelissadev.swiftsense.ui.components.ShizukuStatusWidget
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseButton
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTopAppBar
+import io.github.itsmelissadev.swiftsense.service.shell.ShellBridge
+import io.github.itsmelissadev.swiftsense.ui.components.ExecutionStatusWidget
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveButton
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveHeader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import rikka.shizuku.Shizuku
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CacheCleanerScreen(
     onNavigateBack: () -> Unit
@@ -59,7 +59,7 @@ fun CacheCleanerScreen(
     var initialStorage by remember { mutableLongStateOf(0L) }
     var finalStorage by remember { mutableLongStateOf(0L) }
 
-    val isShizukuReady = Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+    val isReady by io.github.itsmelissadev.swiftsense.service.shell.ShellBridge.ready.collectAsState()
 
     fun getAvailableStorage(): Long {
         return context.cacheDir.freeSpace + context.filesDir.freeSpace
@@ -71,7 +71,7 @@ fun CacheCleanerScreen(
             isComplete = false
             initialStorage = withContext(Dispatchers.IO) { getAvailableStorage() }
             withContext(Dispatchers.IO) {
-                ShizukuShellRunner.runCommand("pm trim-caches 4096G")
+                io.github.itsmelissadev.swiftsense.service.shell.ShellBridge.run("pm trim-caches 4096G")
             }
             delay(2000)
             finalStorage = withContext(Dispatchers.IO) { getAvailableStorage() }
@@ -81,8 +81,9 @@ fun CacheCleanerScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            SwiftSenseTopAppBar(
+            ExpressiveHeader(
                 title = stringResource(R.string.feature_cache_cleaner),
                 onNavigateBack = onNavigateBack
             )
@@ -92,21 +93,25 @@ fun CacheCleanerScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = 16.dp)
+                .padding(top = 16.dp, bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            ShizukuStatusWidget()
+            ExecutionStatusWidget(bottomSpacing = 24.dp)
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
                 if (isRunning) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(48.dp),
-                            strokeWidth = 4.dp,
+                            modifier = Modifier.size(56.dp),
+                            strokeWidth = 5.dp,
                             color = MaterialTheme.colorScheme.primary,
-                            strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
+                            strokeCap = StrokeCap.Round
                         )
                         Spacer(modifier = Modifier.height(24.dp))
                         Text(
@@ -117,16 +122,24 @@ fun CacheCleanerScreen(
                     }
                 } else if (isComplete) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            Icons.Default.DoneAll,
-                            null,
-                            modifier = Modifier.size(64.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(96.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.DoneAll,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(20.dp))
                         Text(
                             stringResource(R.string.optimization_complete),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
                         )
@@ -135,24 +148,21 @@ fun CacheCleanerScreen(
                         if (freedMb > 0) {
                             Spacer(modifier = Modifier.height(16.dp))
                             Surface(
-                                shape = RoundedCornerShape(4.dp),
+                                shape = CircleShape,
                                 color = MaterialTheme.colorScheme.primaryContainer,
                                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                             ) {
                                 Text(
                                     stringResource(R.string.freed_space, freedMb),
-                                    style = MaterialTheme.typography.labelSmall,
+                                    style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(
-                                        horizontal = 12.dp,
-                                        vertical = 6.dp
-                                    )
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                                 )
                             }
                         }
 
                         Spacer(modifier = Modifier.height(32.dp))
-                        SwiftSenseButton(
+                        ExpressiveButton(
                             text = stringResource(R.string.granted),
                             onClick = { isComplete = false },
                             modifier = Modifier.width(160.dp)
@@ -160,29 +170,25 @@ fun CacheCleanerScreen(
                     }
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = MaterialTheme.colorScheme.surface,
-                            border = BorderStroke(
-                                1.dp,
-                                MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
-                            ),
-                            modifier = Modifier.size(120.dp)
+                        Box(
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    Icons.Default.CleaningServices,
-                                    null,
-                                    modifier = Modifier.size(48.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
+                            Icon(
+                                Icons.Default.CleaningServices,
+                                contentDescription = null,
+                                modifier = Modifier.size(54.dp),
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
                         }
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(28.dp))
                         Text(
                             stringResource(R.string.feature_cache_cleaner_desc),
                             textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(horizontal = 24.dp)
                         )
@@ -191,15 +197,17 @@ fun CacheCleanerScreen(
             }
 
             if (!isRunning && !isComplete) {
-                SwiftSenseButton(
+                ExpressiveButton(
                     text = stringResource(R.string.clean_now),
                     onClick = { startCleaning() },
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
-                    enabled = isShizukuReady,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                    enabled = isReady,
                     icon = Icons.Default.CleaningServices
                 )
             } else {
-                Spacer(modifier = Modifier.height(100.dp))
+                Spacer(modifier = Modifier.height(96.dp))
             }
         }
     }

@@ -4,30 +4,24 @@ import android.content.Context
 import android.content.Intent
 import android.hardware.Sensor
 import android.hardware.SensorManager
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.DirectionsRun
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.rounded.Analytics
-import androidx.compose.material.icons.rounded.PowerSettingsNew
-import androidx.compose.material.icons.rounded.RocketLaunch
 import androidx.compose.material.icons.rounded.ScreenRotation
 import androidx.compose.material.icons.rounded.Sensors
 import androidx.compose.material.icons.rounded.South
 import androidx.compose.material.icons.rounded.Speed
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.ViewInAr
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -49,15 +43,16 @@ import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import io.github.itsmelissadev.swiftsense.R
 import io.github.itsmelissadev.swiftsense.data.PreferenceManager
-import io.github.itsmelissadev.swiftsense.ui.components.FeatureCard
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseSectionHeader
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseSelectionDialog
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTextField
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTopAppBar
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveCardGroup
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveHeader
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveHeroToggleCard
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressivePreferenceItem
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveSelectionDialog
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveSwitchPreference
+import io.github.itsmelissadev.swiftsense.ui.theme.ExpressivePalette
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
     val context = LocalContext.current
@@ -83,9 +78,18 @@ fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
         types.mapNotNull { sensorManager.getDefaultSensor(it) }
     }
 
+    val speeds = listOf(
+        "very_slow" to stringResource(R.string.speed_very_slow),
+        "slow" to stringResource(R.string.speed_slow),
+        "medium" to stringResource(R.string.speed_medium),
+        "fast" to stringResource(R.string.speed_fast),
+        "max" to stringResource(R.string.speed_max)
+    )
+
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            SwiftSenseTopAppBar(
+            ExpressiveHeader(
                 title = stringResource(R.string.feature_boost_sensors),
                 onNavigateBack = onNavigateBack
             )
@@ -95,17 +99,16 @@ fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             item {
-                Spacer(modifier = Modifier.height(8.dp))
-                FeatureCard(
-                    title = if (isServiceRunning) stringResource(R.string.status_on) else stringResource(
-                        R.string.status_off
-                    ),
-                    description = if (isServiceRunning) stringResource(R.string.status_running) else stringResource(R.string.status_stopped),
-                    icon = if (isServiceRunning) Icons.Rounded.RocketLaunch else Icons.Rounded.PowerSettingsNew,
+                ExpressiveHeroToggleCard(
+                    title = if (isServiceRunning) stringResource(R.string.status_on)
+                    else stringResource(R.string.status_off),
+                    subtitle = if (isServiceRunning) stringResource(R.string.status_running)
+                    else stringResource(R.string.status_stopped),
                     checked = isServiceRunning,
                     onCheckedChange = { active ->
                         scope.launch {
@@ -122,95 +125,119 @@ fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
             }
 
             item {
-                FeatureCard(
-                    title = stringResource(R.string.show_live_hz_option),
-                    description = stringResource(R.string.show_live_hz_desc),
-                    icon = Icons.Rounded.Analytics,
-                    checked = showLiveHz,
-                    onCheckedChange = { scope.launch { preferenceManager.setShowLiveHz(it) } }
-                )
-            }
-
-            item {
-                SwiftSenseSectionHeader(title = stringResource(R.string.sensor_speed))
-                Spacer(modifier = Modifier.height(12.dp))
-
-                val speeds = listOf(
-                    "very_slow" to stringResource(R.string.speed_very_slow),
-                    "slow" to stringResource(R.string.speed_slow),
-                    "medium" to stringResource(R.string.speed_medium),
-                    "fast" to stringResource(R.string.speed_fast),
-                    "max" to stringResource(R.string.speed_max)
-                )
-
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    SwiftSenseTextField(
-                        value = speeds.find { it.first == sensorSpeed }?.second ?: "",
-                        onValueChange = {},
-                        readOnly = true,
-                        label = stringResource(R.string.sensor_speed),
-                        trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .clickable { showSpeedDialog = true }
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = stringResource(R.string.sensor_speed_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    text = stringResource(R.string.settings_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 12.dp, bottom = 8.dp)
                 )
-            }
 
-            item {
-                SwiftSenseSectionHeader(title = stringResource(R.string.tab_sensors))
-            }
+                ExpressiveCardGroup {
+                    item {
+                        ExpressiveSwitchPreference(
+                            title = stringResource(R.string.show_live_hz_option),
+                            description = stringResource(R.string.show_live_hz_desc),
+                            icon = Icons.Rounded.Analytics,
+                            badgeColors = ExpressivePalette.BlueLight,
+                            checked = showLiveHz,
+                            onCheckedChange = { scope.launch { preferenceManager.setShowLiveHz(it) } }
+                        )
+                    }
 
-            items(sensorList) { sensor ->
-                val isEnabled = prefs?.get(booleanPreferencesKey(PreferenceManager.SENSOR_STATES_PREFIX + sensor.type)) ?: false
-
-                val (sensorName, sensorIcon) = when (sensor.type) {
-                    Sensor.TYPE_GYROSCOPE -> stringResource(R.string.sensor_gyroscope) to Icons.Rounded.ScreenRotation
-                    Sensor.TYPE_GYROSCOPE_UNCALIBRATED -> stringResource(R.string.sensor_gyroscope_uncalibrated) to Icons.Rounded.ScreenRotation
-                    Sensor.TYPE_ACCELEROMETER -> stringResource(R.string.sensor_accelerometer) to Icons.AutoMirrored.Rounded.DirectionsRun
-                    Sensor.TYPE_MAGNETIC_FIELD -> stringResource(R.string.sensor_magnetic_field) to Icons.Rounded.Sensors
-                    Sensor.TYPE_ROTATION_VECTOR -> stringResource(R.string.sensor_rotation_vector) to Icons.Rounded.ViewInAr
-                    Sensor.TYPE_GRAVITY -> stringResource(R.string.sensor_gravity) to Icons.Rounded.South
-                    Sensor.TYPE_LINEAR_ACCELERATION -> stringResource(R.string.sensor_linear_acceleration) to Icons.Rounded.Speed
-                    else -> sensor.name to Icons.Rounded.Sensors
+                    item {
+                        ExpressivePreferenceItem(
+                            title = stringResource(R.string.sensor_speed),
+                            description = speeds.find { it.first == sensorSpeed }?.second ?: "",
+                            icon = Icons.Rounded.Tune,
+                            badgeColors = ExpressivePalette.AmberLight,
+                            onClick = { showSpeedDialog = true }
+                        )
+                    }
                 }
-
-                FeatureCard(
-                    title = sensorName,
-                    icon = sensorIcon,
-                    checked = isEnabled,
-                    onCheckedChange = { scope.launch { preferenceManager.setSensorState(sensor.type, it) } },
-                    trailingContent = if (showLiveHz && isServiceRunning && isEnabled) {
-                        { ThrottledLiveHzText(sensor.type) }
-                    } else null
-                )
             }
 
             item {
-                Spacer(modifier = Modifier.height(32.dp))
+                Text(
+                    text = stringResource(R.string.tab_sensors),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 12.dp, bottom = 8.dp)
+                )
+
+                ExpressiveCardGroup {
+                    sensorList.forEach { sensor ->
+                        val isEnabled = prefs?.get(
+                            booleanPreferencesKey(PreferenceManager.SENSOR_STATES_PREFIX + sensor.type)
+                        ) ?: false
+
+                        val (sensorName, sensorIcon, badgeColors) = when (sensor.type) {
+                            Sensor.TYPE_GYROSCOPE -> Triple(
+                                stringResource(R.string.sensor_gyroscope),
+                                Icons.Rounded.ScreenRotation,
+                                ExpressivePalette.BlueLight
+                            )
+                            Sensor.TYPE_GYROSCOPE_UNCALIBRATED -> Triple(
+                                stringResource(R.string.sensor_gyroscope_uncalibrated),
+                                Icons.Rounded.ScreenRotation,
+                                ExpressivePalette.CyanLight
+                            )
+                            Sensor.TYPE_ACCELEROMETER -> Triple(
+                                stringResource(R.string.sensor_accelerometer),
+                                Icons.AutoMirrored.Rounded.DirectionsRun,
+                                ExpressivePalette.GreenLight
+                            )
+                            Sensor.TYPE_MAGNETIC_FIELD -> Triple(
+                                stringResource(R.string.sensor_magnetic_field),
+                                Icons.Rounded.Sensors,
+                                ExpressivePalette.PurpleLight
+                            )
+                            Sensor.TYPE_ROTATION_VECTOR -> Triple(
+                                stringResource(R.string.sensor_rotation_vector),
+                                Icons.Rounded.ViewInAr,
+                                ExpressivePalette.PinkLight
+                            )
+                            Sensor.TYPE_GRAVITY -> Triple(
+                                stringResource(R.string.sensor_gravity),
+                                Icons.Rounded.South,
+                                ExpressivePalette.OrangeLight
+                            )
+                            Sensor.TYPE_LINEAR_ACCELERATION -> Triple(
+                                stringResource(R.string.sensor_linear_acceleration),
+                                Icons.Rounded.Speed,
+                                ExpressivePalette.TealLight
+                            )
+                            else -> Triple(
+                                sensor.name,
+                                Icons.Rounded.Sensors,
+                                ExpressivePalette.AmberLight
+                            )
+                        }
+
+                        item {
+                            ExpressiveSwitchPreference(
+                                title = sensorName,
+                                icon = sensorIcon,
+                                badgeColors = badgeColors,
+                                checked = isEnabled,
+                                onCheckedChange = {
+                                    scope.launch { preferenceManager.setSensorState(sensor.type, it) }
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(28.dp))
             }
         }
     }
 
     if (showSpeedDialog) {
-        val speeds = listOf(
-            "very_slow" to stringResource(R.string.speed_very_slow),
-            "slow" to stringResource(R.string.speed_slow),
-            "medium" to stringResource(R.string.speed_medium),
-            "fast" to stringResource(R.string.speed_fast),
-            "max" to stringResource(R.string.speed_max)
-        )
-        SwiftSenseSelectionDialog(
+        ExpressiveSelectionDialog(
             title = stringResource(R.string.sensor_speed),
             options = speeds,
             selected = sensorSpeed,
@@ -226,23 +253,23 @@ fun BoostSensorsScreen(onNavigateBack: () -> Unit) {
 fun ThrottledLiveHzText(sensorType: Int) {
     var displayHz by remember { mutableIntStateOf(0) }
     LaunchedEffect(sensorType) {
-        while(true) {
+        while (true) {
             displayHz = BoostSensorsService.liveHz[sensorType] ?: 0
             delay(1000L)
         }
     }
 
     Surface(
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-        shape = RoundedCornerShape(4.dp),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        shape = CircleShape,
         modifier = Modifier.padding(start = 8.dp)
     ) {
         Text(
             text = "$displayHz HZ",
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Black,
-            color = MaterialTheme.colorScheme.primary
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
         )
     }
 }

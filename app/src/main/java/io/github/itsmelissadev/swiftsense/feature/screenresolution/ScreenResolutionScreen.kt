@@ -4,8 +4,9 @@ import android.content.Context
 import android.util.DisplayMetrics
 import android.view.WindowManager
 import android.widget.Toast
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -22,8 +24,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.rounded.AspectRatio
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,24 +54,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import io.github.itsmelissadev.swiftsense.R
 import io.github.itsmelissadev.swiftsense.data.PreferenceManager
-import io.github.itsmelissadev.swiftsense.service.shizuku.ShizukuShellRunner
-import io.github.itsmelissadev.swiftsense.ui.components.FeatureCard
-import io.github.itsmelissadev.swiftsense.ui.components.ShadcnDialog
-import io.github.itsmelissadev.swiftsense.ui.components.ShadcnDialogButton
-import io.github.itsmelissadev.swiftsense.ui.components.ShizukuStatusWidget
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseButton
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseOutlinedButton
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseSection
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTextField
-import io.github.itsmelissadev.swiftsense.ui.components.SwiftSenseTopAppBar
+import io.github.itsmelissadev.swiftsense.service.shell.ShellBridge
+import io.github.itsmelissadev.swiftsense.ui.components.ExecutionStatusWidget
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveButton
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveCardGroup
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveDialog
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveDialogButton
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveHeader
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveOutlinedButton
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveSwitchPreference
+import io.github.itsmelissadev.swiftsense.ui.components.ExpressiveTextField
+import io.github.itsmelissadev.swiftsense.ui.theme.ExpressivePalette
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import rikka.shizuku.Shizuku
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScreenResolutionScreen(
     onNavigateBack: () -> Unit
@@ -116,19 +117,18 @@ fun ScreenResolutionScreen(
         }
 
         scope.launch(Dispatchers.IO) {
-            val sizeResult = ShizukuShellRunner.runCommand("wm size")
+            val sizeResult = io.github.itsmelissadev.swiftsense.service.shell.ShellBridge.run("wm size")
             var pWidth = currentWidth
             var pHeight = currentHeight
             sizeResult.onSuccess { output ->
                 if (output.contains("Physical size:")) {
-                    val size =
-                        output.substringAfter("Physical size:").trim().split("\n")[0].split("x")
+                    val size = output.substringAfter("Physical size:").trim().split("\n")[0].split("x")
                     pWidth = size[0].toInt()
                     pHeight = size[1].toInt()
                 }
             }
 
-            val densityResult = ShizukuShellRunner.runCommand("wm density")
+            val densityResult = io.github.itsmelissadev.swiftsense.service.shell.ShellBridge.run("wm density")
             var pDpi = currentDpi
             densityResult.onSuccess { output ->
                 if (output.contains("Physical density:")) {
@@ -163,18 +163,18 @@ fun ScreenResolutionScreen(
     }
 
     if (showSavePlanDialog) {
-        ShadcnDialog(
+        ExpressiveDialog(
             onDismissRequest = { showSavePlanDialog = false },
             title = stringResource(R.string.save_plan),
             content = {
-                SwiftSenseTextField(
+                ExpressiveTextField(
                     value = planNameInput,
                     onValueChange = { planNameInput = it },
                     label = stringResource(R.string.plan_name)
                 )
             },
             confirmButton = {
-                ShadcnDialogButton(
+                ExpressiveDialogButton(
                     text = stringResource(R.string.save_plan),
                     onClick = {
                         val planJson = JSONObject().apply {
@@ -187,14 +187,13 @@ fun ScreenResolutionScreen(
                             preferenceManager.addResolutionPlan(planJson)
                             showSavePlanDialog = false
                             planNameInput = ""
-                            Toast.makeText(context, R.string.toast_plan_saved, Toast.LENGTH_SHORT)
-                                .show()
+                            Toast.makeText(context, R.string.toast_plan_saved, Toast.LENGTH_SHORT).show()
                         }
                     }
                 )
             },
             dismissButton = {
-                ShadcnDialogButton(
+                ExpressiveDialogButton(
                     text = stringResource(R.string.action_cancel),
                     isPrimary = false,
                     onClick = { showSavePlanDialog = false }
@@ -204,25 +203,19 @@ fun ScreenResolutionScreen(
     }
 
     if (showConfirmationDialog) {
-        ShadcnDialog(
-            onDismissRequest = { },
-            properties = DialogProperties(
-                dismissOnBackPress = false,
-                dismissOnClickOutside = false
-            ),
+        ExpressiveDialog(
+            onDismissRequest = {},
+            properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
             title = stringResource(R.string.confirm_resolution_title),
             description = stringResource(R.string.confirm_resolution_desc, countdown),
             confirmButton = {
-                ShadcnDialogButton(
+                ExpressiveDialogButton(
                     text = stringResource(R.string.action_keep_changes),
-                    onClick = {
-                        showConfirmationDialog = false
-                        refreshDisplayInfo()
-                    }
+                    onClick = { showConfirmationDialog = false }
                 )
             },
             dismissButton = {
-                ShadcnDialogButton(
+                ExpressiveDialogButton(
                     text = stringResource(R.string.action_revert),
                     isPrimary = false,
                     onClick = {
@@ -238,13 +231,22 @@ fun ScreenResolutionScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            SwiftSenseTopAppBar(
+            ExpressiveHeader(
                 title = stringResource(R.string.feature_screen_resolution),
                 onNavigateBack = onNavigateBack,
                 actions = {
                     IconButton(onClick = { refreshDisplayInfo() }) {
-                        Icon(Icons.Default.Refresh, null, modifier = Modifier.size(20.dp))
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(Icons.Default.Refresh, null, modifier = Modifier.size(18.dp))
+                            }
+                        }
                     }
                 }
             )
@@ -254,124 +256,156 @@ fun ScreenResolutionScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 20.dp)
-                .verticalScroll(scrollState),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .verticalScroll(scrollState)
+                .padding(horizontal = 16.dp)
+                .padding(top = 16.dp, bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Spacer(modifier = Modifier.height(4.dp))
-            ShizukuStatusWidget()
+            ExecutionStatusWidget()
 
-            SwiftSenseSection(title = stringResource(R.string.display_info)) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.display_current),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "${currentWidth} x ${currentHeight} (${currentDpi} DPI)",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                            color = MaterialTheme.colorScheme.primary
-                        )
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = stringResource(R.string.display_info),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 12.dp)
+                )
+
+                ExpressiveCardGroup {
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.display_current),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "${currentWidth} x ${currentHeight} (${currentDpi} DPI)",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.display_physical),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "${physicalWidth} x ${physicalHeight} (${physicalDpi} DPI)",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.display_physical),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "${physicalWidth} x ${physicalHeight} (${physicalDpi} DPI)",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                     }
                 }
             }
 
-            SwiftSenseSection(title = stringResource(R.string.resolution_settings)) {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    FeatureCard(
-                        title = stringResource(R.string.maintain_aspect_ratio),
-                        description = if (maintainAspectRatio) stringResource(R.string.ratio_locked) else stringResource(
-                            R.string.ratio_unlocked
-                        ),
-                        checked = maintainAspectRatio,
-                        onCheckedChange = { maintainAspectRatio = it }
-                    )
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = stringResource(R.string.resolution_settings),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 12.dp)
+                )
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        SwiftSenseTextField(
-                            value = inputWidth,
-                            onValueChange = { newValue ->
-                                if (newValue.all { it.isDigit() }) {
-                                    inputWidth = newValue
-                                    if (maintainAspectRatio && newValue.isNotEmpty() && physicalWidth > 0) {
-                                        val ratio =
-                                            physicalHeight.toFloat() / physicalWidth.toFloat()
-                                        inputHeight = (newValue.toInt() * ratio).toInt().toString()
-                                        val dpiRatio = newValue.toFloat() / physicalWidth.toFloat()
-                                        inputDpi = (physicalDpi * dpiRatio).toInt().toString()
-                                    }
-                                }
-                            },
-                            label = stringResource(R.string.resolution_width),
-                            modifier = Modifier.weight(1f),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                        )
-
-                        SwiftSenseTextField(
-                            value = inputHeight,
-                            onValueChange = { newValue ->
-                                if (newValue.all { it.isDigit() }) {
-                                    inputHeight = newValue
-                                    if (maintainAspectRatio && newValue.isNotEmpty() && physicalHeight > 0) {
-                                        val ratio =
-                                            physicalWidth.toFloat() / physicalHeight.toFloat()
-                                        inputWidth = (newValue.toInt() * ratio).toInt().toString()
-                                        val dpiRatio = newValue.toFloat() / physicalHeight.toFloat()
-                                        inputDpi = (physicalDpi * dpiRatio).toInt().toString()
-                                    }
-                                }
-                            },
-                            label = stringResource(R.string.resolution_height),
-                            modifier = Modifier.weight(1f),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                ExpressiveCardGroup {
+                    item {
+                        ExpressiveSwitchPreference(
+                            title = stringResource(R.string.maintain_aspect_ratio),
+                            description = if (maintainAspectRatio) stringResource(R.string.ratio_locked)
+                            else stringResource(R.string.ratio_unlocked),
+                            icon = Icons.Rounded.AspectRatio,
+                            badgeColors = ExpressivePalette.TealLight,
+                            checked = maintainAspectRatio,
+                            onCheckedChange = { maintainAspectRatio = it }
                         )
                     }
 
-                    SwiftSenseTextField(
-                        value = inputDpi,
-                        onValueChange = { if (it.all { char -> char.isDigit() }) inputDpi = it },
-                        label = stringResource(R.string.resolution_dpi),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
+                    item {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                ExpressiveTextField(
+                                    value = inputWidth,
+                                    onValueChange = { newValue ->
+                                        if (newValue.all { it.isDigit() }) {
+                                            inputWidth = newValue
+                                            if (maintainAspectRatio && newValue.isNotEmpty() && physicalWidth > 0) {
+                                                val ratio = physicalHeight.toFloat() / physicalWidth.toFloat()
+                                                inputHeight = (newValue.toInt() * ratio).toInt().toString()
+                                                val dpiRatio = newValue.toFloat() / physicalWidth.toFloat()
+                                                inputDpi = (physicalDpi * dpiRatio).toInt().toString()
+                                            }
+                                        }
+                                    },
+                                    label = stringResource(R.string.resolution_width),
+                                    modifier = Modifier.weight(1f),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                                )
+
+                                ExpressiveTextField(
+                                    value = inputHeight,
+                                    onValueChange = { newValue ->
+                                        if (newValue.all { it.isDigit() }) {
+                                            inputHeight = newValue
+                                            if (maintainAspectRatio && newValue.isNotEmpty() && physicalHeight > 0) {
+                                                val ratio = physicalWidth.toFloat() / physicalHeight.toFloat()
+                                                inputWidth = (newValue.toInt() * ratio).toInt().toString()
+                                                val dpiRatio = newValue.toFloat() / physicalHeight.toFloat()
+                                                inputDpi = (physicalDpi * dpiRatio).toInt().toString()
+                                            }
+                                        }
+                                    },
+                                    label = stringResource(R.string.resolution_height),
+                                    modifier = Modifier.weight(1f),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                                )
+                            }
+
+                            ExpressiveTextField(
+                                value = inputDpi,
+                                onValueChange = { if (it.all { char -> char.isDigit() }) inputDpi = it },
+                                label = stringResource(R.string.resolution_dpi),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            )
+                        }
+                    }
                 }
             }
 
-            val isShizukuReady =
-                Shizuku.pingBinder() && Shizuku.checkSelfPermission() == android.content.pm.PackageManager.PERMISSION_GRANTED
+            val isReady by ShellBridge.ready.collectAsState()
 
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    SwiftSenseButton(
+                    ExpressiveButton(
                         text = stringResource(R.string.action_apply),
                         onClick = {
                             scope.launch {
@@ -382,10 +416,10 @@ fun ScreenResolutionScreen(
                             }
                         },
                         modifier = Modifier.weight(1f),
-                        enabled = isShizukuReady
+                        enabled = isReady
                     )
 
-                    SwiftSenseOutlinedButton(
+                    ExpressiveOutlinedButton(
                         text = stringResource(R.string.save_plan),
                         onClick = { showSavePlanDialog = true },
                         modifier = Modifier.weight(1f),
@@ -400,10 +434,11 @@ fun ScreenResolutionScreen(
                             refreshDisplayInfo()
                         }
                     },
-                    modifier = Modifier.fillMaxWidth().height(42.dp),
-                    shape = RoundedCornerShape(6.dp),
-                    enabled = isShizukuReady,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.2f)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = CircleShape,
+                    enabled = isReady,
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = MaterialTheme.colorScheme.error,
                         disabledContentColor = MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
@@ -411,119 +446,83 @@ fun ScreenResolutionScreen(
                 ) {
                     Text(
                         stringResource(R.string.action_reset),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
 
-            SwiftSenseSection(title = stringResource(R.string.resolution_plans)) {
-                if (savedPlans.isEmpty()) {
-                    Text(
-                        text = stringResource(R.string.no_plans),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                        textAlign = TextAlign.Center
-                    )
-                } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = stringResource(R.string.resolution_plans),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 12.dp)
+                )
+
+                ExpressiveCardGroup {
+                    if (savedPlans.isEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.no_plans),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 20.dp),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    } else {
                         savedPlans.forEach { planJson ->
                             val plan = JSONObject(planJson)
-                            Surface(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(6.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
-                                border = BorderStroke(
-                                    1.dp,
-                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.08f)
-                                ),
-                                onClick = {
-                                    inputWidth = plan.getString("width")
-                                    inputHeight = plan.getString("height")
-                                    inputDpi = plan.getString("dpi")
-                                }
-                            ) {
+                            item {
                                 Row(
-                                    modifier = Modifier.padding(
-                                        horizontal = 16.dp,
-                                        vertical = 12.dp
-                                    ).fillMaxWidth(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            inputWidth = plan.getString("width")
+                                            inputHeight = plan.getString("height")
+                                            inputDpi = plan.getString("dpi")
+                                        }
+                                        .padding(horizontal = 16.dp, vertical = 14.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Row(
-                                        modifier = Modifier.weight(1f).padding(end = 8.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        Text(
-                                            text = plan.getString("name"),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            modifier = Modifier.weight(1f, fill = false)
-                                        )
-                                        Surface(
-                                            color = MaterialTheme.colorScheme.secondaryContainer,
-                                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                                            shape = RoundedCornerShape(4.dp)
-                                        ) {
-                                            Text(
-                                                text = "${plan.getString("width")}x${
-                                                    plan.getString(
-                                                        "height"
-                                                    )
-                                                } • ${plan.getString("dpi")} DPI",
-                                                modifier = Modifier.padding(
-                                                    horizontal = 6.dp,
-                                                    vertical = 2.dp
-                                                ),
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        }
-                                    }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = plan.getString("name"),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "${plan.getString("width")} x ${plan.getString("height")} @ ${plan.getString("dpi")} DPI",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                                     IconButton(
                                         onClick = {
                                             scope.launch {
                                                 preferenceManager.deleteResolutionPlan(planJson)
-                                                Toast.makeText(
-                                                    context,
-                                                    R.string.toast_plan_deleted,
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
+                                                Toast.makeText(context, R.string.toast_plan_deleted, Toast.LENGTH_SHORT).show()
                                             }
-                                        },
-                                        modifier = Modifier.size(32.dp)
+                                        }
                                     ) {
                                         Icon(
                                             Icons.Default.Delete,
-                                            null,
-                                            modifier = Modifier.size(16.dp),
-                                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+                                            contentDescription = null,
+                                            modifier = Modifier.size(20.dp),
+                                            tint = MaterialTheme.colorScheme.error
                                         )
                                     }
                                 }
                             }
                         }
                     }
-                }
-            }
-
-            if (!isShizukuReady) {
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.05f),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.1f))
-                ) {
-                    Text(
-                        text = stringResource(R.string.shizuku_required_desc),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        textAlign = TextAlign.Center
-                    )
                 }
             }
 
@@ -545,15 +544,19 @@ private suspend fun applyResolution(
         return false
     }
     return withContext(Dispatchers.IO) {
-        val sizeResult = ShizukuShellRunner.runCommand("wm size ${width}x${height}")
-        val densityResult = ShizukuShellRunner.runCommand("wm density $dpi")
-        sizeResult.isSuccess && densityResult.isSuccess
+        val sizeCmd = "wm size ${width}x${height}"
+        val dpiCmd = "wm density $dpi"
+
+        val sizeRes = ShellBridge.run(sizeCmd)
+        val dpiRes = ShellBridge.run(dpiCmd)
+
+        sizeRes.isSuccess && dpiRes.isSuccess
     }
 }
 
 private suspend fun resetResolution() {
     withContext(Dispatchers.IO) {
-        ShizukuShellRunner.runCommand("wm size reset")
-        ShizukuShellRunner.runCommand("wm density reset")
+        ShellBridge.run("wm size reset")
+        ShellBridge.run("wm density reset")
     }
 }

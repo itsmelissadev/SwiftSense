@@ -11,7 +11,7 @@ import androidx.core.app.NotificationCompat
 import io.github.itsmelissadev.swiftsense.MainActivity
 import io.github.itsmelissadev.swiftsense.R
 import io.github.itsmelissadev.swiftsense.data.PreferenceManager
-import io.github.itsmelissadev.swiftsense.service.shizuku.ShizukuShellRunner
+import io.github.itsmelissadev.swiftsense.service.shell.ShellBridge
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -63,24 +63,32 @@ class AppStopperService : Service() {
         return START_STICKY
     }
 
+    private data class StopperConfig(
+        val apps: Set<String>,
+        val interval: Int,
+        val mode: String,
+        val targetUserId: Int
+    )
+
     private fun observeConfigChanges() {
         configObservationJob?.cancel()
         configObservationJob = serviceScope.launch {
             combine(
                 preferenceManager.stopperApps,
                 preferenceManager.stopperInterval,
-                preferenceManager.stopperMode
-            ) { apps, interval, mode ->
-                Triple(apps, interval, mode)
-            }.distinctUntilChanged().collectLatest { (apps, interval, mode) ->
+                preferenceManager.stopperMode,
+                preferenceManager.stopperTargetUserId
+            ) { apps, interval, mode, targetUserId ->
+                StopperConfig(apps, interval, mode, targetUserId)
+            }.distinctUntilChanged().collectLatest { config ->
                 loopJob?.cancel()
-                updateNotification(apps.size, interval)
+                updateNotification(config.apps.size, config.interval)
 
-                if (apps.isNotEmpty()) {
+                if (config.apps.isNotEmpty()) {
                     loopJob = serviceScope.launch {
                         while (true) {
-                            stopTargetApps(apps, mode)
-                            delay(interval * 1000L)
+                            stopTargetApps(config.apps, config.mode, config.targetUserId)
+                            delay(config.interval * 1000L)
                         }
                     }
                 }
@@ -88,13 +96,13 @@ class AppStopperService : Service() {
         }
     }
 
-    private suspend fun stopTargetApps(apps: Set<String>, mode: String) {
+    private suspend fun stopTargetApps(apps: Set<String>, mode: String, targetUserId: Int) {
         val filtered = apps.filter { it != packageName && !it.contains("shizuku", ignoreCase = true) && it.isNotBlank() }
         if (filtered.isEmpty()) return
         withContext(Dispatchers.IO) {
             val cmdPrefix = if (mode.equals("SIMPLE", ignoreCase = true)) "am kill" else "am force-stop"
-            val cmd = filtered.joinToString("; ") { "$cmdPrefix $it" }
-            ShizukuShellRunner.runCommand(cmd)
+            val cmd = filtered.joinToString("; ") { "$cmdPrefix --user $targetUserId $it" }
+            ShellBridge.run(cmd)
         }
     }
 

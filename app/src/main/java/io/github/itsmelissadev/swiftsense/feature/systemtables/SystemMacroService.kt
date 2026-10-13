@@ -11,7 +11,7 @@ import androidx.core.app.NotificationCompat
 import io.github.itsmelissadev.swiftsense.MainActivity
 import io.github.itsmelissadev.swiftsense.R
 import io.github.itsmelissadev.swiftsense.data.PreferenceManager
-import io.github.itsmelissadev.swiftsense.service.shizuku.ShizukuShellRunner
+import io.github.itsmelissadev.swiftsense.service.shell.ShellBridge
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -81,10 +81,11 @@ class SystemMacroService : Service() {
                     }
                     if (macro != null) {
                         updateNotification(macro.name, interval)
+                        val delayMs = if (interval == 500) 500L else interval * 1000L
                         loopJob = serviceScope.launch {
                             while (true) {
                                 applyMacro(macro)
-                                delay(interval * 1000L)
+                                delay(delayMs)
                             }
                         }
                     } else {
@@ -101,17 +102,17 @@ class SystemMacroService : Service() {
         withContext(Dispatchers.IO) {
             macro.settings.forEach { setting ->
                 val cmd = "settings put ${setting.table.key} ${setting.key} ${setting.targetValue}"
-                ShizukuShellRunner.runCommand(cmd)
+                ShellBridge.run(cmd)
             }
         }
     }
 
-    private fun updateNotification(macroName: String, intervalSeconds: Int) {
+    private fun updateNotification(macroName: String, interval: Int) {
         val manager = getSystemService(NotificationManager::class.java)
-        manager.notify(NOTIFICATION_ID, createNotification(macroName, intervalSeconds))
+        manager.notify(NOTIFICATION_ID, createNotification(macroName, interval))
     }
 
-    private fun createNotification(macroName: String, intervalSeconds: Int): Notification {
+    private fun createNotification(macroName: String, interval: Int): Notification {
         val stopIntent = Intent(this, SystemMacroService::class.java).apply { action = ACTION_STOP }
         val stopPI = PendingIntent.getService(this, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE)
         val mainPI = PendingIntent.getActivity(
@@ -121,8 +122,9 @@ class SystemMacroService : Service() {
             PendingIntent.FLAG_IMMUTABLE
         )
 
+        val intervalText = if (interval == 500) "500 ms" else "${interval}s"
         val contentText = if (macroName.isNotEmpty()) {
-            getString(R.string.macro_service_notif_desc, macroName, intervalSeconds)
+            "$macroName ($intervalText)"
         } else {
             getString(R.string.status_running)
         }

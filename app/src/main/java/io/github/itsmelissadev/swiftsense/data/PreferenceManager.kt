@@ -11,6 +11,9 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -19,6 +22,8 @@ class PreferenceManager(private val context: Context) {
     companion object {
         private val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
         private val THEME_MODE = stringPreferencesKey("theme_mode")
+        private val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
+        private val THEME_ACCENT_COLOR = stringPreferencesKey("theme_accent_color")
         private val LANGUAGE = stringPreferencesKey("language")
         private val SELECTED_MODE = stringPreferencesKey("selected_mode")
         val IS_SERVICE_RUNNING = booleanPreferencesKey("is_service_running")
@@ -30,10 +35,12 @@ class PreferenceManager(private val context: Context) {
         val APP_MANAGER_WARNING_DISMISSED = booleanPreferencesKey("app_manager_warning_dismissed")
         val APP_MANAGER_CUSTOM_LISTS = stringSetPreferencesKey("app_manager_custom_lists")
         val APP_MANAGER_ACTIVE_LIST_ID = stringPreferencesKey("app_manager_active_list_id")
+        val APP_MANAGER_TARGET_USER_ID = intPreferencesKey("app_manager_target_user_id")
         private val STOPPER_APPS = stringSetPreferencesKey("stopper_apps")
         val IS_STOPPER_SERVICE_RUNNING = booleanPreferencesKey("is_stopper_service_running")
         val STOPPER_INTERVAL = intPreferencesKey("stopper_interval")
         val STOPPER_MODE = stringPreferencesKey("stopper_mode")
+        val STOPPER_TARGET_USER_ID = intPreferencesKey("stopper_target_user_id")
         private val RESOLUTION_PLANS = stringSetPreferencesKey("resolution_plans")
         private val SYSTEM_MACROS = stringSetPreferencesKey("system_macros")
         val AMOLED_INTENSITY = floatPreferencesKey("amoled_intensity")
@@ -91,15 +98,101 @@ class PreferenceManager(private val context: Context) {
         val AOD_AS_FOREGROUND_SERVICE = booleanPreferencesKey("aod_as_foreground_service")
         val GLOBAL_CAMERA_ENABLED = booleanPreferencesKey("global_camera_enabled")
         val GLOBAL_MICROPHONE_ENABLED = booleanPreferencesKey("global_microphone_enabled")
+        val SHELL_MODE = stringPreferencesKey("shell_mode")
+        val ADB_HOST = stringPreferencesKey("adb_host")
+        val ADB_PORT = intPreferencesKey("adb_port")
+        val ADB_PAIRING_PORT = intPreferencesKey("adb_pairing_port")
+        val SWIFTSENSE_AUTO_START = booleanPreferencesKey("swiftsense_auto_start")
+        val SWIFTSENSE_HAS_PAIRED = booleanPreferencesKey("swiftsense_has_paired")
+        private val _shellModeState = MutableStateFlow("")
+    }
+
+    private val syncPrefs by lazy {
+        context.getSharedPreferences("swiftsense_shell_prefs", Context.MODE_PRIVATE)
+    }
+
+    fun getShellModeSync(): String {
+        val current = _shellModeState.value
+        if (current.isNotEmpty()) return current
+        val loaded = syncPrefs.getString("shell_mode", null) ?: "shizuku"
+        _shellModeState.value = loaded
+        return loaded
     }
 
     val preferences: Flow<Preferences> = context.dataStore.data
+
+    val shellMode: StateFlow<String>
+        get() {
+            if (_shellModeState.value.isEmpty()) {
+                _shellModeState.value = syncPrefs.getString("shell_mode", null) ?: "shizuku"
+            }
+            return _shellModeState.asStateFlow()
+        }
+
+    suspend fun setShellMode(mode: String) {
+        _shellModeState.value = mode
+        syncPrefs.edit().putString("shell_mode", mode).commit()
+        context.dataStore.edit { it[SHELL_MODE] = mode }
+        io.github.itsmelissadev.swiftsense.service.shell.ShellBridge.refreshNow()
+    }
+
+    fun getAdbHostSync(): String {
+        return syncPrefs.getString("adb_host", "127.0.0.1") ?: "127.0.0.1"
+    }
+
+    fun getAdbPortSync(): Int {
+        return syncPrefs.getInt("adb_port", 0)
+    }
+
+    val adbHost: Flow<String> = preferences.map { it[ADB_HOST] ?: getAdbHostSync() }
+    suspend fun setAdbHost(host: String) {
+        syncPrefs.edit().putString("adb_host", host).commit()
+        io.github.itsmelissadev.swiftsense.service.adb.AdbManager.lastHost = host
+        context.dataStore.edit { it[ADB_HOST] = host }
+    }
+
+    val adbPort: Flow<Int> = preferences.map { it[ADB_PORT] ?: getAdbPortSync() }
+    suspend fun setAdbPort(port: Int) {
+        syncPrefs.edit().putInt("adb_port", port).commit()
+        io.github.itsmelissadev.swiftsense.service.adb.AdbManager.lastPort = port
+        context.dataStore.edit { it[ADB_PORT] = port }
+    }
+
+    val adbPairingPort: Flow<Int> = preferences.map { it[ADB_PAIRING_PORT] ?: 0 }
+    suspend fun setAdbPairingPort(port: Int) { context.dataStore.edit { it[ADB_PAIRING_PORT] = port } }
+
+    fun getSwiftSenseAutoStartSync(): Boolean {
+        return syncPrefs.getBoolean("swiftsense_auto_start", false)
+    }
+
+    val swiftSenseAutoStart: Flow<Boolean> = preferences.map { it[SWIFTSENSE_AUTO_START] ?: getSwiftSenseAutoStartSync() }
+    suspend fun setSwiftSenseAutoStart(enabled: Boolean) {
+        syncPrefs.edit().putBoolean("swiftsense_auto_start", enabled).commit()
+        context.dataStore.edit { it[SWIFTSENSE_AUTO_START] = enabled }
+    }
+
+    fun hasPairedAdbSync(): Boolean {
+        val keyFile = java.io.File(context.filesDir, "adbkey")
+        return syncPrefs.getBoolean("swiftsense_has_paired", false) || keyFile.exists()
+    }
+
+    val hasPairedAdb: Flow<Boolean> = preferences.map { it[SWIFTSENSE_HAS_PAIRED] ?: hasPairedAdbSync() }
+    suspend fun setHasPairedAdb(hasPaired: Boolean) {
+        syncPrefs.edit().putBoolean("swiftsense_has_paired", hasPaired).commit()
+        context.dataStore.edit { it[SWIFTSENSE_HAS_PAIRED] = hasPaired }
+    }
 
     val isOnboardingCompleted: Flow<Boolean> = preferences.map { it[ONBOARDING_COMPLETED] ?: false }
     suspend fun setOnboardingCompleted(completed: Boolean) { context.dataStore.edit { it[ONBOARDING_COMPLETED] = completed } }
 
     val themeMode: Flow<String> = preferences.map { it[THEME_MODE] ?: "system" }
     suspend fun setThemeMode(mode: String) { context.dataStore.edit { it[THEME_MODE] = mode } }
+
+    val dynamicColor: Flow<Boolean> = preferences.map { it[DYNAMIC_COLOR] ?: false }
+    suspend fun setDynamicColor(enabled: Boolean) { context.dataStore.edit { it[DYNAMIC_COLOR] = enabled } }
+
+    val themeAccentColor: Flow<String> = preferences.map { it[THEME_ACCENT_COLOR] ?: "pistachio" }
+    suspend fun setThemeAccentColor(color: String) { context.dataStore.edit { it[THEME_ACCENT_COLOR] = color } }
 
     val language: Flow<String> = preferences.map { it[LANGUAGE] ?: "system" }
     suspend fun setLanguage(lang: String) { context.dataStore.edit { it[LANGUAGE] = lang } }
@@ -162,6 +255,13 @@ class PreferenceManager(private val context: Context) {
         context.dataStore.edit { it[APP_MANAGER_ACTIVE_LIST_ID] = id }
     }
 
+    val appManagerTargetUserId: Flow<Int> =
+        preferences.map { it[APP_MANAGER_TARGET_USER_ID] ?: (android.os.Process.myUid() / 100000) }
+
+    suspend fun setAppManagerTargetUserId(userId: Int) {
+        context.dataStore.edit { it[APP_MANAGER_TARGET_USER_ID] = userId }
+    }
+
     val stopperApps: Flow<Set<String>> = preferences.map { it[STOPPER_APPS] ?: emptySet() }
 
     suspend fun setStopperApps(apps: Set<String>) {
@@ -196,6 +296,13 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun setStopperMode(mode: String) {
         context.dataStore.edit { it[STOPPER_MODE] = mode }
+    }
+
+    val stopperTargetUserId: Flow<Int> =
+        preferences.map { it[STOPPER_TARGET_USER_ID] ?: (android.os.Process.myUid() / 100000) }
+
+    suspend fun setStopperTargetUserId(userId: Int) {
+        context.dataStore.edit { it[STOPPER_TARGET_USER_ID] = userId }
     }
 
     val systemMacros: Flow<Set<String>> = preferences.map { it[SYSTEM_MACROS] ?: emptySet() }
