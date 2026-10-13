@@ -1,10 +1,31 @@
 # SwiftSense
 
-SwiftSense is an offline, privacy-first Android utility designed for fine-grained system tuning, AMOLED display protection, and hardware-level optimizations without root (via Shizuku).
+SwiftSense is an advanced, privacy-first Android system tuning and optimization toolkit. It enables deep hardware-level tweaks, display optimizations, and package management without root—either via its **built-in Wireless Debugging daemon** or through [Shizuku](https://shizuku.rikka.app/).
 
 ---
 
 ## Features
+
+### Material 3 Design & Dynamic Theming
+- **Expressive M3 Interface:** Clean, modern, and cohesive Material 3 design across all modules.
+- **Dynamic & Custom Theming:** Android 12+ wallpaper-based dynamic color matching, plus dedicated accent tones (Pistachio Green, Ocean Blue, Violet Purple, Amber Orange) in light and dark modes.
+
+### Standalone Wireless Debugging & Shizuku
+- **Built-in ADB Daemon:** Direct local Wireless Debugging connection without requiring third-party tools.
+- **Flexible Shell Bridge:** Seamlessly toggle between SwiftSense's internal ADB daemon and Shizuku according to your preference.
+
+### Package & APK Installer
+- **Multi-Format Support:** Fast, native installation for `.apk`, `.xapk`, `.apks`, and `.apkm` packages.
+- **Power-User Flags:** Reinstall (`-r`), allow downgrade (`-d`), allow test-only builds (`-t`), grant runtime permissions (`-g`), and bypass verification checks.
+- **Certificate Inspection & Multi-User:** View package signature SHA-256 fingerprint, requested permissions, and install across specific user profiles or all accounts simultaneously.
+
+### In-App Releases & Update Center
+- **GitHub Release Explorer:** Directly fetch and read SwiftSense changelogs and release notes with full Markdown rendering.
+- **One-Tap APK Download:** Download the latest `app-release.apk` with live progress tracking and trigger the installation handoff instantly.
+
+### Multi-User & Second Space Support
+- **Dynamic Device Profile Discovery:** Automatically scans device user profiles (`Owner`, `Work`, `Dual Apps`, `Second Space`) with actual profile labels.
+- **Interactive Profile Switcher:** Easily target actions in App Manager and App Stopper to specific user profiles.
 
 ### AMOLED Screen Protection
 - **Subpixel Mesh Filters:** Protects OLED/AMOLED panels against burn-in using physically aligned micro-mesh patterns (Diamond PenTile, Dynamic Phase Inversion, Blue Subpixel Shield, Checker Matrix, Micro Dots).
@@ -25,7 +46,7 @@ SwiftSense is an offline, privacy-first Android utility designed for fine-graine
 
 ### App Manager
 - Package inspection sheet with UID, install paths, target SDK, and status flags.
-- Fast batch enable/disable and freeze operations powered by Shizuku without artificial execution delays.
+- Fast batch enable/disable and freeze operations powered by privileged shell commands.
 
 ### Sensor Boost
 - Unlocks sensor sampling rates (gyroscope, accelerometer) to their maximum hardware limits for lower input latency.
@@ -38,6 +59,7 @@ SwiftSense is an offline, privacy-first Android utility designed for fine-graine
 ### System Table Macros
 - View and modify Android `System`, `Secure`, and `Global` settings tables.
 - Create, run, export, and import multi-setting tweak macros via JSON.
+- High-frequency loop intervals down to 500ms (500ms to 10 minutes).
 
 ### Screen Recorder
 - Hardware-accelerated (HEVC/AVC) screen recorder with minimal overhead.
@@ -45,8 +67,8 @@ SwiftSense is an offline, privacy-first Android utility designed for fine-graine
 - Includes Quick Settings tile for quick capture.
 
 ### Privacy Quick Settings Tiles
-- **Camera Access Tile:** Instantly toggle global camera access on or off via Shizuku (`cmd sensor_privacy`).
-- **Microphone Access Tile:** Instantly toggle global microphone access on or off via Shizuku (`cmd sensor_privacy`).
+- **Camera Access Tile:** Instantly toggle global camera access on or off via privileged shell (`cmd sensor_privacy`).
+- **Microphone Access Tile:** Instantly toggle global microphone access on or off via privileged shell (`cmd sensor_privacy`).
 - **Persistent Local State:** Retains the toggle state seamlessly across sessions using local DataStore storage.
 
 ---
@@ -55,29 +77,34 @@ SwiftSense is an offline, privacy-first Android utility designed for fine-graine
 
 | Feature | Requirement | Purpose |
 | :--- | :--- | :--- |
-| **Always-On Display** | Android 8.0+ | Lock screen overlay |
-| **AMOLED Screen Protect** | Android 8.0+ | Anti-burn-in overlay |
-| **Sensor Boost** | Android 8.0+ | High-rate sensor sampling |
-| **Background App Stopper** | Shizuku | Automated background app freezing |
-| **App Manager** | Shizuku | Package enable/disable control |
-| **Resolution & DPI Tuner** | Shizuku | Display scaling and density tweaks |
-| **System Table Macros** | Shizuku | System/Secure/Global settings editor |
-| **Screen Recorder** | Android 10+ | Internal audio & screen capture |
-| **Privacy Tiles (Camera & Mic)** | Shizuku + Android 12+ | Global hardware sensor privacy toggles |
+| **Material 3 Theming** | Android 8.0+ *(Dynamic colors Android 12+)* | Visual customization & wallpaper palettes |
+| **Always-On Display** | Android 8.0+ | Lock screen overlay with burn-in protection |
+| **AMOLED Screen Protect** | Android 8.0+ | Subpixel anti-burn-in overlay & color tint |
+| **Sensor Boost** | Android 8.0+ | Maximum hardware rate sensor sampling |
+| **Screen Recorder** | Android 10+ | Internal audio & hardware screen capture |
+| **In-App Releases & Updates** | Internet permission | GitHub API check & APK downloading |
+| **Background App Stopper** | Standalone ADB or Shizuku | Automated background app freezing |
+| **App Manager** | Standalone ADB or Shizuku | Package enable/disable & profile control |
+| **Resolution & DPI Tuner** | Standalone ADB or Shizuku | Display scaling and density tweaks |
+| **System Table Macros** | Standalone ADB or Shizuku | System/Secure/Global settings automation |
+| **Package & APK Installer** | Standalone ADB or Shizuku | Privileged multi-format package installation |
+| **Privacy Tiles (Camera & Mic)** | (Standalone ADB or Shizuku) + Android 12+ | Global hardware sensor privacy toggles |
 
 ---
 
 ## Privacy & Security
 
-- **No Internet Permission:** SwiftSense does not declare `android.permission.INTERNET`. All data remains strictly on your device.
-- **No Analytics or Telemetry:** No tracking, telemetry, or remote logging.
-- **Rootless System Access:** Operates securely through user-authorized [Shizuku](https://shizuku.rikka.app/) APIs.
+- **Strict Internet Permission Usage:** The `android.permission.INTERNET` permission is declared and used strictly for two transparent purposes:
+  1. Communicating locally with the device's internal Wireless Debugging service on loopback (`localhost`).
+  2. Querying the public GitHub Releases API (`api.github.com`) and downloading official update APKs when manually initiated by the user.
+- **Zero Analytics or Telemetry:** No trackers, advertisements, telemetry SDKs, or background metric gathering. All app data and system settings remain strictly on your device.
+- **Rootless Privileged Access:** Uses standard Android Wireless Debugging or user-authorized Shizuku APIs, avoiding dangerous root modifications.
 
 ---
 
 ## Google Play Protect Notice
 
-Because SwiftSense interacts with system-level settings and utilizes Shizuku, **Google Play Protect** may occasionally display a warning during installation. This is a common false positive for advanced system utility applications. SwiftSense is fully open-source, contains no trackers or network capabilities, and is safe to use.
+Because SwiftSense interacts with system-level configuration tables and uses elevated debugging APIs, **Google Play Protect** may occasionally flag an advisory during installation. This is a false positive common to developer tools and system tweaking utilities. SwiftSense is completely open-source, contains zero trackers, and is safe to use.
 
 ---
 
