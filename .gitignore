@@ -19,3 +19,4 @@ local.properties
 releases
 project_context.md
 .agents
+/app/release/
