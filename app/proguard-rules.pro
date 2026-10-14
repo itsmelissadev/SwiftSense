@@ -24,3 +24,12 @@
 -keep class org.bouncycastle.** { *; }
 -dontwarn io.github.rhythmcache.adb.**
 -keep class io.github.rhythmcache.adb.** { *; }
+
+# SwiftSense standalone ADB daemon executed via app_process
+-keep class io.github.itsmelissadev.swiftsense.service.adb.SwiftSenseServer {
+    public static void main(java.lang.String[]);
+    public *;
+}
+-keep class io.github.itsmelissadev.swiftsense.service.adb.SwiftSenseServer$* {
+    public *;
+}
