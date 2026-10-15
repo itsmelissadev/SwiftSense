@@ -19,6 +19,7 @@ import io.github.itsmelissadev.swiftsense.data.PreferenceManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import kotlin.math.abs
@@ -158,9 +159,21 @@ class AlwaysOnDisplayActivity : ComponentActivity() {
             launch { preferenceManager.aodBurnInMode.collect { aodView.burnInMode = it } }
             launch { preferenceManager.aodBurnInRgbShift.collect { aodView.burnInRgbShift = it } }
             launch {
-                preferenceManager.aodBrightness.collect { brightness ->
-                    window.attributes = window.attributes.apply { screenBrightness = brightness }
-                    aodView.brightness = brightness
+                combine(
+                    preferenceManager.aodAutoBrightness,
+                    preferenceManager.aodBrightness
+                ) { auto, brightness ->
+                    Pair(auto, brightness)
+                }.collect { (auto, brightness) ->
+                    val targetBrightness = if (auto) {
+                        WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+                    } else {
+                        brightness
+                    }
+                    window.attributes = window.attributes.apply {
+                        screenBrightness = targetBrightness
+                    }
+                    aodView.brightness = if (auto) 1.0f else brightness
                 }
             }
             launch { preferenceManager.aodDismissDoubleTap.collect { dismissDoubleTap = it } }

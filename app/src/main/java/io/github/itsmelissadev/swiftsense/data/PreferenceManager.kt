@@ -98,6 +98,7 @@ class PreferenceManager(private val context: Context) {
         val AOD_SHOW_NOTIFICATIONS = booleanPreferencesKey("aod_show_notifications")
         val AOD_CLOCK_STYLE = stringPreferencesKey("aod_clock_style")
         val AOD_BATTERY_STYLE = stringPreferencesKey("aod_battery_style")
+        val AOD_AUTO_BRIGHTNESS = booleanPreferencesKey("aod_auto_brightness")
         val AOD_BRIGHTNESS = floatPreferencesKey("aod_brightness")
         val AOD_ACTIVATE_ON_LOCK = booleanPreferencesKey("aod_activate_on_lock")
         val AOD_TIMEOUT_SECONDS = intPreferencesKey("aod_timeout_seconds")
@@ -445,6 +446,9 @@ class PreferenceManager(private val context: Context) {
 
     val aodBatteryStyle: Flow<String> = preferences.map { it[AOD_BATTERY_STYLE] ?: "horizontal_classic" }
     suspend fun setAodBatteryStyle(style: String) { context.dataStore.edit { it[AOD_BATTERY_STYLE] = style } }
+
+    val aodAutoBrightness: Flow<Boolean> = preferences.map { it[AOD_AUTO_BRIGHTNESS] ?: true }
+    suspend fun setAodAutoBrightness(enabled: Boolean) { context.dataStore.edit { it[AOD_AUTO_BRIGHTNESS] = enabled } }
 
     val aodBrightness: Flow<Float> = preferences.map { it[AOD_BRIGHTNESS] ?: 0.5f }
     suspend fun setAodBrightness(brightness: Float) { context.dataStore.edit { it[AOD_BRIGHTNESS] = brightness } }

@@ -133,6 +133,7 @@ fun AlwaysOnDisplayScreen(onNavigateBack: () -> Unit) {
     val burnInMode by preferenceManager.aodBurnInMode.collectAsState(initial = "jump")
     val burnInRgbShift by preferenceManager.aodBurnInRgbShift.collectAsState(initial = false)
 
+    val autoBrightness by preferenceManager.aodAutoBrightness.collectAsState(initial = true)
     val brightness by preferenceManager.aodBrightness.collectAsState(initial = 0.5f)
     var brightnessSlider by remember(brightness) { mutableFloatStateOf(brightness) }
     var burnInSlider by remember(burnInInterval) { mutableFloatStateOf(burnInInterval.toFloat()) }
@@ -327,38 +328,74 @@ fun AlwaysOnDisplayScreen(onNavigateBack: () -> Unit) {
                         )
                     }
 
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                scope.launch {
+                                    preferenceManager.setAodAutoBrightness(!autoBrightness)
+                                }
+                            }
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
                             Text(
-                                stringResource(R.string.aod_brightness),
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium,
+                                text = stringResource(R.string.aod_auto_brightness),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = stringResource(R.string.aod_auto_brightness_desc),
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Text(
-                                "${(brightnessSlider * 100).roundToInt()}%",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold
+                        }
+                        Switch(
+                            checked = autoBrightness,
+                            onCheckedChange = { checked ->
+                                scope.launch {
+                                    preferenceManager.setAodAutoBrightness(checked)
+                                }
+                            }
+                        )
+                    }
+
+                    if (!autoBrightness) {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    stringResource(R.string.aod_brightness),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    "${(brightnessSlider * 100).roundToInt()}%",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            Slider(
+                                value = brightnessSlider,
+                                onValueChange = { brightnessSlider = it },
+                                onValueChangeFinished = {
+                                    scope.launch {
+                                        preferenceManager.setAodBrightness(brightnessSlider)
+                                    }
+                                },
+                                valueRange = 0.1f..1.0f,
+                                colors = SliderDefaults.colors(
+                                    thumbColor = MaterialTheme.colorScheme.primary,
+                                    activeTrackColor = MaterialTheme.colorScheme.primary
+                                )
                             )
                         }
-                        Slider(
-                            value = brightnessSlider,
-                            onValueChange = { brightnessSlider = it },
-                            onValueChangeFinished = {
-                                scope.launch {
-                                    preferenceManager.setAodBrightness(brightnessSlider)
-                                }
-                            },
-                            valueRange = 0.1f..1.0f,
-                            colors = SliderDefaults.colors(
-                                thumbColor = MaterialTheme.colorScheme.primary,
-                                activeTrackColor = MaterialTheme.colorScheme.primary
-                            )
-                        )
                     }
                 }
             }

@@ -116,10 +116,10 @@ class AlwaysOnDisplayService : AccessibilityService() {
         @Suppress("DEPRECATION")
         val wakeLock = pm.newWakeLock(
             android.os.PowerManager.ACQUIRE_CAUSES_WAKEUP or
-            android.os.PowerManager.SCREEN_BRIGHT_WAKE_LOCK,
+            android.os.PowerManager.SCREEN_DIM_WAKE_LOCK,
             "SwiftSense:AODWakeLock"
         )
-        wakeLock.acquire(3000)
+        wakeLock.acquire(1000)
     }
 
     private fun launchAodActivity() {

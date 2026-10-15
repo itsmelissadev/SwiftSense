@@ -557,7 +557,7 @@ class AmoledProtectService : AccessibilityService() {
             if (!tintEnabled || tintIntensity <= 0f) {
                 return
             }
-            val alpha = (tintIntensity * 255).toInt().coerceIn(0, 255)
+            val alpha = (tintIntensity * 150).toInt().coerceIn(0, 150)
             val baseColor = when (tintColor) {
                 "amber" -> Color.parseColor("#FFA500")
                 "red" -> Color.parseColor("#FF2A2A")
@@ -647,7 +647,7 @@ class AmoledProtectService : AccessibilityService() {
         fun rebuildPattern() {
             clearPatterns()
 
-            val alpha = (currentOpacity * 255).toInt().coerceIn(0, 255)
+            val alpha = (currentOpacity * 230).toInt().coerceIn(0, 230)
             val dm: DisplayMetrics = resources.displayMetrics
             val screenDensity = dm.density
 
@@ -727,7 +727,7 @@ class AmoledProtectService : AccessibilityService() {
 
             if (currentFilterType == "noise") {
                 val ts = (sizePx * 4).coerceAtLeast(4)
-                val noiseDensity = (0.15f + currentDensity * 0.75f).coerceIn(0.1f, 0.95f)
+                val noiseDensity = (0.10f + currentDensity * 0.35f).coerceIn(0.08f, 0.45f)
 
                 for (i in 0 until 6) {
                     val bmp = Bitmap.createBitmap(ts, ts, Bitmap.Config.ARGB_8888)
@@ -786,14 +786,20 @@ class AmoledProtectService : AccessibilityService() {
                 }
 
                 "pentile_matrix" -> {
-                    val squareSize = sizePx.coerceAtLeast(1)
-                    val tileSize = squareSize * 2
+                    val step = (sizePx * 2).coerceAtLeast(2)
+                    val tileSize = step * 2
+                    val radius = sizePx.coerceAtLeast(1)
+                    val c1x = step / 2
+                    val c1y = step / 2
+                    val c2x = step + step / 2
+                    val c2y = step + step / 2
+
                     Bitmap.createBitmap(tileSize, tileSize, Bitmap.Config.ARGB_8888).apply {
                         for (x in 0 until tileSize) {
                             for (y in 0 until tileSize) {
-                                val dx = Math.abs(x - squareSize + 0.5f)
-                                val dy = Math.abs(y - squareSize + 0.5f)
-                                if ((dx + dy) <= squareSize) {
+                                val d1 = kotlin.math.abs(x - c1x) + kotlin.math.abs(y - c1y)
+                                val d2 = kotlin.math.abs(x - c2x) + kotlin.math.abs(y - c2y)
+                                if (d1 < radius || d2 < radius) {
                                     setPixel(x, y, Color.argb(alpha, 0, 0, 0))
                                 }
                             }
@@ -804,8 +810,8 @@ class AmoledProtectService : AccessibilityService() {
                 "blue_shield" -> {
                     val squareSize = sizePx.coerceAtLeast(1)
                     val tileSize = (squareSize * 2).coerceAtLeast(2)
-                    val blueCutAlpha = (alpha * 0.95f).toInt().coerceIn(0, 255)
-                    val warmAlpha = (alpha * 0.5f).toInt().coerceIn(0, 255)
+                    val blueCutAlpha = (alpha * 0.85f).toInt().coerceIn(0, 215)
+                    val warmAlpha = (alpha * 0.40f).toInt().coerceIn(0, 100)
                     Bitmap.createBitmap(tileSize, tileSize, Bitmap.Config.ARGB_8888).apply {
                         for (x in 0 until tileSize) {
                             for (y in 0 until tileSize) {
