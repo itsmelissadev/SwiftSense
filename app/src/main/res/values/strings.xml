@@ -661,4 +661,27 @@
     <string name="execution_service_not_ready">Command execution service is not ready.</string>
     <string name="execution_service_not_ready_desc">Please start the SwiftSense service or authorize Shizuku to proceed.</string>
     <string name="execution_failed">Failed to execute command: %1$s</string>
+    <string name="feature_turbo_downloader">Turbo Downloader</string>
+    <string name="feature_turbo_downloader_desc">Ultra-fast multi-segment parallel file and video downloader.</string>
+    <string name="downloader_url_hint">Enter file or video URL…</string>
+    <string name="downloader_threads">Parallel Connections</string>
+    <string name="downloader_threads_desc">Segment the file into multiple streams to maximize bandwidth (4, 8, 16).</string>
+    <string name="downloader_action_download">Download</string>
+    <string name="downloader_status_connecting">Connecting…</string>
+    <string name="downloader_status_downloading">Downloading</string>
+    <string name="downloader_status_paused">Paused</string>
+    <string name="downloader_status_completed">Completed</string>
+    <string name="downloader_status_failed">Failed</string>
+    <string name="downloader_action_pause">Pause</string>
+    <string name="downloader_action_resume">Resume</string>
+    <string name="downloader_action_cancel">Cancel</string>
+    <string name="downloader_action_open">Open File</string>
+    <string name="downloader_action_install_apk">Install via SwiftSense</string>
+    <string name="downloader_notification_channel">Turbo Downloads</string>
+    <string name="downloader_notification_channel_desc">Notifications for active parallel file downloads</string>
+    <string name="downloader_active_downloads">Active Downloads</string>
+    <string name="downloader_completed_downloads">Completed Downloads</string>
+    <string name="downloader_no_downloads">No active downloads.</string>
+    <string name="downloader_segments_label">Segments (%1$d)</string>
+    <string name="downloader_threads_count">%1$d Threads</string>
 </resources>

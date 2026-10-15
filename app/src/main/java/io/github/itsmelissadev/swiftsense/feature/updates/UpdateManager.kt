@@ -175,12 +175,5 @@ object UpdateManager {
         context.startActivity(intent)
     }
 
-    fun formatFileSize(bytes: Long): String {
-        if (bytes <= 0) return "0 B"
-        val units = arrayOf("B", "KB", "MB", "GB")
-        val digitGroups = (Math.log10(bytes.toDouble()) / Math.log10(1024.0)).toInt()
-        val index = digitGroups.coerceIn(0, units.size - 1)
-        val value = bytes / Math.pow(1024.0, index.toDouble())
-        return String.format(java.util.Locale.US, "%.1f %s", value, units[index])
-    }
+    fun formatFileSize(bytes: Long): String = io.github.itsmelissadev.swiftsense.utils.FormatUtils.formatBytes(bytes)
 }

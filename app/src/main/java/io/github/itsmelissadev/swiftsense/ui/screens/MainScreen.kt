@@ -63,6 +63,7 @@ fun MainScreen(
     onNavigateToAlwaysOnDisplay: () -> Unit,
     onNavigateToScreenRecorder: () -> Unit,
     onNavigateToApkInstaller: () -> Unit,
+    onNavigateToTurboDownloader: () -> Unit,
     onNavigateToSettings: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -88,6 +89,8 @@ fun MainScreen(
     val systemTablesDesc = stringResource(R.string.feature_system_tables_desc)
     val apkInstallerTitle = stringResource(R.string.feature_apk_installer)
     val apkInstallerDesc = stringResource(R.string.feature_apk_installer_desc)
+    val turboDownloaderTitle = stringResource(R.string.feature_turbo_downloader)
+    val turboDownloaderDesc = stringResource(R.string.feature_turbo_downloader_desc)
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
@@ -192,6 +195,7 @@ fun MainScreen(
                 aodTitle to aodDesc,
                 appManagerTitle to appManagerDesc,
                 apkInstallerTitle to apkInstallerDesc,
+                turboDownloaderTitle to turboDownloaderDesc,
                 screenResTitle to screenResDesc,
                 screenRecorderTitle to screenRecorderDesc,
                 systemTablesTitle to systemTablesDesc
@@ -254,6 +258,18 @@ fun MainScreen(
                                     icon = Icons.Default.Download,
                                     badgeColors = ExpressivePalette.GreenLight,
                                     onClick = onNavigateToApkInstaller
+                                )
+                            }
+                        }
+
+                        if (searchQuery.isEmpty() || turboDownloaderTitle.contains(searchQuery, ignoreCase = true) || turboDownloaderDesc.contains(searchQuery, ignoreCase = true)) {
+                            item {
+                                ExpressivePreferenceItem(
+                                    title = turboDownloaderTitle,
+                                    description = turboDownloaderDesc,
+                                    icon = Icons.Default.Speed,
+                                    badgeColors = ExpressivePalette.BlueLight,
+                                    onClick = onNavigateToTurboDownloader
                                 )
                             }
                         }

@@ -172,6 +172,7 @@ class MainActivity : ComponentActivity() {
                                     onNavigateToAlwaysOnDisplay = { navController.navigate("always_on_display") },
                                     onNavigateToScreenRecorder = { navController.navigate("screen_recorder") },
                                     onNavigateToApkInstaller = { navController.navigate("apk_installer") },
+                                    onNavigateToTurboDownloader = { navController.navigate("turbo_downloader") },
                                     onNavigateToSettings = { navController.navigate("settings") }
                                 )
                             }
@@ -212,6 +213,15 @@ class MainActivity : ComponentActivity() {
                                     onNavigateBack = {
                                         incomingApkUriState.value = null
                                         navController.popBackStack()
+                                    }
+                                )
+                            }
+                            composable("turbo_downloader") {
+                                io.github.itsmelissadev.swiftsense.feature.downloader.TurboDownloaderScreen(
+                                    onNavigateBack = { navController.popBackStack() },
+                                    onNavigateToApkInstaller = { uri ->
+                                        incomingApkUriState.value = uri
+                                        navController.navigate("apk_installer")
                                     }
                                 )
                             }

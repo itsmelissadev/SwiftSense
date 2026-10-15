@@ -661,4 +661,27 @@
     <string name="execution_service_not_ready">Komut servisi hazır değil.</string>
     <string name="execution_service_not_ready_desc">Lütfen SwiftSense servisini başlatın veya Shizuku yetkisi verin.</string>
     <string name="execution_failed">Komut yürütülemedi: %1$s</string>
+    <string name="feature_turbo_downloader">Turbo İndirici</string>
+    <string name="feature_turbo_downloader_desc">Çok parçalı eşzamanlı ultra hızlı dosya ve video indirme yöneticisi.</string>
+    <string name="downloader_url_hint">Dosya veya video bağlantısını yapıştırın…</string>
+    <string name="downloader_threads">Paralel Bağlantı Sayısı</string>
+    <string name="downloader_threads_desc">Bant genişliğini sonuna kadar kullanmak için dosyayı eşzamanlı parçalara böler (4, 8, 16).</string>
+    <string name="downloader_action_download">İndir</string>
+    <string name="downloader_status_connecting">Bağlanılıyor…</string>
+    <string name="downloader_status_downloading">İndiriliyor</string>
+    <string name="downloader_status_paused">Duraklatıldı</string>
+    <string name="downloader_status_completed">Tamamlandı</string>
+    <string name="downloader_status_failed">Başarısız Oldu</string>
+    <string name="downloader_action_pause">Duraklat</string>
+    <string name="downloader_action_resume">Devam Et</string>
+    <string name="downloader_action_cancel">İptal</string>
+    <string name="downloader_action_open">Dosyayı Aç</string>
+    <string name="downloader_action_install_apk">SwiftSense ile Yükle</string>
+    <string name="downloader_notification_channel">Turbo İndirmeler</string>
+    <string name="downloader_notification_channel_desc">Aktif paralel dosya indirmeleri için bildirim kanalı</string>
+    <string name="downloader_active_downloads">Aktif İndirmeler</string>
+    <string name="downloader_completed_downloads">Tamamlanan İndirmeler</string>
+    <string name="downloader_no_downloads">Aktif indirme bulunmuyor.</string>
+    <string name="downloader_segments_label">Bağlantı Parçaları (%1$d)</string>
+    <string name="downloader_threads_count">%1$d Bağlantı</string>
 </resources>
