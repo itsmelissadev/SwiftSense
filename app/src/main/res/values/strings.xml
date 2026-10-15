@@ -658,4 +658,7 @@
     <string name="updates_no_apk">No APK asset found for this release.</string>
     <string name="updates_download_started">APK download started</string>
     <string name="updates_download_failed">Download failed: %1$s</string>
+    <string name="execution_service_not_ready">Command execution service is not ready.</string>
+    <string name="execution_service_not_ready_desc">Please start the SwiftSense service or authorize Shizuku to proceed.</string>
+    <string name="execution_failed">Failed to execute command: %1$s</string>
 </resources>

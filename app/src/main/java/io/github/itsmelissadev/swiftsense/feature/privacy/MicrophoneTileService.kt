@@ -70,12 +70,21 @@ class MicrophoneTileService : TileService() {
             return
         }
 
-        if (!SensorPrivacyHelper.isShizukuAvailable()) {
-            Toast.makeText(this, R.string.shizuku_not_authorized_desc, Toast.LENGTH_SHORT).show()
-            return
-        }
-
         serviceScope.launch {
+            val isReady = io.github.itsmelissadev.swiftsense.service.shell.ShellBridge.ensureBackendReady(this@MicrophoneTileService)
+            if (!isReady) {
+                withContext(Dispatchers.Main) {
+                    val mode = io.github.itsmelissadev.swiftsense.service.shell.ShellBridge.getActiveMode(this@MicrophoneTileService)
+                    val messageRes = if (mode == "adb") {
+                        R.string.swiftsense_service_not_running
+                    } else {
+                        R.string.shizuku_not_authorized_desc
+                    }
+                    Toast.makeText(this@MicrophoneTileService, messageRes, Toast.LENGTH_SHORT).show()
+                }
+                return@launch
+            }
+
             val currentState = preferenceManager.isGlobalMicrophoneEnabled.first()
             val nextState = !currentState
 
@@ -88,7 +97,13 @@ class MicrophoneTileService : TileService() {
             } else {
                 withContext(Dispatchers.Main) {
                     val errorMsg = result.exceptionOrNull()?.message
-                    Toast.makeText(this@MicrophoneTileService, errorMsg ?: getString(R.string.shizuku_not_running), Toast.LENGTH_SHORT).show()
+                    val fallbackMsg = getString(R.string.execution_service_not_ready)
+                    val toastText = if (!errorMsg.isNullOrBlank()) {
+                        getString(R.string.execution_failed, errorMsg)
+                    } else {
+                        fallbackMsg
+                    }
+                    Toast.makeText(this@MicrophoneTileService, toastText, Toast.LENGTH_SHORT).show()
                 }
             }
         }

@@ -11,8 +11,8 @@ object SensorPrivacyHelper {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     }
 
-    fun isShizukuAvailable(): Boolean {
-        return ShellBridge.ready.value
+    fun isBackendAvailable(): Boolean {
+        return ShellBridge.isReady()
     }
 
     fun setSensorEnabled(sensor: String, enabled: Boolean): Result<Unit> {
@@ -20,7 +20,7 @@ object SensorPrivacyHelper {
             return Result.failure(IllegalStateException("Requires Android 12 or higher"))
         }
 
-        if (!isShizukuAvailable()) {
+        if (!isBackendAvailable()) {
             return Result.failure(IllegalStateException("Execution backend is not ready"))
         }
 

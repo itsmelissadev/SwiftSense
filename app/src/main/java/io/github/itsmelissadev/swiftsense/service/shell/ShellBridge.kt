@@ -140,7 +140,69 @@ object ShellBridge {
         return if (mode == "adb") SwiftSenseBackend else ShizukuBackend
     }
 
+    fun getActiveMode(context: Context? = appContext): String {
+        val ctx = context ?: appContext ?: return "shizuku"
+        val sp = ctx.getSharedPreferences("swiftsense_shell_prefs", Context.MODE_PRIVATE)
+        return sp.getString("shell_mode", "shizuku") ?: "shizuku"
+    }
+
     fun isReady(): Boolean = _ready.value
+
+    suspend fun ensureBackendReady(context: Context): Boolean = withContext(Dispatchers.IO) {
+        val mode = getActiveMode(context)
+        if (mode == "adb") {
+            if (SwiftSenseDaemonBridge.isDaemonAlive()) {
+                _ready.value = true
+                _status.value = BackendStatus.Ready
+                return@withContext true
+            }
+            val pref = PreferenceManager(context)
+            val port = pref.getAdbPortSync().takeIf { it > 0 } ?: AdbManager.lastPort
+            val host = pref.getAdbHostSync()
+            if (port > 0) {
+                val res = kotlinx.coroutines.withTimeoutOrNull(2500L) {
+                    AdbManager.connect(host, port)
+                }
+                if (res != null && res.isSuccess) {
+                    SwiftSenseDaemonBridge.spawnDaemonViaAdb(context)
+                    val alive = SwiftSenseDaemonBridge.isDaemonAlive()
+                    _ready.value = alive
+                    _status.value = if (alive) BackendStatus.Ready else BackendStatus.SwiftSenseStopped
+                    return@withContext alive
+                }
+            }
+            _ready.value = false
+            _status.value = BackendStatus.SwiftSenseStopped
+            return@withContext false
+        } else {
+            val isInstalled = try {
+                context.packageManager.getPackageInfo("moe.shizuku.privileged.api", 0)
+                true
+            } catch (_: PackageManager.NameNotFoundException) {
+                false
+            }
+            if (!isInstalled) {
+                _ready.value = false
+                _status.value = BackendStatus.ShizukuNotInstalled
+                return@withContext false
+            }
+            val isRunning = Shizuku.pingBinder()
+            if (!isRunning) {
+                _ready.value = false
+                _status.value = BackendStatus.ShizukuNotRunning
+                return@withContext false
+            }
+            val isAuthorized = Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+            if (!isAuthorized) {
+                _ready.value = false
+                _status.value = BackendStatus.ShizukuUnauthorized
+                return@withContext false
+            }
+            _ready.value = true
+            _status.value = BackendStatus.Ready
+            return@withContext true
+        }
+    }
 
     fun run(command: String, timeoutMs: Int = 15000): Result<String> {
         val backend = getBackend()

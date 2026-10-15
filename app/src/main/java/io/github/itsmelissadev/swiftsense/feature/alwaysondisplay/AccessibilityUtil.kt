@@ -35,12 +35,14 @@ object AccessibilityUtil {
         return false
     }
 
-    fun isShizukuAvailable(): Boolean {
-        return ShellBridge.ready.value
+    fun isBackendAvailable(): Boolean {
+        return ShellBridge.isReady()
     }
 
+    fun isShizukuAvailable(): Boolean = isBackendAvailable()
+
     fun toggleAccessibilityServiceWithShizuku(context: Context, accessibilityService: Class<*>, enable: Boolean): Boolean {
-        if (!isShizukuAvailable()) return false
+        if (!isBackendAvailable()) return false
         val serviceComponent = context.packageName + "/" + accessibilityService.canonicalName
 
         val getCmd = "settings get secure enabled_accessibility_services"

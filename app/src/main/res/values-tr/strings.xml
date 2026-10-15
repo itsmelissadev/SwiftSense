@@ -658,4 +658,7 @@
     <string name="updates_no_apk">Bu sürüm için APK dosyası bulunamadı.</string>
     <string name="updates_download_started">APK indirme başlatıldı</string>
     <string name="updates_download_failed">İndirme başarısız oldu: %1$s</string>
+    <string name="execution_service_not_ready">Komut servisi hazır değil.</string>
+    <string name="execution_service_not_ready_desc">Lütfen SwiftSense servisini başlatın veya Shizuku yetkisi verin.</string>
+    <string name="execution_failed">Komut yürütülemedi: %1$s</string>
 </resources>
