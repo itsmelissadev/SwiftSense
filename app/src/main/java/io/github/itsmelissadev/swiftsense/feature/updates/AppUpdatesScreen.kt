@@ -448,11 +448,7 @@ private fun ReleaseCard(
                         if (release.body.isNotBlank()) {
                             MarkdownContent(
                                 markdown = release.body,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(MaterialTheme.colorScheme.surfaceContainerLow)
-                                    .padding(12.dp)
+                                modifier = Modifier.fillMaxWidth()
                             )
                         } else {
                             Text(
