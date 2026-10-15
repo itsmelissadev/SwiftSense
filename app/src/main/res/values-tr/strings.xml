@@ -1,28 +1,28 @@
 <resources>
     <string name="app_name">SwiftSense</string>
     <string name="onboarding_title_1">Şeffaf ve Güvenli</string>
-    <string name="onboarding_desc_1">SwiftSense tamamen açık kaynaklı bir project. En başından beri önceliğim gizliliğin; bu yüzden uygulama hiçbir şekilde internete bağlanmıyor. Tüm işlemler sadece senin cihazında kalıyor.</string>
-    <string name="onboarding_title_2">Neler Yapabilirsin?</string>
-    <string name="onboarding_desc_2">Cihazındaki sensör hızlarını optimize eden ve dokunmatik tepki süresini iyileştiren araçları tek bir yerde topladım. Donanımının kapasitesini tam anlamıyla hissetmen için buradayız.</string>
+    <string name="onboarding_desc_1">SwiftSense tamamen açık kaynaklı bir projedir. Gizliliğinizi korumak amacıyla uygulama hiçbir şekilde internet bağlantısı kullanmaz; tüm veriler ve işlemler yalnızca cihazınızda gerçekleşir.</string>
+    <string name="onboarding_title_2">Gelişmiş Araçlar</string>
+    <string name="onboarding_desc_2">Sensör hızlarını optimize eden ve sistem ayarlarını yönetmenizi sağlayan tüm araçlara tek noktadan erişin.</string>
     <string name="get_started">Başlayalım</string>
-    <string name="next">İlerle</string>
+    <string name="next">İleri</string>
     <string name="skip">Atla</string>
 
-    <string name="permission_title">Küçük Bir Hazırlık</string>
-    <string name="permission_desc">Uygulamanın tam kapasite çalışabilmesi ve farkı hissetmen için birkaç izne ihtiyacım var. Merak etme, sadece gerekli olanları istiyorum.</string>
+    <string name="permission_title">Gerekli İzinler</string>
+    <string name="permission_desc">Uygulamanın tüm özellikleriyle kararlı biçimde çalışabilmesi için aşağıdaki izinlerin verilmesi gereklidir.</string>
     <string name="notification_permission">Bildirim İzni</string>
-    <string name="notification_permission_desc">Arka planda kesintisiz çalışabilmem ve sana anlık bilgi verebilmem için bu izne ihtiyacım var.</string>
+    <string name="notification_permission_desc">Arka plan servislerinin kesintisiz çalışabilmesi ve durum bildirimlerinin gösterilebilmesi için gereklidir.</string>
     <string name="battery_permission">Pil Ayarları</string>
-    <string name="battery_permission_desc">Sistemin SwiftSense\'i durdurup hızını kesmesini istemeyiz. Kesintisiz bir deneyim için pil kısıtlamalarını kaldırmanı öneririm.</string>
+    <string name="battery_permission_desc">Sistemin arka plan servislerini durdurmasını önlemek için pil optimizasyonu kısıtlamalarının kaldırılması önerilir.</string>
     <string name="allow">İzin Ver</string>
-    <string name="granted">Tamamdır</string>
+    <string name="granted">İzin Verildi</string>
 
     <string name="tab_status">Genel Durum</string>
     <string name="tab_sensors">Sensör Ayarları</string>
     <string name="start_service">Çalıştır</string>
     <string name="stop_service">Durdur</string>
-    <string name="status_running">Şu an aktif</string>
-    <string name="status_stopped">Şu an durduruldu</string>
+    <string name="status_running">Aktif</string>
+    <string name="status_stopped">Durduruldu</string>
 
     <string name="settings_title">Ayarlar</string>
     <string name="appearance_header">Görünüm Seçenekleri</string>
@@ -54,12 +54,12 @@
     <string name="live_hz_label">Anlık Değer: %d Hz</string>
     <string name="notification_title">SwiftSense Çalışıyor</string>
     <string name="notification_text">Sistem optimizasyonları şu an devrede.</string>
-    <string name="notification_channel_service">Servis Bilgisi</string>
-    <string name="notification_channel_optimization">Hızlandırma Motoru</string>
+    <string name="notification_channel_service">Arka Plan Servisi</string>
+    <string name="notification_channel_optimization">Sensör Servisi</string>
 
     <string name="advanced_header">Detaylı Ayarlar</string>
     <string name="show_live_hz_option">Canlı Frekans Monitörü</string>
-    <string name="show_live_hz_desc">Her sensörün o anki gerçek hızını takip etmeni sağlar.</string>
+    <string name="show_live_hz_desc">Sensörlerin anlık örnekleme frekansını (Hz) gerçek zamanlı olarak gösterir.</string>
 
     <string name="sensor_gyroscope">Jiroskop</string>
     <string name="sensor_gyroscope_uncalibrated">Kalibrasyonsuz Jiroskop</string>
@@ -77,25 +77,25 @@
     <string name="feature_boost_sensors">Sensör Optimizasyonu</string>
     <string name="feature_boost_sensors_desc">Sensör verilerini en yüksek hızda işleyerek hassasiyeti artırır.</string>
     <string name="sensor_speed">Optimizasyon Hızı</string>
-    <string name="sensor_speed_desc">Daha yüksek hız daha iyi tepki sağlar ancak batarya tüketimini artırır.</string>
+    <string name="sensor_speed_desc">Daha yüksek frekans daha hassas sensör takibi sağlar, pil tüketimini artırabilir.</string>
     <string name="speed_very_slow">Çok Yavaş</string>
     <string name="speed_slow">Yavaş</string>
     <string name="speed_medium">Orta</string>
     <string name="speed_fast">Hızlı</string>
-    <string name="speed_max">Max</string>
+    <string name="speed_max">Maksimum</string>
 
     <string name="category_tools">Sistem Araçları</string>
     <string name="feature_app_manager">Uygulama Yöneticisi</string>
-    <string name="feature_app_manager_desc">Sistem ve kullanıcı uygulamalarını kolayca yönetmenize yardımcı olur.</string>
+    <string name="feature_app_manager_desc">Sistem ve kullanıcı uygulamalarını görüntüleyin, etkinleştirin veya devre dışı bırakın.</string>
     <string name="feature_screen_resolution">Ekran Çözünürlüğü</string>
     <string name="feature_screen_resolution_desc">Cihazınızın ekran çözünürlüğünü ve yoğunluğunu ayarlayın.</string>
     <string name="feature_system_tables">Sistem Tablo Makroları</string>
     <string name="feature_system_tables_desc">Android sistem ayarları tablolarını makrolar ile görüntüleyin ve düzenleyin.</string>
 
-    <string name="shizuku_not_installed">Shizuku yüklü görünmüyor</string>
-    <string name="shizuku_not_running">Shizuku şu an çalışmıyor</string>
+    <string name="shizuku_not_installed">Shizuku yüklü değil</string>
+    <string name="shizuku_not_running">Shizuku çalışmıyor</string>
     <string name="shizuku_not_authorized">Shizuku için yetki verilmedi</string>
-    <string name="shizuku_authorized">Shizuku yetkisi tamam</string>
+    <string name="shizuku_authorized">Shizuku yetkilendirildi</string>
 
     <string name="menu_import_export">İçe veya Dışa Aktar</string>
     <string name="import_title">Paketleri İçe Aktar</string>
@@ -120,8 +120,8 @@
     <string name="installed_apps">Yüklü Uygulamalar</string>
     <string name="common_selected">Seçilen</string>
 
-    <string name="app_manager_warning_title">Küçük Bir Uyarı</string>
-    <string name="app_manager_warning_text">Sistem uygulamalarını devre dışı bırakırken lütfen dikkatli ol. Kritik bir uygulamayı kapatmak cihazının kararsız çalışmasına neden olabilir.</string>
+    <string name="app_manager_warning_title">Önemli Uyarı</string>
+    <string name="app_manager_warning_text">Sistem uygulamalarını devre dışı bırakırken dikkatli olun. Kritik bir sistem bileşenini kapatmak cihazın kararsız çalışmasına neden olabilir.</string>
 
     <string name="filter_all">Tümü</string>
     <string name="filter_user">Kullanıcı</string>
@@ -140,7 +140,7 @@
     <string name="toast_list_created">Liste başarıyla oluşturuldu.</string>
     <string name="toast_list_deleted">Liste silindi.</string>
     <string name="toast_list_renamed">Liste yeniden adlandırıldı.</string>
-    <string name="confirm_delete_list_title">Listeyi Sil?</string>
+    <string name="confirm_delete_list_title">Listeyi Sil</string>
     <string name="confirm_delete_list_desc">Bu listeyi silmek istediğinizden emin misiniz?</string>
     <string name="select_all">Tümünü Seç</string>
     <string name="deselect_all">Seçimi Temizle</string>
@@ -180,12 +180,12 @@
     <string name="resolution_settings">Çözünürlük Ayarları</string>
     <string name="action_apply">Uygula</string>
     <string name="action_reset">Varsayılana Sıfırla</string>
-    <string name="shizuku_required_desc">Bu özellik, sistem ayarlarını değiştirmek için Shizuku gerektirir.</string>
+    <string name="shizuku_required_desc">Bu özellik sistem düzeyinde değişiklik yapabilmek için Shizuku yetkisi gerektirir.</string>
     <string name="toast_resolution_applied">Çözünürlük başarıyla güncellendi.</string>
     <string name="toast_invalid_input">Lütfen geçerli değerler girin.</string>
 
-    <string name="confirm_resolution_title">Bu ekran ayarları kalsın mı?</string>
-    <string name="confirm_resolution_desc">Ekran ayarları değiştirildi. %d saniye içinde onaylanmazsa eski ayarlara dönülecek.</string>
+    <string name="confirm_resolution_title">Ekran Ayarlarını Onayla</string>
+    <string name="confirm_resolution_desc">Yeni ekran ayarları uygulandı. %d saniye içinde onaylanmazsa önceki ayarlara dönülecektir.</string>
     <string name="action_keep_changes">Değişiklikleri Koru</string>
     <string name="action_revert">Geri Al</string>
 
@@ -199,7 +199,7 @@
     <string name="action_delete">Sil</string>
 
     <string name="aod_overlay_permission_warning_title">İzin Gerekli</string>
-    <string name="aod_overlay_permission_warning_desc">Her Zaman Açık Ekran, saati ve bildirimleri kilit ekranınızda gösterebilmek için \"Diğer uygulamaların üzerinde göster\" iznine ihtiyaç duyar.</string>
+    <string name="aod_overlay_permission_warning_desc">Her Zaman Açık Ekran özelliğinin çalışabilmesi için \"Diğer uygulamaların üzerinde göster\" izni gereklidir.</string>
     <string name="aod_grant_permission">İzin Ver</string>
     
     <string name="feature_app_stopper">Arkaplan Durdurucu</string>
@@ -209,7 +209,7 @@
     <string name="stopper_service_running">Servis çalışıyor (%1$d uygulama, %2$d sn aralıkla)</string>
     <string name="stopper_service_stopped">Servis durduruldu</string>
     <string name="stopper_interval">Kontrol Aralığı</string>
-    <string name="interval_3s">3 Saniye (Agresif)</string>
+    <string name="interval_3s">3 Saniye (Hızlı)</string>
     <string name="stopper_notif_title">Arkaplan Durdurucu Aktif</string>
     <string name="stopper_notif_desc">%1$d uygulama izleniyor (%2$d sn aralıkla)</string>
     <string name="stopper_notif_channel">Arkaplan Durdurucu Servisi</string>
@@ -220,9 +220,9 @@
     <string name="clean_now">Önbelleği Temizle</string>
     <string name="closing_apps">Arkaplan uygulamaları kapatılıyor…</string>
     <string name="clearing_cache">Sistem önbelleği temizleniyor…</string>
-    <string name="optimization_complete">Optimizasyon tamamlandı!</string>
+    <string name="optimization_complete">İşlem Tamamlandı</string>
     <string name="apps_closed">%d uygulama kapatıldı.</string>
-    <string name="freed_space">Yaklaşık %d MB alan boşaltıldı</string>
+    <string name="freed_space">%d MB alan temizlendi</string>
 
     <string name="stop_mode">Durdurma Modu</string>
     <string name="mode_simple">Basit</string>
@@ -251,7 +251,7 @@
     <string name="select_table">Tablo Seç</string>
     <string name="search_table">Tabloda ara…</string>
     <string name="app_version">Versiyon %1$s (%2$d)</string>
-    <string name="swift_settings">Swift Ayarları</string>
+    <string name="swift_settings">Hızlı Ayarlar</string>
     <string name="add_new_setting">Yeni Ayar Ekle</string>
     <string name="edit_macro">Makroyu Düzenle</string>
     <string name="settings">Ayarlar</string>
@@ -271,7 +271,7 @@
     <string name="macro_setting_format">%1$s: %2$s \u2192 %3$s</string>
 
     <string name="feature_amoled_protect">AMOLED Ekran Koruması</string>
-    <string name="feature_amoled_protect_desc">Hafif bir piksel filtresi döşeyerek, ekranda sabit kalan kareleri böler ve ekran yanmasını (burn-in) önler.</string>
+    <string name="feature_amoled_protect_desc">Piksel filtreleme katmanı ile ekrandaki statik öğeleri dağıtarak ekran yanmasını (burn-in) önler.</string>
     <string name="service_status">Servis Durumu</string>
     <string name="open_accessibility_settings">Erişilebilirlik Ayarlarını Aç</string>
     <string name="amoled_protect_service_desc">Ekran yanmasını önlemek ve AMOLED panellerin ömrünü uzatmak için şeffaf bir piksel ağı filtresi uygular.</string>
@@ -298,19 +298,19 @@
     <string name="amoled_filter_opacity_desc">Filtre katmanının şeffaflığını kontrol eder.</string>
 
     <string name="amoled_cycle_duration">Döngü Süresi</string>
-    <string name="amoled_cycle_duration_desc">Tam çapraz kayma döngüsünün süresi. Filtre sağ+aşağı hareket eder, sonra geri sol+yukarı döner.</string>
+    <string name="amoled_cycle_duration_desc">Filtrenin bir tam kayma döngüsünü tamamlama süresi.</string>
 
     <string name="amoled_refresh_mode">Yenileme Modu</string>
     <string name="amoled_mode_smooth">Döngü</string>
     <string name="amoled_mode_jump">Düz</string>
     <string name="amoled_mode_smooth_desc">Filtre, süre boyunca çapraz bir döngüde sürekli ve pürüzsüz bir şekilde hareket eder.</string>
-    <string name="amoled_mode_jump_desc">Filtre süre boyunca sabit durur ve süre sonunda aniden yeni bir konuma zıplar.</string>
+    <string name="amoled_mode_jump_desc">Filtre süre boyunca sabit kalır ve süre sonunda yeni konuma geçer.</string>
 
     <string name="amoled_service_name">SwiftSense: AMOLED Ekran Koruması</string>
-    <string name="amoled_service_description">Bu servis YALNIZCA AMOLED ekran yanmalarını önlemek amacıyla ekranınızda koruyucu bir piksel katmanı oluşturmak için kullanılır. Kişisel verilerinizi, ekran içeriğinizi veya tuş vuruşlarınızı kesinlikle toplamaz, saklamaz veya paylaşmaz. Sadece ekran ömrünü uzatmak için katman iznine ihtiyaç duyar.</string>
+    <string name="amoled_service_description">Bu servis, ekran yanmasını önlemek için koruyucu bir piksel katmanı oluşturur. Kişisel verilerinizi veya ekran içeriğinizi toplamaz, saklamaz ya da paylaşmaz.</string>
 
     <string name="amoled_health_warning_title">Kullanım Önerisi</string>
-    <string name="amoled_health_warning_desc">Hızlı filtre hareketleri (1 dakikadan kısa) veya çok yüksek piksel yoğunluğu, uzun süreli kullanımda göz yorgunluğuna veya rahatsızlığa neden olabilir. En iyi deneyim için 1 dakika veya daha uzun süreleri kullanmanızı öneririz.</string>
+    <string name="amoled_health_warning_desc">Hızlı filtre hareketleri (1 dakikadan kısa) veya çok yüksek piksel yoğunluğu uzun süreli kullanımda göz yorgunluğuna neden olabilir. 1 dakika veya daha uzun sürelerin kullanılması önerilir.</string>
     <string name="amoled_health_warning_dismiss">Tekrar gösterme</string>
 
     <string name="amoled_duration_10s">10sn</string>
@@ -353,10 +353,10 @@
     <string name="dpi_unit">%d DPI</string>
 
     <string name="aod_service_name">SwiftSense: Her Zaman Açık Ekran</string>
-    <string name="aod_service_description">Bu servis, ekran kilitlendiğinde kilit ekranınızda saat, pil ve bildirim bilgilerini göstermek için ekranın kapanma durumunu algılamak amacıyla kullanılır. Kişisel verilerinizi veya ekran içeriğinizi kesinlikle toplamaz, saklamaz veya paylaşmaz.</string>
+    <string name="aod_service_description">Bu servis, ekran kilitlendiğinde saat, pil ve bildirim bilgilerini göstermek için kullanılır. Kişisel verilerinizi veya ekran içeriğinizi toplamaz, saklamaz ya da paylaşmaz.</string>
 
     <string name="feature_screen_recorder">Ekran Kaydedici</string>
-    <string name="feature_screen_recorder_desc">Oyunlar için optimize edilmiş yüksek performanslı ekran kaydı.</string>
+    <string name="feature_screen_recorder_desc">Özelleştirilebilir çözünürlük ve kare hızıyla yüksek performanslı ekran kaydı.</string>
     <string name="screen_recorder_resolution">Çözünürlük</string>
     <string name="screen_recorder_fps">Kare Hızı</string>
     <string name="screen_recorder_bitrate">Bit Hızı</string>
@@ -382,10 +382,10 @@
     <string name="orientation_portrait">Dikey</string>
     <string name="orientation_landscape">Yatay</string>
 
-    <string name="screen_recorder_res_desc">Yüksek çözünürlük GPU yükünü ve dosya boyutunu artırır.</string>
-    <string name="screen_recorder_fps_desc">Daha yüksek FPS akıcı video sağlar ancak CPU/GPU kullanımını artırır.</string>
-    <string name="screen_recorder_bitrate_desc">Yüksek bit hızı görüntü kalitesini artırır ancak dosya boyutunu büyütür.</string>
-    <string name="screen_recorder_orientation_desc">Kayıt yönünü zorlar.</string>
+    <string name="screen_recorder_res_desc">Yüksek çözünürlük görüntü kalitesini artırır; donanım yükü ve dosya boyutu yükselir.</string>
+    <string name="screen_recorder_fps_desc">Daha yüksek kare hızı akıcı video kaydı sağlar; işlemci ve grafik birimi kullanımını artırır.</string>
+    <string name="screen_recorder_bitrate_desc">Daha yüksek bit hızı video netliğini artırır, dosya boyutunu büyütür.</string>
+    <string name="screen_recorder_orientation_desc">Ekran kaydının yönünü belirler.</string>
     <string name="screen_recorder_audio_desc">Kayıt için ses kaynağını seçin.</string>
     <string name="screen_recorder_video_saved_path">Video kaydedildi: %s</string>
 
@@ -395,7 +395,7 @@
     <string name="codec_avc">H.264 (AVC)</string>
     <string name="codec_hevc">H.265 (HEVC)</string>
     <string name="codec_desc_auto">Cihazınız için en uygun donanım kodlayıcıyı otomatik olarak seçer.</string>
-    <string name="codec_desc_avc">H.264, oyunlar için en yüksek uyumluluğu ve gecikmesiz, stabil performansı sunar.</string>
+    <string name="codec_desc_avc">H.264, geniş cihaz uyumluluğu ve düşük gecikmeli kararlı video kodlama sağlar.</string>
     <string name="codec_desc_hevc">H.265, düşük dosya boyutunda daha iyi kalite sunar ancak cihaz sıcaklığını artırabilir.</string>
 
     <string name="screen_recorder_audio_header">Ses</string>
@@ -403,9 +403,9 @@
     <string name="audio_quality_low">Düşük (64 kbps)</string>
     <string name="audio_quality_medium">Orta (128 kbps)</string>
     <string name="audio_quality_high">Yüksek (256 kbps)</string>
-    <string name="audio_quality_desc_low">En düşük dosya boyutu, temel ses kalitesi. Sadece ses (voice) için uygun.</string>
-    <string name="audio_quality_desc_medium">Standart kalite. Netlik ve dosya boyutu arasında iyi bir denge kurar.</string>
-    <string name="audio_quality_desc_high">Yüksek ses kalitesi. Oyun içi detaylı sesleri (ayak sesleri vb.) yakalamak için ideal.</string>
+    <string name="audio_quality_desc_low">Düşük dosya boyutu ve temel ses kalitesi. Yalnızca konuşma kayıtları için uygundur.</string>
+    <string name="audio_quality_desc_medium">Standart ses kalitesi. Dosya boyutu ile netlik arasında dengelidir.</string>
+    <string name="audio_quality_desc_high">Yüksek ses kalitesi. Medya ve sistem seslerini yüksek netlikte kaydeder.</string>
     <string name="screen_recorder_mbps_unit">%d Mbps</string>
     <string name="screen_recorder_action_start_desc">Başlat</string>
     <string name="screen_recorder_action_stop_desc">Durdur</string>
@@ -451,7 +451,7 @@
     <string name="aod_theme_glass">Cam Efekti (Glassmorphism)</string>
 
     <string name="aod_auto_brightness">Otomatik Parlaklık</string>
-    <string name="aod_auto_brightness_desc">Cihazın kendi sistem ve sensör parlaklığını kullanır</string>
+    <string name="aod_auto_brightness_desc">Ekran parlaklığını cihazın ışık sensörüne ve sistem ayarlarına göre otomatik ayarlar.</string>
     <string name="aod_brightness">Parlaklık (Opaklık)</string>
 
     <string name="aod_show_clock">Saati Göster</string>
@@ -503,7 +503,7 @@
     <string name="aod_clock_color">Saat Rengi</string>
     <string name="aod_battery_styles">Pil Stilleri</string>
     <string name="aod_battery_color">Pil Rengi</string>
-    <string name="aod_show_wattage">Şarj Watt Göster</string>
+    <string name="aod_show_wattage">Şarj Gücünü Göster (Watt)</string>
 
     <string name="aod_clock_style_digital_glow_cyan">Neon Dijital</string>
     <string name="aod_clock_style_glow_rose">Rose Parlaklık</string>
@@ -526,7 +526,7 @@
     <string name="aod_dialog_close">Kapat</string>
 
     <string name="aod_run_as_foreground_service">Ön Planda Çalıştır</string>
-    <string name="aod_run_as_foreground_service_desc">Servisi kalıcı bir bildirimle ön planda çalıştırarak sistem tarafından kapatılmasını daha agresif şekilde engelleyin.</string>
+    <string name="aod_run_as_foreground_service_desc">Servisi kalıcı bir bildirimle ön planda çalıştırarak sistem tarafından sonlandırılmasını önleyin.</string>
 
     <string name="amoled_tint_section_title">Piksel Renk Tonlama ve Beyaz Kırıcı</string>
     <string name="amoled_tint_switch_title">Renk Filtresini Etkinleştir</string>
@@ -574,31 +574,31 @@
     <string name="adb_notif_failed_title">Eşleme Başarısız</string>
     <string name="adb_auto_pairing_help">SwiftSense, Geliştirici Seçenekleri\'nde eşleme penceresini açtığınızda otomatik bildirim gönderir. Kodu bildirim panelinden doğrudan girebilirsiniz.</string>
     <string name="adb_connection_header">Kablosuz Hata Ayıklama</string>
-    <string name="adb_auto_pairing_step1">1. Aşağıdaki \"Geliştirici Seçeneklerini Aç\" butonuna basın (arka plan eşleştirme servisi otomatik başlayacaktır).</string>
+    <string name="adb_auto_pairing_step1">1. \"Geliştirici Seçeneklerini Aç\" butonuna dokunun.</string>
     <string name="adb_auto_pairing_step2">2. \"Kablosuz Hata Ayıklama\"yı açın ve \"Eşleme koduyla cihaz eşle\"ye dokunun.</string>
-    <string name="adb_auto_pairing_step3">3. Bildirim panelini indirip 6 haneli kodu doğrudan SwiftSense bildirimine yazıp onaylayın.</string>
+    <string name="adb_auto_pairing_step3">3. Bildirim panelini açarak 6 haneli eşleme kodunu girin ve onaylayın.</string>
     <string name="swiftsense_service_not_running">SwiftSense Servisi Çalışmıyor</string>
     <string name="swiftsense_service_not_running_desc">Komutları yürütmek için ayarlardan servisi başlatın veya eşleştirin</string>
     <string name="adb_service_title">SwiftSense Servisi</string>
     <string name="adb_service_running">Servis çalışıyor</string>
     <string name="adb_service_action_start">Servisi Başlat</string>
-    <string name="adb_service_stop_title">Servisi Durdur?</string>
+    <string name="adb_service_stop_title">Servisi Durdur</string>
     <string name="adb_service_stop_message">SwiftSense arka plan servisini durdurmak istediğinize emin misiniz?</string>
     <string name="adb_service_stop_confirm">Durdur</string>
     <string name="adb_service_stop_failed">Servis durdurulamadı</string>
     <string name="adb_service_auto_start">Servisi Otomatik Başlat</string>
     <string name="adb_service_auto_start_desc">Uygulama açıldığında SwiftSense servisini otomatik olarak başlat</string>
     <string name="adb_enter_connect_port">Kablosuz Hata Ayıklama Portu</string>
-    <string name="adb_enter_connect_port_desc">Geliştirici Seçenekleri\'nde Kablosuz Hata Ayıklama altında yazan 5 haneli bağlantı portunu girin</string>
+    <string name="adb_enter_connect_port_desc">Geliştirici Seçenekleri sayfasında Kablosuz Hata Ayıklama altında belirtilen 5 haneli bağlantı portunu girin.</string>
     <string name="adb_port_label">Port (Örn: 37000)</string>
     <string name="action_start_service">Servisi Başlat</string>
-    <string name="adb_repair_pairing">Tekrar Kod ile Eşle</string>
+    <string name="adb_repair_pairing">Yeniden Eşle</string>
     <string name="action_grant_permission">İzin Ver</string>
 
     <string name="feature_apk_installer">APK / XAPK Yükleyici</string>
     <string name="feature_apk_installer_desc">ADB üzerinden APK, XAPK ve split paketleri doğrudan cihazınıza yükleyin.</string>
-    <string name="apk_select_file">Paket Dosyası Seç (APK / XAPK)</string>
-    <string name="apk_select_file_desc">Yüklemek için cihazınızdan .apk, .xapk, .apks veya .apkm dosyası seçin</string>
+    <string name="apk_select_file">Paket Dosyası Seç</string>
+    <string name="apk_select_file_desc">Yüklemek istediğiniz .apk, .xapk, .apks veya .apkm uzantılı dosyayı seçin.</string>
     <string name="apk_select_button">Dosya Seç</string>
     <string name="apk_parsing">Paket dosyası inceleniyor…</string>
     <string name="apk_parse_error">Paket dosyası okunamadı veya bozuk</string>
@@ -607,7 +607,7 @@
     <string name="apk_package_type_split">Split Paket (%1$d APK)</string>
     <string name="apk_package_type_single">Standart APK</string>
     <string name="apk_package_obb_badge">+ OBB Verisi</string>
-    <string name="apk_reinstall_option">Mevcut uygulamanın üzerine yaz (-r)</string>
+    <string name="apk_reinstall_option">Mevcut uygulamanın üzerine kur (-r)</string>
     <string name="apk_reinstall_desc">Yükleme sırasında mevcut uygulama verilerini korur</string>
     <string name="apk_downgrade_option">Sürüm düşürmeye izin ver (-d)</string>
     <string name="apk_downgrade_desc">Daha eski bir sürümün yüklenmesine izin verir</string>
@@ -636,7 +636,7 @@
     <string name="apk_status_downgrade">Sürüm Düşürme (Mevcut: %1$s)</string>
     <string name="apk_status_same">Aynı Sürüm Yüklü (%1$s)</string>
     <string name="apk_signature_match">İmza Eşleşmesi Doğrulandı</string>
-    <string name="apk_signature_mismatch">İmza Uyuşmazlığı Uyarısı!</string>
+    <string name="apk_signature_mismatch">İmza Uyuşmazlığı</string>
     <string name="apk_signature_sha256">Sertifika SHA-256: %1$s</string>
     <string name="apk_permissions_title">Talep Edilen İzinler (%1$d)</string>
     <string name="apk_view_permissions">İzinleri İncele</string>
@@ -662,7 +662,7 @@
     <string name="updates_prerelease_badge">Ön Sürüm</string>
     <string name="updates_loading">Sürümler kontrol ediliyor…</string>
     <string name="updates_empty">Yayınlanan herhangi bir sürüm bulunamadı.</string>
-    <string name="updates_error">Sürümler alınırken bir hata oluştu: %1$s</string>
+    <string name="updates_error">Sürümler yüklenirken hata oluştu: %1$s</string>
     <string name="updates_retry">Tekrar Dene</string>
     <string name="updates_action_download_apk">APK İndir (%1$s)</string>
     <string name="updates_action_downloading">İndiriliyor… %%%1$d</string>
@@ -677,10 +677,10 @@
     <string name="execution_service_not_ready_desc">Lütfen SwiftSense servisini başlatın veya Shizuku yetkisi verin.</string>
     <string name="execution_failed">Komut yürütülemedi: %1$s</string>
     <string name="feature_turbo_downloader">Turbo İndirici</string>
-    <string name="feature_turbo_downloader_desc">Çok parçalı eşzamanlı ultra hızlı dosya ve video indirme yöneticisi.</string>
+    <string name="feature_turbo_downloader_desc">Bant genişliğini verimli kullanan çok parçalı paralel dosya ve medya indirme yöneticisi.</string>
     <string name="downloader_url_hint">Dosya veya video bağlantısını yapıştırın…</string>
     <string name="downloader_threads">Paralel Bağlantı Sayısı</string>
-    <string name="downloader_threads_desc">Bant genişliğini sonuna kadar kullanmak için dosyayı eşzamanlı parçalara böler (4, 8, 16).</string>
+    <string name="downloader_threads_desc">Bant genişliğinden tam yararlanmak için dosyayı eşzamanlı parçalara böler (4, 8, 16).</string>
     <string name="downloader_action_download">İndir</string>
     <string name="downloader_status_connecting">Bağlanılıyor…</string>
     <string name="downloader_status_downloading">İndiriliyor</string>
@@ -720,7 +720,7 @@
     <string name="installer_dialog_action_done">Bitti</string>
     <string name="installer_dialog_action_open">Aç</string>
     <string name="installer_dialog_action_cancel">İptal</string>
-    <string name="installer_dialog_cert_mismatch_warning">İmza uyuşmazlığı tespit edildi! Bu paketin imzası mevcut yüklü uygulamadan farklı. Yüklemeden önce mevcut uygulamanın kaldırılması gerekir.</string>
+    <string name="installer_dialog_cert_mismatch_warning">İmza uyuşmazlığı tespit edildi. Paketin imza sertifikası yüklü uygulamayla eşleşmiyor. Yüklemeye devam etmek için mevcut uygulamanın kaldırılması gerekir.</string>
     <string name="installer_dialog_version_transition">%1$s → %2$s</string>
     <string name="installer_dialog_advanced_options">Gelişmiş Seçenekler</string>
     <string name="adb_err_already_exists">Bu paket adına sahip bir uygulama zaten yüklü.</string>

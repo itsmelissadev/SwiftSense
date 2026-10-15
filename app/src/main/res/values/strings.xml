@@ -1,21 +1,21 @@
 <resources>
     <string name="app_name">SwiftSense</string>
     <string name="onboarding_title_1">Privacy and Trust</string>
-    <string name="onboarding_desc_1">SwiftSense is fully open-source. Your privacy is my priority, which is why the app never connects to the internet. All your data stays safely on your device.</string>
+    <string name="onboarding_desc_1">SwiftSense is fully open-source. To ensure complete privacy, the app never connects to the internet and processes all data locally on your device.</string>
     <string name="onboarding_title_2">Advanced Tools</string>
-    <string name="onboarding_desc_2">I\'ve gathered tools to optimize sensor rates and improve touch response in one place. Let\'s see what your hardware is truly capable of.</string>
+    <string name="onboarding_desc_2">A comprehensive toolkit designed to optimize sensor sampling rates and manage system parameters.</string>
     <string name="get_started">Get Started</string>
     <string name="next">Next</string>
     <string name="skip">Skip</string>
 
-    <string name="permission_title">A Quick Setup</string>
-    <string name="permission_desc">To give you the best performance, I need a few permissions. Don\'t worry, I only ask for what\'s absolutely necessary.</string>
+    <string name="permission_title">Required Permissions</string>
+    <string name="permission_desc">The following permissions are required for the application and its background services to function properly.</string>
     <string name="notification_permission">Notification Permission</string>
-    <string name="notification_permission_desc">Required so I can work smoothly in the background and keep you updated on the status.</string>
+    <string name="notification_permission_desc">Required to maintain uninterrupted background services and display real-time status updates.</string>
     <string name="battery_permission">Battery Settings</string>
-    <string name="battery_permission_desc">We don\'t want the system to slow SwiftSense down. I recommend removing battery restrictions for the best experience.</string>
+    <string name="battery_permission_desc">Removing battery restrictions prevents the operating system from terminating SwiftSense background services.</string>
     <string name="allow">Allow</string>
-    <string name="granted">Done</string>
+    <string name="granted">Granted</string>
 
     <string name="tab_status">Status</string>
     <string name="tab_sensors">Sensors</string>
@@ -59,7 +59,7 @@
 
     <string name="advanced_header">Advanced</string>
     <string name="show_live_hz_option">Live Frequency Monitor</string>
-    <string name="show_live_hz_desc">Allows you to track the real-time speed (Hz) of each sensor.</string>
+    <string name="show_live_hz_desc">Displays the real-time sampling rate (Hz) of each sensor.</string>
 
     <string name="sensor_gyroscope">Gyroscope</string>
     <string name="sensor_gyroscope_uncalibrated">Uncalibrated Gyroscope</string>
@@ -86,16 +86,16 @@
 
     <string name="category_tools">System Tools</string>
     <string name="feature_app_manager">App Manager</string>
-    <string name="feature_app_manager_desc">Helps you easily manage system and user applications.</string>
+    <string name="feature_app_manager_desc">View, enable, or disable system and user installed applications.</string>
     <string name="feature_screen_resolution">Screen Resolution</string>
     <string name="feature_screen_resolution_desc">Adjust your device\'s display resolution and density.</string>
     <string name="feature_system_tables">System Table Macros</string>
     <string name="feature_system_tables_desc">View and modify Android system settings tables with macros.</string>
 
-    <string name="shizuku_not_installed">Shizuku doesn\'t seem to be installed</string>
-    <string name="shizuku_not_running">Shizuku isn\'t running right now</string>
+    <string name="shizuku_not_installed">Shizuku is not installed</string>
+    <string name="shizuku_not_running">Shizuku is not running</string>
     <string name="shizuku_not_authorized">Shizuku is not authorized</string>
-    <string name="shizuku_authorized">Shizuku is ready</string>
+    <string name="shizuku_authorized">Shizuku is authorized</string>
 
     <string name="menu_import_export">Import or Export</string>
     <string name="import_title">Import Packages</string>
@@ -120,8 +120,8 @@
     <string name="installed_apps">Installed Apps</string>
     <string name="common_selected">Selected</string>
 
-    <string name="app_manager_warning_title">A Little Warning</string>
-    <string name="app_manager_warning_text">Please be careful when disabling system apps. Disabling a critical app might cause your device to become unstable.</string>
+    <string name="app_manager_warning_title">Important Notice</string>
+    <string name="app_manager_warning_text">Please be careful when disabling system apps. Disabling a critical system package may cause device instability.</string>
 
     <string name="filter_all">All</string>
     <string name="filter_user">User</string>
@@ -140,7 +140,7 @@
     <string name="toast_list_created">List created successfully.</string>
     <string name="toast_list_deleted">List deleted.</string>
     <string name="toast_list_renamed">List renamed.</string>
-    <string name="confirm_delete_list_title">Delete List?</string>
+    <string name="confirm_delete_list_title">Delete List</string>
     <string name="confirm_delete_list_desc">Are you sure you want to delete this list?</string>
     <string name="select_all">Select All</string>
     <string name="deselect_all">Deselect All</string>
@@ -180,12 +180,12 @@
     <string name="resolution_settings">Resolution Settings</string>
     <string name="action_apply">Apply</string>
     <string name="action_reset">Reset to Default</string>
-    <string name="shizuku_required_desc">This feature requires Shizuku to modify system settings.</string>
+    <string name="shizuku_required_desc">This feature requires Shizuku permission to modify system-level settings.</string>
     <string name="toast_resolution_applied">Resolution updated successfully.</string>
     <string name="toast_invalid_input">Please enter valid values.</string>
 
-    <string name="confirm_resolution_title">Keep these display settings?</string>
-    <string name="confirm_resolution_desc">The display settings have been changed. Reverting to original settings in %d seconds.</string>
+    <string name="confirm_resolution_title">Confirm Display Settings</string>
+    <string name="confirm_resolution_desc">Display settings have been updated. Reverting to previous settings in %d seconds if not confirmed.</string>
     <string name="action_keep_changes">Keep Changes</string>
     <string name="action_revert">Revert</string>
 
@@ -199,35 +199,35 @@
     <string name="action_delete">Delete</string>
 
     <string name="aod_overlay_permission_warning_title">Permission Required</string>
-    <string name="aod_overlay_permission_warning_desc">Always On Display requires the "Display over other apps" permission to show the clock and notifications on your lock screen.</string>
+    <string name="aod_overlay_permission_warning_desc">Always On Display requires \"Display over other apps\" permission to display information on the lock screen.</string>
     <string name="aod_dismiss_power_button">Dismiss with Power Button</string>
     <string name="aod_dismiss_double_tap">Dismiss with Double Tap</string>
     <string name="aod_grant_permission">Grant Permission</string>
 
-    <string name="feature_app_stopper">Background Killer</string>
+    <string name="feature_app_stopper">Background Stopper</string>
     <string name="feature_app_stopper_desc">Close background applications to free up memory and reduce CPU usage.</string>
-    <string name="stopper_service_title">Background Killer Service</string>
+    <string name="stopper_service_title">Background Stopper Service</string>
     <string name="stopper_service_desc">Continuously stops selected background applications at set intervals.</string>
     <string name="stopper_service_running">Service running (%1$d apps, %2$ds interval)</string>
     <string name="stopper_service_stopped">Service stopped</string>
     <string name="stopper_interval">Check Interval</string>
-    <string name="interval_3s">3 Seconds (Aggressive)</string>
-    <string name="stopper_notif_title">Background Killer Active</string>
+    <string name="interval_3s">3 Seconds (Fast)</string>
+    <string name="stopper_notif_title">Background Stopper Active</string>
     <string name="stopper_notif_desc">Monitoring %1$d apps (%2$ds interval)</string>
-    <string name="stopper_notif_channel">Background Killer Service</string>
+    <string name="stopper_notif_channel">Background Stopper Service</string>
     <string name="feature_cache_cleaner">Cache Cleaner</string>
     <string name="feature_cache_cleaner_desc">Clear system and app cache to free up storage space.</string>
 
-    <string name="stop_now">Kill Apps</string>
+    <string name="stop_now">Stop Apps</string>
     <string name="clean_now">Clear Cache</string>
     <string name="closing_apps">Closing background apps…</string>
     <string name="clearing_cache">Clearing system cache…</string>
-    <string name="optimization_complete">Optimization complete!</string>
+    <string name="optimization_complete">Process Complete</string>
     <string name="apps_closed">%d apps closed.</string>
-    <string name="freed_space">Freed up approximately %d MB</string>
+    <string name="freed_space">Cleaned %d MB of storage space</string>
 
     <string name="stop_mode">Stop Mode</string>
-    <string name="mode_simple">Simple Kill</string>
+    <string name="mode_simple">Simple Stop</string>
     <string name="mode_force">Force Stop</string>
     <string name="selected_count">%d apps selected</string>
     <string name="no_apps_found">No apps found.</string>
@@ -254,7 +254,7 @@
     <string name="select_table">Select Table</string>
     <string name="search_table">Search in table…</string>
     <string name="app_version">Version %1$s (%2$d)</string>
-    <string name="swift_settings">Swift Settings</string>
+    <string name="swift_settings">Quick Settings</string>
     <string name="add_new_setting">Add New Setting</string>
     <string name="settings">Settings</string>
 
@@ -273,7 +273,7 @@
     <string name="macro_setting_format">%1$s: %2$s \u2192 %3$s</string>
 
     <string name="feature_amoled_protect">AMOLED Screen Protect</string>
-    <string name="feature_amoled_protect_desc">Prevents screen burn-in and limits static pixels using a subtle overlay mesh.</string>
+    <string name="feature_amoled_protect_desc">Prevents display burn-in by diffusing static screen elements with an overlay pixel filter.</string>
     <string name="service_status">Service Status</string>
     <string name="open_accessibility_settings">Open Accessibility Settings</string>
     <string name="amoled_protect_service_desc">Applies an overlay pixel mesh to prevent screen burn-in extending the lifespan of AMOLED displays.</string>
@@ -300,19 +300,19 @@
     <string name="amoled_filter_opacity_desc">Controls the transparency of the filter overlay.</string>
 
     <string name="amoled_cycle_duration">Cycle Duration</string>
-    <string name="amoled_cycle_duration_desc">Time for a full diagonal shift cycle. The filter moves right+down then back left+up.</string>
+    <string name="amoled_cycle_duration_desc">Duration of a complete filter shift cycle.</string>
 
     <string name="amoled_refresh_mode">Refresh Mode</string>
     <string name="amoled_mode_smooth">Smooth</string>
     <string name="amoled_mode_jump">Jump</string>
     <string name="amoled_mode_smooth_desc">The filter moves continuously and smoothly in a diagonal loop based on the duration.</string>
-    <string name="amoled_mode_jump_desc">The filter stays static for the duration and then suddenly jumps to a new position.</string>
+    <string name="amoled_mode_jump_desc">The filter remains static and transitions to a new position at the end of each interval.</string>
 
     <string name="amoled_service_name">SwiftSense: AMOLED Screen Protection</string>
-    <string name="amoled_service_description">This service is used ONLY to draw a protective pixel overlay on your screen to prevent AMOLED burn-in. It DOES NOT collect, store or transmit any of your personal data, screen content, or keystrokes. It only requires overlay permission to extend your display\'s lifespan.</string>
+    <string name="amoled_service_description">This service applies a protective pixel overlay to prevent AMOLED burn-in. It does not collect, store, or transmit personal data or screen content.</string>
 
     <string name="amoled_health_warning_title">Usage Recommendation</string>
-    <string name="amoled_health_warning_desc">Fast filter movements (less than 1 minute) or very high pixel density may cause eye fatigue or discomfort during prolonged use. For the best experience, we recommend using durations of 1 minute or longer.</string>
+    <string name="amoled_health_warning_desc">Fast filter movements (less than 1 minute) or very high pixel density may cause eye fatigue or discomfort during prolonged use. Durations of 1 minute or longer are recommended.</string>
     <string name="amoled_health_warning_dismiss">Don\'t show again</string>
 
     <string name="amoled_duration_10s">10s</string>
@@ -355,10 +355,10 @@
     <string name="dpi_unit">%d DPI</string>
 
     <string name="aod_service_name">SwiftSense: Always On Display</string>
-    <string name="aod_service_description">This service is used to detect when the screen is turned off in order to display a clock, battery, and notification information on your lock screen. It DOES NOT collect, store or transmit any of your personal data or screen content.</string>
+    <string name="aod_service_description">This service displays clock, battery, and notification information when the screen is locked. It does not collect, store, or transmit personal data or screen content.</string>
 
     <string name="feature_screen_recorder">Screen Recorder</string>
-    <string name="feature_screen_recorder_desc">High performance screen recording optimized for gaming.</string>
+    <string name="feature_screen_recorder_desc">High performance screen recording with customizable resolution and frame rates.</string>
     <string name="screen_recorder_resolution">Resolution</string>
     <string name="screen_recorder_fps">Frame Rate</string>
     <string name="screen_recorder_bitrate">Bitrate</string>
@@ -384,10 +384,10 @@
     <string name="orientation_portrait">Portrait</string>
     <string name="orientation_landscape">Landscape</string>
 
-    <string name="screen_recorder_res_desc">Higher resolution increases GPU load and file size.</string>
-    <string name="screen_recorder_fps_desc">Higher FPS provides smoother video but uses more CPU/GPU.</string>
-    <string name="screen_recorder_bitrate_desc">Higher bitrate improves video quality but creates larger files.</string>
-    <string name="screen_recorder_orientation_desc">Forces the recording orientation.</string>
+    <string name="screen_recorder_res_desc">Higher resolution provides clearer video but increases hardware load and file size.</string>
+    <string name="screen_recorder_fps_desc">Higher frame rate ensures smoother video playback but increases processor and graphics usage.</string>
+    <string name="screen_recorder_bitrate_desc">Higher bitrate enhances video clarity at the expense of larger file sizes.</string>
+    <string name="screen_recorder_orientation_desc">Sets the video recording orientation.</string>
     <string name="screen_recorder_audio_desc">Select audio source for the recording.</string>
     <string name="screen_recorder_video_saved_path">Video saved to: %s</string>
 
@@ -397,7 +397,7 @@
     <string name="codec_avc">H.264 (AVC)</string>
     <string name="codec_hevc">H.265 (HEVC)</string>
     <string name="codec_desc_auto">Automatically selects the best available hardware encoder for your device.</string>
-    <string name="codec_desc_avc">H.264 provides the best compatibility and stable performance for gaming with low latency.</string>
+    <string name="codec_desc_avc">H.264 provides broad device compatibility and stable low-latency video encoding.</string>
     <string name="codec_desc_hevc">H.265 provides better visual quality at lower bitrates, but may increase device temperature.</string>
 
     <string name="screen_recorder_audio_header">Audio</string>
@@ -405,9 +405,9 @@
     <string name="audio_quality_low">Low (64 kbps)</string>
     <string name="audio_quality_medium">Medium (128 kbps)</string>
     <string name="audio_quality_high">High (256 kbps)</string>
-    <string name="audio_quality_desc_low">Smallest file size, basic audio quality. Good for voice.</string>
-    <string name="audio_quality_desc_medium">Standard quality. Good balance of clarity and file size.</string>
-    <string name="audio_quality_desc_high">High fidelity audio. Ideal for capturing detailed game sounds.</string>
+    <string name="audio_quality_desc_low">Smallest file size with basic audio fidelity. Suitable for voice recording.</string>
+    <string name="audio_quality_desc_medium">Standard audio quality with a balanced ratio between clarity and file size.</string>
+    <string name="audio_quality_desc_high">High fidelity audio. Ideal for capturing rich, detailed media and system audio.</string>
     <string name="screen_recorder_mbps_unit">%d Mbps</string>
     <string name="screen_recorder_action_start_desc">Start</string>
     <string name="screen_recorder_action_stop_desc">Stop</string>
@@ -454,7 +454,7 @@
     <string name="aod_theme_glass">Glassmorphism</string>
     
     <string name="aod_auto_brightness">Auto Brightness</string>
-    <string name="aod_auto_brightness_desc">Use device system brightness instead of overriding with a fixed level</string>
+    <string name="aod_auto_brightness_desc">Automatically adjusts display brightness using the ambient light sensor and system settings</string>
     <string name="aod_brightness">Brightness (Opacity)</string>
     
     <string name="aod_show_clock">Show Clock</string>
@@ -526,7 +526,7 @@
     <string name="aod_dialog_close">Close</string>
 
     <string name="aod_run_as_foreground_service">Run in Foreground</string>
-    <string name="aod_run_as_foreground_service_desc">Keep the service alive more aggressively by running it as a foreground service with a persistent notification.</string>
+    <string name="aod_run_as_foreground_service_desc">Keep the service running reliably by running it as a foreground service with a persistent notification.</string>
 
     <string name="amoled_tint_section_title">Pixel Tint &amp; White Attenuation</string>
     <string name="amoled_tint_switch_title">Enable Color Tint</string>
@@ -574,31 +574,31 @@
     <string name="adb_notif_failed_title">Pairing Failed</string>
     <string name="adb_auto_pairing_help">SwiftSense will show a notification when it finds the pairing dialog in Developer Options. You can enter the code directly from the notification shade.</string>
     <string name="adb_connection_header">Wireless Debugging</string>
-    <string name="adb_auto_pairing_step1">1. Tap \"Open Developer Options\" below (pairing service will start automatically).</string>
+    <string name="adb_auto_pairing_step1">1. Tap \"Open Developer Options\".</string>
     <string name="adb_auto_pairing_step2">2. Enable \"Wireless Debugging\" and tap \"Pair device with pairing code\".</string>
-    <string name="adb_auto_pairing_step3">3. Pull down your notification shade and enter the 6-digit code into SwiftSense\'s notification.</string>
+    <string name="adb_auto_pairing_step3">3. Open the notification shade and enter the 6-digit pairing code.</string>
     <string name="swiftsense_service_not_running">SwiftSense Service is not running</string>
     <string name="swiftsense_service_not_running_desc">Start service in settings or pair device to execute commands</string>
     <string name="adb_service_title">SwiftSense Service</string>
     <string name="adb_service_running">Service is running</string>
     <string name="adb_service_action_start">Start Service</string>
-    <string name="adb_service_stop_title">Stop Service?</string>
+    <string name="adb_service_stop_title">Stop Service</string>
     <string name="adb_service_stop_message">Are you sure you want to stop the SwiftSense background daemon service?</string>
     <string name="adb_service_stop_confirm">Stop</string>
     <string name="adb_service_stop_failed">Failed to stop service</string>
     <string name="adb_service_auto_start">Auto Start Service</string>
     <string name="adb_service_auto_start_desc">Automatically start SwiftSense service on app launch</string>
     <string name="adb_enter_connect_port">Enter Wireless Debugging Port</string>
-    <string name="adb_enter_connect_port_desc">Enter the 5-digit port shown under Wireless Debugging in Developer Options</string>
+    <string name="adb_enter_connect_port_desc">Enter the 5-digit connection port shown under Wireless Debugging in Developer Options.</string>
     <string name="adb_port_label">Port (e.g. 37000)</string>
     <string name="action_start_service">Start Service</string>
-    <string name="adb_repair_pairing">Pair Again with Code</string>
+    <string name="adb_repair_pairing">Pair Again</string>
     <string name="action_grant_permission">Grant Permission</string>
 
     <string name="feature_apk_installer">APK / XAPK Installer</string>
     <string name="feature_apk_installer_desc">Install APK, XAPK, and split packages directly onto your device via ADB.</string>
-    <string name="apk_select_file">Select Package (APK / XAPK)</string>
-    <string name="apk_select_file_desc">Choose an APK, XAPK, APKS or APKM file from your device storage</string>
+    <string name="apk_select_file">Select Package File</string>
+    <string name="apk_select_file_desc">Choose an .apk, .xapk, .apks, or .apkm file from your device to install.</string>
     <string name="apk_select_button">Choose File</string>
     <string name="apk_parsing">Analyzing package file…</string>
     <string name="apk_parse_error">Could not parse package file</string>
@@ -607,7 +607,7 @@
     <string name="apk_package_type_split">Split Package (%1$d APKs)</string>
     <string name="apk_package_type_single">Standard APK</string>
     <string name="apk_package_obb_badge">+ OBB Data</string>
-    <string name="apk_reinstall_option">Reinstall existing app (-r)</string>
+    <string name="apk_reinstall_option">Reinstall over existing application (-r)</string>
     <string name="apk_reinstall_desc">Keep existing application data during install</string>
     <string name="apk_downgrade_option">Allow version downgrade (-d)</string>
     <string name="apk_downgrade_desc">Allow installing an older version over a newer one</string>
@@ -636,7 +636,7 @@
     <string name="apk_status_downgrade">Downgrade (Installed: %1$s)</string>
     <string name="apk_status_same">Already Installed (%1$s)</string>
     <string name="apk_signature_match">Signature Match Verified</string>
-    <string name="apk_signature_mismatch">Signature Mismatch Warning!</string>
+    <string name="apk_signature_mismatch">Signature Mismatch</string>
     <string name="apk_signature_sha256">Cert SHA-256: %1$s</string>
     <string name="apk_permissions_title">Requested Permissions (%1$d)</string>
     <string name="apk_view_permissions">View Permissions</string>
@@ -677,10 +677,10 @@
     <string name="execution_service_not_ready_desc">Please start the SwiftSense service or authorize Shizuku to proceed.</string>
     <string name="execution_failed">Failed to execute command: %1$s</string>
     <string name="feature_turbo_downloader">Turbo Downloader</string>
-    <string name="feature_turbo_downloader_desc">Ultra-fast multi-segment parallel file and video downloader.</string>
+    <string name="feature_turbo_downloader_desc">Multi-segment parallel downloader designed for accelerated file and media retrieval.</string>
     <string name="downloader_url_hint">Enter file or video URL…</string>
     <string name="downloader_threads">Parallel Connections</string>
-    <string name="downloader_threads_desc">Segment the file into multiple streams to maximize bandwidth (4, 8, 16).</string>
+    <string name="downloader_threads_desc">Segment the file into multiple parallel streams to maximize bandwidth efficiency (4, 8, 16).</string>
     <string name="downloader_action_download">Download</string>
     <string name="downloader_status_connecting">Connecting…</string>
     <string name="downloader_status_downloading">Downloading</string>
@@ -720,7 +720,7 @@
     <string name="installer_dialog_action_done">Done</string>
     <string name="installer_dialog_action_open">Open</string>
     <string name="installer_dialog_action_cancel">Cancel</string>
-    <string name="installer_dialog_cert_mismatch_warning">Signature mismatch detected! The signature of this package differs from the currently installed version. You must uninstall the existing app first.</string>
+    <string name="installer_dialog_cert_mismatch_warning">Signature mismatch detected. The package certificate does not match the currently installed version. The existing application must be uninstalled first.</string>
     <string name="installer_dialog_version_transition">%1$s → %2$s</string>
     <string name="installer_dialog_advanced_options">Advanced Options</string>
     <string name="adb_err_already_exists">An application with this package name is already installed.</string>
