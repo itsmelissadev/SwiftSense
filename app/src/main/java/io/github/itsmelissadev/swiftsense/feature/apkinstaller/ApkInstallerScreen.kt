@@ -97,6 +97,7 @@ fun ApkInstallerScreen(
     var options by remember { mutableStateOf(ApkInstallOptions()) }
     var showPermissionsDialog by remember { mutableStateOf(false) }
     var showHistoryDialog by remember { mutableStateOf(false) }
+    var pendingSecurityRisk by remember { mutableStateOf<ApkSecurityRisk?>(null) }
     var historyItems by remember { mutableStateOf(emptyList<InstallHistoryItem>()) }
 
     var batchQueue by remember { mutableStateOf<List<Uri>>(emptyList()) }
@@ -302,6 +303,22 @@ fun ApkInstallerScreen(
                     Text(stringResource(R.string.common_close))
                 }
             }
+        )
+    }
+
+    if (pendingSecurityRisk != null) {
+        ApkSecurityWarningDialog(
+            risk = pendingSecurityRisk!!,
+            onConfirm = {
+                val r = pendingSecurityRisk
+                pendingSecurityRisk = null
+                if (r == ApkSecurityRisk.GRANT_PERMISSIONS) {
+                    options = options.copy(grantRuntimePermissions = true)
+                } else if (r == ApkSecurityRisk.SKIP_VERIFICATION) {
+                    options = options.copy(skipVerification = true)
+                }
+            },
+            onDismiss = { pendingSecurityRisk = null }
         )
     }
 
@@ -813,7 +830,13 @@ fun ApkInstallerScreen(
                                             icon = Icons.Default.CheckCircle,
                                             badgeColors = ExpressivePalette.GreenLight,
                                             checked = options.grantRuntimePermissions,
-                                            onCheckedChange = { options = options.copy(grantRuntimePermissions = it) }
+                                            onCheckedChange = { enable ->
+                                                if (enable) {
+                                                    pendingSecurityRisk = ApkSecurityRisk.GRANT_PERMISSIONS
+                                                } else {
+                                                    options = options.copy(grantRuntimePermissions = false)
+                                                }
+                                            }
                                         )
                                     }
 
@@ -835,7 +858,13 @@ fun ApkInstallerScreen(
                                             icon = Icons.Default.LockOpen,
                                             badgeColors = ExpressivePalette.PinkLight,
                                             checked = options.skipVerification,
-                                            onCheckedChange = { options = options.copy(skipVerification = it) }
+                                            onCheckedChange = { enable ->
+                                                if (enable) {
+                                                    pendingSecurityRisk = ApkSecurityRisk.SKIP_VERIFICATION
+                                                } else {
+                                                    options = options.copy(skipVerification = false)
+                                                }
+                                            }
                                         )
                                     }
 

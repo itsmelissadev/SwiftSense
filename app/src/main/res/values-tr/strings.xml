@@ -442,6 +442,8 @@
     <string name="aod_theme_bold">Kalın</string>
     <string name="aod_theme_glass">Cam Efekti (Glassmorphism)</string>
 
+    <string name="aod_auto_brightness">Otomatik Parlaklık</string>
+    <string name="aod_auto_brightness_desc">Cihazın kendi sistem ve sensör parlaklığını kullanır</string>
     <string name="aod_brightness">Parlaklık (Opaklık)</string>
 
     <string name="aod_show_clock">Saati Göster</string>
@@ -640,6 +642,11 @@
     <string name="apk_batch_title">Toplu Kurulum (%1$d / %2$d)</string>
     <string name="apk_user_profile_option">Tüm Kullanıcı Profillerine Kur</string>
     <string name="apk_user_profile_desc">Paketi cihazdaki tüm kullanıcı hesaplarına yükler</string>
+    <string name="apk_warn_grant_perms_title">Zararlı Yazılım Riski: Tüm İzinleri Onayla</string>
+    <string name="apk_warn_grant_perms_message">Tüm izinleri otomatik olarak onaylamak, uygulamanın kamera, mikrofon, konum ve depolama gibi hassas verilere onay istemeden erişmesine izin verir. Paket zararlı bir yazılım içeriyorsa verileriniz tehlikeye girebilir.</string>
+    <string name="apk_warn_skip_verification_title">Güvenlik Riski: Doğrulamayı Atla</string>
+    <string name="apk_warn_skip_verification_message">Doğrulamayı atlamak, paket yöneticisinin ve Play Protect sisteminin güvenlik denetimlerini devre dışı bırakır. Zararlı ve tehlikeli yazılımlar tespit edilmeden kurulabilir.</string>
+    <string name="apk_action_accept_risk">Riski Kabul Et ve Aç</string>
     <string name="common_close">Kapat</string>
     <string name="updates_screen_title">Yayınlar ve Güncellemeler</string>
     <string name="updates_current_version">Mevcut Sürüm</string>

@@ -51,6 +51,11 @@ data class ApkInstallOptions(
     val targetUserId: Int? = null
 )
 
+enum class ApkSecurityRisk {
+    GRANT_PERMISSIONS,
+    SKIP_VERIFICATION
+}
+
 data class InstallHistoryItem(
     val packageName: String,
     val appName: String,

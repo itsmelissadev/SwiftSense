@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.rounded.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -137,6 +138,7 @@ fun PackageInstallerDialog(
                     val updateType = installedInfo?.updateType ?: UpdateType.NEW_INSTALL
 
                     var showAdvancedOptions by remember { mutableStateOf(false) }
+                    var pendingSecurityRisk by remember { mutableStateOf<ApkSecurityRisk?>(null) }
                     var options by remember(details) {
                         mutableStateOf(
                             ApkInstallOptions(
@@ -338,7 +340,13 @@ fun PackageInstallerDialog(
                                 title = stringResource(R.string.apk_grant_perms_option),
                                 description = stringResource(R.string.apk_grant_perms_desc),
                                 checked = options.grantRuntimePermissions,
-                                onCheckedChange = { options = options.copy(grantRuntimePermissions = it) }
+                                onCheckedChange = { enable ->
+                                    if (enable) {
+                                        pendingSecurityRisk = ApkSecurityRisk.GRANT_PERMISSIONS
+                                    } else {
+                                        options = options.copy(grantRuntimePermissions = false)
+                                    }
+                                }
                             )
                             DialogOptionRow(
                                 title = stringResource(R.string.apk_test_only_option),
@@ -350,7 +358,13 @@ fun PackageInstallerDialog(
                                 title = stringResource(R.string.apk_skip_verification_option),
                                 description = stringResource(R.string.apk_skip_verification_desc),
                                 checked = options.skipVerification,
-                                onCheckedChange = { options = options.copy(skipVerification = it) }
+                                onCheckedChange = { enable ->
+                                    if (enable) {
+                                        pendingSecurityRisk = ApkSecurityRisk.SKIP_VERIFICATION
+                                    } else {
+                                        options = options.copy(skipVerification = false)
+                                    }
+                                }
                             )
                             DialogOptionRow(
                                 title = stringResource(R.string.apk_user_profile_option),
@@ -403,6 +417,22 @@ fun PackageInstallerDialog(
                         ) {
                             Text(actionText)
                         }
+                    }
+
+                    if (pendingSecurityRisk != null) {
+                        ApkSecurityWarningDialog(
+                            risk = pendingSecurityRisk!!,
+                            onConfirm = {
+                                val r = pendingSecurityRisk
+                                pendingSecurityRisk = null
+                                if (r == ApkSecurityRisk.GRANT_PERMISSIONS) {
+                                    options = options.copy(grantRuntimePermissions = true)
+                                } else if (r == ApkSecurityRisk.SKIP_VERIFICATION) {
+                                    options = options.copy(skipVerification = true)
+                                }
+                            },
+                            onDismiss = { pendingSecurityRisk = null }
+                        )
                     }
                 }
 
@@ -681,4 +711,66 @@ private fun PackageDialogHeader(
             )
         }
     }
+}
+
+@Composable
+fun ApkSecurityWarningDialog(
+    risk: ApkSecurityRisk,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                imageVector = Icons.Rounded.Warning,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(28.dp)
+            )
+        },
+        title = {
+            Text(
+                text = stringResource(
+                    if (risk == ApkSecurityRisk.GRANT_PERMISSIONS) {
+                        R.string.apk_warn_grant_perms_title
+                    } else {
+                        R.string.apk_warn_skip_verification_title
+                    }
+                ),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        },
+        text = {
+            Text(
+                text = stringResource(
+                    if (risk == ApkSecurityRisk.GRANT_PERMISSIONS) {
+                        R.string.apk_warn_grant_perms_message
+                    } else {
+                        R.string.apk_warn_skip_verification_message
+                    }
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError
+                )
+            ) {
+                Text(stringResource(R.string.apk_action_accept_risk))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        }
+    )
 }

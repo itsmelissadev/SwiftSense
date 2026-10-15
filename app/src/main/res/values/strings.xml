@@ -445,6 +445,8 @@
     <string name="aod_theme_bold">Bold</string>
     <string name="aod_theme_glass">Glassmorphism</string>
     
+    <string name="aod_auto_brightness">Auto Brightness</string>
+    <string name="aod_auto_brightness_desc">Use device system brightness instead of overriding with a fixed level</string>
     <string name="aod_brightness">Brightness (Opacity)</string>
     
     <string name="aod_show_clock">Show Clock</string>
@@ -640,6 +642,11 @@
     <string name="apk_batch_title">Batch Installation (%1$d / %2$d)</string>
     <string name="apk_user_profile_option">Install for All Users</string>
     <string name="apk_user_profile_desc">Install package across all user profiles</string>
+    <string name="apk_warn_grant_perms_title">Malware Risk: Auto-Grant Permissions</string>
+    <string name="apk_warn_grant_perms_message">Granting all runtime permissions automatically allows the application to access sensitive device resources (camera, microphone, location, storage, contacts) without prompting you. If this APK contains malware or spyware, it could compromise your personal data.</string>
+    <string name="apk_warn_skip_verification_title">Security Risk: Skip Verification</string>
+    <string name="apk_warn_skip_verification_message">Skipping verification disables system and Play Protect security checks before installation. Harmful, tampered, or malicious applications might be installed without detection.</string>
+    <string name="apk_action_accept_risk">Accept Risk &amp; Enable</string>
     <string name="common_close">Close</string>
     <string name="updates_screen_title">Releases &amp; Updates</string>
     <string name="updates_current_version">Current Version</string>
