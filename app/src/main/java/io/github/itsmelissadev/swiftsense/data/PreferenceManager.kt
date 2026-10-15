@@ -41,6 +41,7 @@ class PreferenceManager(private val context: Context) {
         private val SELECTED_MODE = stringPreferencesKey("selected_mode")
         val IS_SERVICE_RUNNING = booleanPreferencesKey("is_service_running")
         val SHOW_LIVE_HZ = booleanPreferencesKey("show_live_hz")
+        val SENSOR_FASTEST_MODE = booleanPreferencesKey("sensor_fastest_mode")
         val TOUCH_BOOST_ENABLED = booleanPreferencesKey("touch_boost_enabled")
         val SHIZUKU_SENSOR_BOOST = booleanPreferencesKey("shizuku_sensor_boost")
         val SENSOR_SPEED = stringPreferencesKey("sensor_speed")
@@ -210,6 +211,9 @@ class PreferenceManager(private val context: Context) {
 
     val showLiveHz: Flow<Boolean> = preferences.map { it[SHOW_LIVE_HZ] ?: false }
     suspend fun setShowLiveHz(show: Boolean) { context.dataStore.edit { it[SHOW_LIVE_HZ] = show } }
+
+    val sensorFastestMode: Flow<Boolean> = preferences.map { it[SENSOR_FASTEST_MODE] ?: true }
+    suspend fun setSensorFastestMode(enabled: Boolean) { context.dataStore.edit { it[SENSOR_FASTEST_MODE] = enabled } }
 
     val touchBoostEnabled: Flow<Boolean> = preferences.map { it[TOUCH_BOOST_ENABLED] ?: false }
     suspend fun setTouchBoostEnabled(enabled: Boolean) { context.dataStore.edit { it[TOUCH_BOOST_ENABLED] = enabled } }

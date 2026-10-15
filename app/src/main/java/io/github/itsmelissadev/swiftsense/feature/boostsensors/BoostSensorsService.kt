@@ -8,12 +8,14 @@ import android.app.Service
 import android.content.Intent
 import android.hardware.Sensor
 import android.hardware.SensorEvent
-import android.hardware.SensorEventListener2
+import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.IBinder
+import android.os.PowerManager
 import android.os.Process
+import android.os.SystemClock
 import android.util.SparseIntArray
 import android.util.SparseLongArray
 import androidx.core.app.NotificationCompat
@@ -38,9 +40,10 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
-class BoostSensorsService : Service(), SensorEventListener2 {
+class BoostSensorsService : Service(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
     private lateinit var preferenceManager: PreferenceManager
+    private var wakeLock: PowerManager.WakeLock? = null
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var observationJob: Job? = null
     private var liveHzJob: Job? = null
@@ -64,6 +67,7 @@ class BoostSensorsService : Service(), SensorEventListener2 {
         const val ACTION_STOP = "io.github.itsmelissadev.swiftsense.feature.boostsensors.STOP"
 
         val liveHz = ConcurrentHashMap<Int, Int>()
+        val liveValues = ConcurrentHashMap<Int, FloatArray>()
 
         private val _isRunning = MutableStateFlow(false)
         val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
@@ -81,6 +85,15 @@ class BoostSensorsService : Service(), SensorEventListener2 {
         sensorThread?.start()
         sensorHandler = Handler(sensorThread!!.looper)
 
+        try {
+            val powerManager = getSystemService(POWER_SERVICE) as PowerManager
+            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SwiftSense:BoostSensorsWakeLock").apply {
+                setReferenceCounted(false)
+                acquire()
+            }
+        } catch (_: Exception) {
+        }
+
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, createNotification(""))
         observeSensorChanges()
@@ -95,6 +108,7 @@ class BoostSensorsService : Service(), SensorEventListener2 {
                 if (!show) {
                     synchronized(lock) {
                         liveHz.clear()
+                        liveValues.clear()
                         eventCounts.clear()
                         lastTimestamps.clear()
                     }
@@ -120,8 +134,9 @@ class BoostSensorsService : Service(), SensorEventListener2 {
         observationJob = serviceScope.launch {
             combine(
                 preferenceManager.preferences,
-                preferenceManager.sensorSpeed
-            ) { prefs, speed ->
+                preferenceManager.sensorSpeed,
+                preferenceManager.sensorFastestMode
+            ) { prefs, speed, fastestMode ->
                 val sensorTypes = listOf(
                     Sensor.TYPE_GYROSCOPE,
                     Sensor.TYPE_GYROSCOPE_UNCALIBRATED,
@@ -142,15 +157,15 @@ class BoostSensorsService : Service(), SensorEventListener2 {
                         if (enabled) sensor else null
                     } else null
                 }
-                activeSensors to speed
-            }.distinctUntilChanged().collect { (activeSensors, speed) ->
-                updateSensorListeners(activeSensors, speed)
+                Triple(activeSensors, speed, fastestMode)
+            }.distinctUntilChanged().collect { (activeSensors, speed, fastestMode) ->
+                updateSensorListeners(activeSensors, speed, fastestMode)
                 updateNotification(activeSensors)
             }
         }
     }
 
-    private fun updateSensorListeners(activeSensors: List<Sensor>, speed: String) {
+    private fun updateSensorListeners(activeSensors: List<Sensor>, speed: String, fastestMode: Boolean) {
         if (isCleanedUp.get()) return
 
         val newSensorTypes = activeSensors.map { it.type }.toSet()
@@ -159,34 +174,26 @@ class BoostSensorsService : Service(), SensorEventListener2 {
         toUnregister.forEach { type ->
             sensorManager.getDefaultSensor(type)?.let { sensor ->
                 try {
-                    sensorManager.flush(this)
-                    sensorManager.registerListener(
-                        this,
-                        sensor,
-                        SensorManager.SENSOR_DELAY_NORMAL,
-                        sensorHandler
-                    )
-                    sensorManager.flush(this)
                     sensorManager.unregisterListener(this, sensor)
                 } catch (_: Exception) {
                 }
             }
             liveHz.remove(type)
+            liveValues.remove(type)
             lastTimestamps.delete(type)
             eventCounts.delete(type)
             currentRegisteredSensors.remove(type)
         }
 
-        val delayUs = when (speed) {
-            "very_slow" -> 60000
-            "slow" -> 20000
-            "medium" -> 10000
-            "fast" -> 5000
-            "max" -> SensorManager.SENSOR_DELAY_FASTEST
-            else -> SensorManager.SENSOR_DELAY_FASTEST
-        }
-
         activeSensors.forEach { sensor ->
+            val delayUs = when (speed) {
+                "very_slow" -> 60000
+                "slow" -> 20000
+                "medium" -> 10000
+                "fast" -> 5000
+                "max" -> if (fastestMode) SensorManager.SENSOR_DELAY_FASTEST else sensor.minDelay.coerceAtLeast(0)
+                else -> if (fastestMode) SensorManager.SENSOR_DELAY_FASTEST else sensor.minDelay.coerceAtLeast(0)
+            }
             sensorManager.unregisterListener(this, sensor)
             sensorManager.registerListener(
                 this,
@@ -201,28 +208,33 @@ class BoostSensorsService : Service(), SensorEventListener2 {
     override fun onSensorChanged(event: SensorEvent?) {
         if (event == null || !showLiveHz || isCleanedUp.get()) return
 
-        synchronized(lock) {
-            val type = event.sensor.type
-            val timestamp = event.timestamp
+        val type = event.sensor.type
+        val values = event.values
+        if (values != null && values.isNotEmpty()) {
+            liveValues[type] = values.clone()
+        }
 
+        synchronized(lock) {
+            val nowNanos = SystemClock.elapsedRealtimeNanos()
             val currentCount = eventCounts.get(type, 0) + 1
             eventCounts.put(type, currentCount)
 
             val lastTime = lastTimestamps.get(type, 0L)
-
-            if (timestamp - lastTime >= 1_000_000_000L) {
-                if (lastTime != 0L) {
-                    liveHz[type] = currentCount
+            if (lastTime == 0L) {
+                lastTimestamps.put(type, nowNanos)
+            } else {
+                val deltaNanos = nowNanos - lastTime
+                if (deltaNanos >= 500_000_000L) {
+                    val calculatedHz = ((currentCount.toLong() * 1_000_000_000L + (deltaNanos / 2)) / deltaNanos).toInt()
+                    liveHz[type] = calculatedHz
+                    eventCounts.put(type, 0)
+                    lastTimestamps.put(type, nowNanos)
                 }
-                eventCounts.put(type, 0)
-                lastTimestamps.put(type, timestamp)
             }
         }
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
-
-    override fun onFlushCompleted(sensor: Sensor?) {}
 
     private fun updateNotification(activeSensors: List<Sensor>) {
         val sensorNames = activeSensors.joinToString(", ") { getSensorName(it.type) }
@@ -338,6 +350,7 @@ class BoostSensorsService : Service(), SensorEventListener2 {
             eventCounts.clear()
             lastTimestamps.clear()
             liveHz.clear()
+            liveValues.clear()
         }
     }
 
@@ -345,6 +358,13 @@ class BoostSensorsService : Service(), SensorEventListener2 {
         _isRunning.value = false
         safeCleanupSensors()
         serviceScope.cancel()
+        try {
+            if (wakeLock?.isHeld == true) {
+                wakeLock?.release()
+            }
+        } catch (_: Exception) {
+        }
+        wakeLock = null
         super.onDestroy()
     }
 

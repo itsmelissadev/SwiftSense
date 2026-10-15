@@ -60,6 +60,8 @@
     <string name="advanced_header">Detaylı Ayarlar</string>
     <string name="show_live_hz_option">Canlı Frekans Monitörü</string>
     <string name="show_live_hz_desc">Sensörlerin anlık örnekleme frekansını (Hz) gerçek zamanlı olarak gösterir.</string>
+    <string name="sensor_fastest_mode_option">Sıfır Gecikme Modu</string>
+    <string name="sensor_fastest_mode_desc">Nominal donanım limitini atlayarak en yüksek frekans için doğrudan sıfır gecikme (FASTEST) talep eder.</string>
 
     <string name="sensor_gyroscope">Jiroskop</string>
     <string name="sensor_gyroscope_uncalibrated">Kalibrasyonsuz Jiroskop</string>
