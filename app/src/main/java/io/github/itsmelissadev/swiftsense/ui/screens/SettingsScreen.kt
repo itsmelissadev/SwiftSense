@@ -476,6 +476,7 @@ fun SettingsScreen(
     if (showStopServiceDialog) {
         ExpressiveDialog(
             title = stringResource(R.string.adb_service_stop_title),
+            description = stringResource(R.string.adb_service_stop_message),
             onDismissRequest = { showStopServiceDialog = false },
             dismissButton = {
                 ExpressiveDialogButton(
@@ -491,18 +492,14 @@ fun SettingsScreen(
                     onClick = {
                         showStopServiceDialog = false
                         scope.launch {
-                            android.util.Log.i("SettingsScreen", "User confirmed stopping SwiftSense daemon.")
                             val stopRes = SwiftSenseDaemonBridge.stopDaemon()
-                            android.util.Log.i("SettingsScreen", "stopDaemon completed with: $stopRes")
                             kotlinx.coroutines.delay(400)
                             val alive = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                                 SwiftSenseDaemonBridge.isDaemonAlive()
                             }
-                            android.util.Log.i("SettingsScreen", "Daemon post-stop check isAlive=$alive")
                             isDaemonRunning = alive
                             io.github.itsmelissadev.swiftsense.service.shell.ShellBridge.refreshNow()
                             if (alive || stopRes.isFailure) {
-                                android.util.Log.e("SettingsScreen", "Failed to stop daemon! Error: ${stopRes.exceptionOrNull()?.message}")
                                 android.widget.Toast.makeText(
                                     context,
                                     context.getString(R.string.adb_service_stop_failed),
@@ -513,12 +510,6 @@ fun SettingsScreen(
                     }
                 )
             }
-        ) {
-            Text(
-                text = stringResource(R.string.adb_service_stop_message),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
+        )
     }
 }

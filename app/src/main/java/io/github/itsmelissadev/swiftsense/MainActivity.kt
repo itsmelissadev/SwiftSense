@@ -88,6 +88,19 @@ class MainActivity : ComponentActivity() {
                 io.github.itsmelissadev.swiftsense.service.shell.ShellBridge.refreshNow()
             }
 
+            LaunchedEffect(language) {
+                val config = Configuration(resources.configuration)
+                val locale = if (language == "system") {
+                    config.locales[0] ?: Locale.getDefault()
+                } else {
+                    Locale.forLanguageTag(language)
+                }
+                Locale.setDefault(locale)
+                config.setLocale(locale)
+                @Suppress("DEPRECATION")
+                resources.updateConfiguration(config, resources.displayMetrics)
+            }
+
             val scope = rememberCoroutineScope()
             val navController = rememberNavController()
             val context = LocalContext.current

@@ -53,14 +53,21 @@ fun ExpressiveDialog(
     properties: DialogProperties = DialogProperties(usePlatformDefaultWidth = false),
     content: @Composable (() -> Unit)? = null
 ) {
+    val currentContext = androidx.compose.ui.platform.LocalContext.current
+    val currentConfig = androidx.compose.ui.platform.LocalConfiguration.current
+
     Dialog(
         onDismissRequest = onDismissRequest,
         properties = properties
     ) {
-        Surface(
-            shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            tonalElevation = 6.dp,
+        androidx.compose.runtime.CompositionLocalProvider(
+            androidx.compose.ui.platform.LocalContext provides currentContext,
+            androidx.compose.ui.platform.LocalConfiguration provides currentConfig
+        ) {
+            Surface(
+                shape = RoundedCornerShape(28.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                tonalElevation = 6.dp,
             modifier = modifier
                 .fillMaxWidth(0.92f)
                 .widthIn(max = 560.dp)
@@ -123,6 +130,7 @@ fun ExpressiveDialog(
             }
         }
     }
+}
 }
 
 @Composable
