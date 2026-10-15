@@ -684,4 +684,10 @@
     <string name="downloader_no_downloads">No active downloads.</string>
     <string name="downloader_segments_label">Segments (%1$d)</string>
     <string name="downloader_threads_count">%1$d Threads</string>
+    <string name="downloader_cat_video">Video</string>
+    <string name="downloader_cat_audio">Audio</string>
+    <string name="downloader_cat_apk">APK</string>
+    <string name="downloader_cat_archive">Archive</string>
+    <string name="downloader_cat_document">Document</string>
+    <string name="downloader_cat_file">File</string>
 </resources>

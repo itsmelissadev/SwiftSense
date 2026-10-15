@@ -684,4 +684,10 @@
     <string name="downloader_no_downloads">Aktif indirme bulunmuyor.</string>
     <string name="downloader_segments_label">Bağlantı Parçaları (%1$d)</string>
     <string name="downloader_threads_count">%1$d Bağlantı</string>
+    <string name="downloader_cat_video">Video</string>
+    <string name="downloader_cat_audio">Ses</string>
+    <string name="downloader_cat_apk">APK</string>
+    <string name="downloader_cat_archive">Arşiv</string>
+    <string name="downloader_cat_document">Belge</string>
+    <string name="downloader_cat_file">Dosya</string>
 </resources>

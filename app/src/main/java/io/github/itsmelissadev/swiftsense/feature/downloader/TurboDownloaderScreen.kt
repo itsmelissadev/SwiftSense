@@ -77,6 +77,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import io.github.itsmelissadev.swiftsense.R
@@ -322,7 +323,7 @@ private fun ActiveDownloadItem(
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -341,36 +342,14 @@ private fun ActiveDownloadItem(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = getStatusText(task.status),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Medium
-                        )
-
-                        if (task.status == DownloadStatus.DOWNLOADING && task.speedBytesPerSec > 0) {
-                            Text(
-                                text = "•  ${FormatUtils.formatSpeed(task.speedBytesPerSec)}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-
-                        if (task.fileSize > 0) {
-                            Text(
-                                text = "•  ${FormatUtils.formatBytes(task.downloadedBytes)} / ${FormatUtils.formatBytes(task.fileSize)}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
+                    Text(
+                        text = "${stringResource(getCategoryLabel(task.category))} • ${stringResource(R.string.downloader_threads_count, task.threadCount)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
 
                 Row {
@@ -398,6 +377,46 @@ private fun ActiveDownloadItem(
                     .clip(RoundedCornerShape(4.dp)),
                 strokeCap = StrokeCap.Round
             )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = getStatusText(task.status),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (task.status == DownloadStatus.FAILED) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+
+                    if (task.status == DownloadStatus.DOWNLOADING && task.speedBytesPerSec > 0) {
+                        Text(
+                            text = "• ${FormatUtils.formatSpeed(task.speedBytesPerSec)}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                if (task.fileSize > 0) {
+                    Text(
+                        text = "${FormatUtils.formatBytes(task.downloadedBytes)} / ${FormatUtils.formatBytes(task.fileSize)} (${(task.progress * 100).toInt()}%)",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else if (task.downloadedBytes > 0) {
+                    Text(
+                        text = FormatUtils.formatBytes(task.downloadedBytes),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
 
             if (task.segments.isNotEmpty()) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -466,7 +485,8 @@ private fun CompletedDownloadItem(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = "${stringResource(R.string.downloader_status_completed)} • ${FormatUtils.formatBytes(task.fileSize)}",
@@ -527,6 +547,17 @@ private fun getStatusText(status: DownloadStatus): String {
         DownloadStatus.PAUSED -> stringResource(R.string.downloader_status_paused)
         DownloadStatus.COMPLETED -> stringResource(R.string.downloader_status_completed)
         DownloadStatus.FAILED -> stringResource(R.string.downloader_status_failed)
+    }
+}
+
+private fun getCategoryLabel(category: FileCategory): Int {
+    return when (category) {
+        FileCategory.VIDEO -> R.string.downloader_cat_video
+        FileCategory.AUDIO -> R.string.downloader_cat_audio
+        FileCategory.APK -> R.string.downloader_cat_apk
+        FileCategory.ARCHIVE -> R.string.downloader_cat_archive
+        FileCategory.DOCUMENT -> R.string.downloader_cat_document
+        FileCategory.OTHER -> R.string.downloader_cat_file
     }
 }
 
