@@ -869,8 +869,8 @@ fun ApkInstallerScreen(
                                             if (result.isSuccess) {
                                                 installState = ApkInstallState.Success(details, result.getOrThrow())
                                             } else {
-                                                val msg = result.exceptionOrNull()?.message
-                                                    ?: context.getString(R.string.apk_install_failed_title)
+                                                val rawErr = result.exceptionOrNull()?.message
+                                                val msg = ApkInstallerHelper.getLocalizedInstallError(context, rawErr)
                                                 installState = ApkInstallState.Error(details, msg)
                                             }
                                         }

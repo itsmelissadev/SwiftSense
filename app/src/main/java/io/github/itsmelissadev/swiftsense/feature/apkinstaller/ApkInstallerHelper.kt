@@ -528,6 +528,7 @@ object ApkInstallerHelper {
         } else if (output.contains("Failure [", ignoreCase = true)) {
             val errReason = output.substringAfter("Failure [").substringBefore("]")
             val reason = errReason.ifBlank { output }
+            val localizedMsg = getLocalizedInstallError(context, reason)
             saveHistoryItem(
                 context,
                 InstallHistoryItem(
@@ -536,11 +537,13 @@ object ApkInstallerHelper {
                     versionName = details.versionName,
                     timestamp = System.currentTimeMillis(),
                     isSuccess = false,
-                    errorMessage = reason
+                    errorMessage = localizedMsg
                 )
             )
-            Result.failure(Exception(reason))
+            Result.failure(Exception(localizedMsg))
         } else if (output.contains("Failure", ignoreCase = true)) {
+            val rawErr = output.trim()
+            val localizedMsg = getLocalizedInstallError(context, rawErr)
             saveHistoryItem(
                 context,
                 InstallHistoryItem(
@@ -549,10 +552,10 @@ object ApkInstallerHelper {
                     versionName = details.versionName,
                     timestamp = System.currentTimeMillis(),
                     isSuccess = false,
-                    errorMessage = output.trim()
+                    errorMessage = localizedMsg
                 )
             )
-            Result.failure(Exception(output.trim()))
+            Result.failure(Exception(localizedMsg))
         } else {
             saveHistoryItem(
                 context,
@@ -642,6 +645,59 @@ object ApkInstallerHelper {
     fun clearHistory(context: Context) {
         val prefs = context.getSharedPreferences(HISTORY_PREFS, Context.MODE_PRIVATE)
         prefs.edit().remove(KEY_HISTORY_ITEMS).apply()
+    }
+
+    fun getLocalizedInstallError(context: Context, rawError: String?): String {
+        if (rawError.isNullOrBlank()) {
+            return context.getString(R.string.apk_install_failed_title)
+        }
+
+        val upper = rawError.uppercase(Locale.US)
+        return when {
+            upper.contains("INSTALL_FAILED_ALREADY_EXISTS") -> context.getString(R.string.adb_err_already_exists)
+            upper.contains("INSTALL_FAILED_INVALID_APK") -> context.getString(R.string.adb_err_invalid_apk)
+            upper.contains("INSTALL_FAILED_INVALID_URI") -> context.getString(R.string.adb_err_invalid_uri)
+            upper.contains("INSTALL_FAILED_INSUFFICIENT_STORAGE") -> context.getString(R.string.adb_err_insufficient_storage)
+            upper.contains("INSTALL_FAILED_DUPLICATE_PACKAGE") -> context.getString(R.string.adb_err_duplicate_package)
+            upper.contains("INSTALL_FAILED_NO_SHARED_USER") -> context.getString(R.string.adb_err_no_shared_user)
+            upper.contains("INSTALL_FAILED_UPDATE_INCOMPATIBLE") -> context.getString(R.string.adb_err_update_incompatible)
+            upper.contains("INSTALL_FAILED_SHARED_USER_INCOMPATIBLE") -> context.getString(R.string.adb_err_shared_user_incompatible)
+            upper.contains("INSTALL_FAILED_MISSING_SHARED_LIBRARY") -> context.getString(R.string.adb_err_missing_shared_library)
+            upper.contains("INSTALL_FAILED_REPLACE_COULDNT_DELETE") -> context.getString(R.string.adb_err_replace_couldnt_delete)
+            upper.contains("INSTALL_FAILED_DEXOPT") -> context.getString(R.string.adb_err_dexopt)
+            upper.contains("INSTALL_FAILED_OLDER_SDK") -> context.getString(R.string.adb_err_older_sdk)
+            upper.contains("INSTALL_FAILED_NEWER_SDK") -> context.getString(R.string.adb_err_newer_sdk)
+            upper.contains("INSTALL_FAILED_CONFLICTING_PROVIDER") -> context.getString(R.string.adb_err_conflicting_provider)
+            upper.contains("INSTALL_FAILED_TEST_ONLY") -> context.getString(R.string.adb_err_test_only)
+            upper.contains("INSTALL_FAILED_CPU_ABI_INCOMPATIBLE") -> context.getString(R.string.adb_err_cpu_abi_incompatible)
+            upper.contains("INSTALL_FAILED_MISSING_FEATURE") -> context.getString(R.string.adb_err_missing_feature)
+            upper.contains("INSTALL_FAILED_CONTAINER_ERROR") -> context.getString(R.string.adb_err_container_error)
+            upper.contains("INSTALL_FAILED_INVALID_INSTALL_LOCATION") -> context.getString(R.string.adb_err_invalid_install_location)
+            upper.contains("INSTALL_FAILED_MEDIA_UNAVAILABLE") -> context.getString(R.string.adb_err_media_unavailable)
+            upper.contains("INSTALL_FAILED_VERIFICATION_TIMEOUT") -> context.getString(R.string.adb_err_verification_timeout)
+            upper.contains("INSTALL_FAILED_VERIFICATION_FAILURE") -> context.getString(R.string.adb_err_verification_failure)
+            upper.contains("INSTALL_FAILED_PACKAGE_CHANGED") -> context.getString(R.string.adb_err_package_changed)
+            upper.contains("INSTALL_FAILED_UID_CHANGED") -> context.getString(R.string.adb_err_uid_changed)
+            upper.contains("INSTALL_FAILED_VERSION_DOWNGRADE") -> context.getString(R.string.adb_err_version_downgrade)
+            upper.contains("INSTALL_FAILED_PERMISSION_MODEL_DOWNGRADE") -> context.getString(R.string.adb_err_permission_model_downgrade)
+            upper.contains("INSTALL_FAILED_SESSION_INVALID") -> context.getString(R.string.adb_err_session_invalid)
+            upper.contains("INSTALL_PARSE_FAILED_NOT_APK") -> context.getString(R.string.adb_err_parse_not_apk)
+            upper.contains("INSTALL_PARSE_FAILED_BAD_MANIFEST") -> context.getString(R.string.adb_err_parse_bad_manifest)
+            upper.contains("INSTALL_PARSE_FAILED_UNEXPECTED_EXCEPTION") -> context.getString(R.string.adb_err_parse_unexpected_exception)
+            upper.contains("INSTALL_PARSE_FAILED_NO_CERTIFICATES") -> context.getString(R.string.adb_err_parse_no_certificates)
+            upper.contains("INSTALL_PARSE_FAILED_INCONSISTENT_CERTIFICATES") -> context.getString(R.string.adb_err_parse_inconsistent_certificates)
+            upper.contains("INSTALL_PARSE_FAILED_CERTIFICATE_ENCODING") -> context.getString(R.string.adb_err_parse_certificate_encoding)
+            upper.contains("INSTALL_PARSE_FAILED_BAD_PACKAGE_NAME") -> context.getString(R.string.adb_err_parse_bad_package_name)
+            upper.contains("INSTALL_PARSE_FAILED_BAD_SHARED_USER_ID") -> context.getString(R.string.adb_err_parse_bad_shared_user_id)
+            upper.contains("INSTALL_PARSE_FAILED_MANIFEST_MALFORMED") -> context.getString(R.string.adb_err_parse_manifest_malformed)
+            upper.contains("INSTALL_PARSE_FAILED_MANIFEST_EMPTY") -> context.getString(R.string.adb_err_parse_manifest_empty)
+            upper.contains("INSTALL_FAILED_DUPLICATE_PERMISSION") -> context.getString(R.string.adb_err_duplicate_permission)
+            upper.contains("INSTALL_FAILED_USER_RESTRICTED") -> context.getString(R.string.adb_err_user_restricted)
+            upper.contains("INSTALL_FAILED_INTERNAL_ERROR") -> context.getString(R.string.adb_err_internal_error)
+            upper.contains("INSTALL_FAILED_ABORTED") -> context.getString(R.string.adb_err_aborted)
+            upper.contains("INSTALL_FAILED_BAD_SIGNATURE") -> context.getString(R.string.adb_err_bad_signature)
+            else -> rawError
+        }
     }
 }
 
