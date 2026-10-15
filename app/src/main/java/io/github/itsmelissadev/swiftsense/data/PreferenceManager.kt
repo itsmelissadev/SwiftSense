@@ -10,39 +10,61 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import io.github.itsmelissadev.swiftsense.service.adb.AdbManager
+import io.github.itsmelissadev.swiftsense.service.shell.ShellBridge
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import java.io.File
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 class PreferenceManager(private val context: Context) {
+
     companion object {
         private val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
         private val THEME_MODE = stringPreferencesKey("theme_mode")
         private val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
         private val THEME_ACCENT_COLOR = stringPreferencesKey("theme_accent_color")
         private val LANGUAGE = stringPreferencesKey("language")
+
+        val SHELL_MODE = stringPreferencesKey("shell_mode")
+        val ADB_HOST = stringPreferencesKey("adb_host")
+        val ADB_PORT = intPreferencesKey("adb_port")
+        val ADB_PAIRING_PORT = intPreferencesKey("adb_pairing_port")
+        val SWIFTSENSE_AUTO_START = booleanPreferencesKey("swiftsense_auto_start")
+        val SWIFTSENSE_HAS_PAIRED = booleanPreferencesKey("swiftsense_has_paired")
+        private val _shellModeState = MutableStateFlow("")
+
         private val SELECTED_MODE = stringPreferencesKey("selected_mode")
         val IS_SERVICE_RUNNING = booleanPreferencesKey("is_service_running")
         val SHOW_LIVE_HZ = booleanPreferencesKey("show_live_hz")
         val TOUCH_BOOST_ENABLED = booleanPreferencesKey("touch_boost_enabled")
         val SHIZUKU_SENSOR_BOOST = booleanPreferencesKey("shizuku_sensor_boost")
+        val SENSOR_SPEED = stringPreferencesKey("sensor_speed")
         const val SENSOR_STATES_PREFIX = "sensor_state_"
+
         private val DISABLED_APPS = stringSetPreferencesKey("disabled_apps")
         val APP_MANAGER_WARNING_DISMISSED = booleanPreferencesKey("app_manager_warning_dismissed")
         val APP_MANAGER_CUSTOM_LISTS = stringSetPreferencesKey("app_manager_custom_lists")
         val APP_MANAGER_ACTIVE_LIST_ID = stringPreferencesKey("app_manager_active_list_id")
         val APP_MANAGER_TARGET_USER_ID = intPreferencesKey("app_manager_target_user_id")
+
         private val STOPPER_APPS = stringSetPreferencesKey("stopper_apps")
         val IS_STOPPER_SERVICE_RUNNING = booleanPreferencesKey("is_stopper_service_running")
         val STOPPER_INTERVAL = intPreferencesKey("stopper_interval")
         val STOPPER_MODE = stringPreferencesKey("stopper_mode")
         val STOPPER_TARGET_USER_ID = intPreferencesKey("stopper_target_user_id")
-        private val RESOLUTION_PLANS = stringSetPreferencesKey("resolution_plans")
+
         private val SYSTEM_MACROS = stringSetPreferencesKey("system_macros")
+        val AUTO_APPLY_MACRO_JSON = stringPreferencesKey("auto_apply_macro_json")
+        val AUTO_APPLY_MACRO_INTERVAL = intPreferencesKey("auto_apply_macro_interval")
+        val IS_MACRO_SERVICE_RUNNING = booleanPreferencesKey("is_macro_service_running")
+
+        private val RESOLUTION_PLANS = stringSetPreferencesKey("resolution_plans")
+
         val AMOLED_INTENSITY = floatPreferencesKey("amoled_intensity")
         val AMOLED_FILTER_TYPE = stringPreferencesKey("amoled_filter_type")
         val AMOLED_SHIFT_SPEED = intPreferencesKey("amoled_shift_speed")
@@ -56,6 +78,7 @@ class PreferenceManager(private val context: Context) {
         val AMOLED_TINT_COLOR = stringPreferencesKey("amoled_tint_color")
         val AMOLED_TINT_CUSTOM_HEX = stringPreferencesKey("amoled_tint_custom_hex")
         val AMOLED_TINT_INTENSITY = floatPreferencesKey("amoled_tint_intensity")
+
         val GYRO_SIM_ENABLED = booleanPreferencesKey("gyro_sim_enabled")
         val GYRO_SIM_SENSITIVITY = floatPreferencesKey("gyro_sim_sensitivity")
         val GYRO_SIM_INVERT_X = booleanPreferencesKey("gyro_sim_invert_x")
@@ -67,11 +90,7 @@ class PreferenceManager(private val context: Context) {
         val GYRO_SIM_AREA_WIDTH = intPreferencesKey("gyro_sim_area_width")
         val GYRO_SIM_AREA_HEIGHT = intPreferencesKey("gyro_sim_area_height")
         val GYRO_SIM_LOCKED = booleanPreferencesKey("gyro_sim_locked")
-        val SENSOR_SPEED = stringPreferencesKey("sensor_speed")
-        val AUTO_APPLY_MACRO_JSON = stringPreferencesKey("auto_apply_macro_json")
-        val AUTO_APPLY_MACRO_INTERVAL = intPreferencesKey("auto_apply_macro_interval")
-        val IS_MACRO_SERVICE_RUNNING = booleanPreferencesKey("is_macro_service_running")
-        
+
         val AOD_ENABLED = booleanPreferencesKey("aod_enabled")
         val AOD_SHOW_CLOCK = booleanPreferencesKey("aod_show_clock")
         val AOD_SHOW_DATE = booleanPreferencesKey("aod_show_date")
@@ -83,7 +102,6 @@ class PreferenceManager(private val context: Context) {
         val AOD_ACTIVATE_ON_LOCK = booleanPreferencesKey("aod_activate_on_lock")
         val AOD_TIMEOUT_SECONDS = intPreferencesKey("aod_timeout_seconds")
         val AOD_WARNING_DISMISSED = booleanPreferencesKey("aod_warning_dismissed")
-        
         val AOD_CLOCK_COLOR = intPreferencesKey("aod_clock_color")
         val AOD_BATTERY_COLOR = intPreferencesKey("aod_battery_color")
         val AOD_FONT_FAMILY = stringPreferencesKey("aod_font_family")
@@ -91,96 +109,20 @@ class PreferenceManager(private val context: Context) {
         val AOD_BURN_IN_INTERVAL = intPreferencesKey("aod_burn_in_interval")
         val AOD_BURN_IN_MODE = stringPreferencesKey("aod_burn_in_mode")
         val AOD_BURN_IN_RGB_SHIFT = booleanPreferencesKey("aod_burn_in_rgb_shift")
-        
         val AOD_DISMISS_POWER_BUTTON = booleanPreferencesKey("aod_dismiss_power_button")
         val AOD_DISMISS_DOUBLE_TAP = booleanPreferencesKey("aod_dismiss_double_tap")
         val AOD_SHOW_WATTAGE = booleanPreferencesKey("aod_show_wattage")
         val AOD_AS_FOREGROUND_SERVICE = booleanPreferencesKey("aod_as_foreground_service")
+
         val GLOBAL_CAMERA_ENABLED = booleanPreferencesKey("global_camera_enabled")
         val GLOBAL_MICROPHONE_ENABLED = booleanPreferencesKey("global_microphone_enabled")
-        val SHELL_MODE = stringPreferencesKey("shell_mode")
-        val ADB_HOST = stringPreferencesKey("adb_host")
-        val ADB_PORT = intPreferencesKey("adb_port")
-        val ADB_PAIRING_PORT = intPreferencesKey("adb_pairing_port")
-        val SWIFTSENSE_AUTO_START = booleanPreferencesKey("swiftsense_auto_start")
-        val SWIFTSENSE_HAS_PAIRED = booleanPreferencesKey("swiftsense_has_paired")
-        private val _shellModeState = MutableStateFlow("")
     }
 
     private val syncPrefs by lazy {
         context.getSharedPreferences("swiftsense_shell_prefs", Context.MODE_PRIVATE)
     }
 
-    fun getShellModeSync(): String {
-        val current = _shellModeState.value
-        if (current.isNotEmpty()) return current
-        val loaded = syncPrefs.getString("shell_mode", null) ?: "shizuku"
-        _shellModeState.value = loaded
-        return loaded
-    }
-
     val preferences: Flow<Preferences> = context.dataStore.data
-
-    val shellMode: StateFlow<String>
-        get() {
-            if (_shellModeState.value.isEmpty()) {
-                _shellModeState.value = syncPrefs.getString("shell_mode", null) ?: "shizuku"
-            }
-            return _shellModeState.asStateFlow()
-        }
-
-    suspend fun setShellMode(mode: String) {
-        _shellModeState.value = mode
-        syncPrefs.edit().putString("shell_mode", mode).commit()
-        context.dataStore.edit { it[SHELL_MODE] = mode }
-        io.github.itsmelissadev.swiftsense.service.shell.ShellBridge.refreshNow()
-    }
-
-    fun getAdbHostSync(): String {
-        return syncPrefs.getString("adb_host", "127.0.0.1") ?: "127.0.0.1"
-    }
-
-    fun getAdbPortSync(): Int {
-        return syncPrefs.getInt("adb_port", 0)
-    }
-
-    val adbHost: Flow<String> = preferences.map { it[ADB_HOST] ?: getAdbHostSync() }
-    suspend fun setAdbHost(host: String) {
-        syncPrefs.edit().putString("adb_host", host).commit()
-        io.github.itsmelissadev.swiftsense.service.adb.AdbManager.lastHost = host
-        context.dataStore.edit { it[ADB_HOST] = host }
-    }
-
-    val adbPort: Flow<Int> = preferences.map { it[ADB_PORT] ?: getAdbPortSync() }
-    suspend fun setAdbPort(port: Int) {
-        syncPrefs.edit().putInt("adb_port", port).commit()
-        io.github.itsmelissadev.swiftsense.service.adb.AdbManager.lastPort = port
-        context.dataStore.edit { it[ADB_PORT] = port }
-    }
-
-    val adbPairingPort: Flow<Int> = preferences.map { it[ADB_PAIRING_PORT] ?: 0 }
-    suspend fun setAdbPairingPort(port: Int) { context.dataStore.edit { it[ADB_PAIRING_PORT] = port } }
-
-    fun getSwiftSenseAutoStartSync(): Boolean {
-        return syncPrefs.getBoolean("swiftsense_auto_start", false)
-    }
-
-    val swiftSenseAutoStart: Flow<Boolean> = preferences.map { it[SWIFTSENSE_AUTO_START] ?: getSwiftSenseAutoStartSync() }
-    suspend fun setSwiftSenseAutoStart(enabled: Boolean) {
-        syncPrefs.edit().putBoolean("swiftsense_auto_start", enabled).commit()
-        context.dataStore.edit { it[SWIFTSENSE_AUTO_START] = enabled }
-    }
-
-    fun hasPairedAdbSync(): Boolean {
-        val keyFile = java.io.File(context.filesDir, "adbkey")
-        return syncPrefs.getBoolean("swiftsense_has_paired", false) || keyFile.exists()
-    }
-
-    val hasPairedAdb: Flow<Boolean> = preferences.map { it[SWIFTSENSE_HAS_PAIRED] ?: hasPairedAdbSync() }
-    suspend fun setHasPairedAdb(hasPaired: Boolean) {
-        syncPrefs.edit().putBoolean("swiftsense_has_paired", hasPaired).commit()
-        context.dataStore.edit { it[SWIFTSENSE_HAS_PAIRED] = hasPaired }
-    }
 
     val isOnboardingCompleted: Flow<Boolean> = preferences.map { it[ONBOARDING_COMPLETED] ?: false }
     suspend fun setOnboardingCompleted(completed: Boolean) { context.dataStore.edit { it[ONBOARDING_COMPLETED] = completed } }
@@ -197,6 +139,68 @@ class PreferenceManager(private val context: Context) {
     val language: Flow<String> = preferences.map { it[LANGUAGE] ?: "system" }
     suspend fun setLanguage(lang: String) { context.dataStore.edit { it[LANGUAGE] = lang } }
 
+    fun getShellModeSync(): String {
+        val current = _shellModeState.value
+        if (current.isNotEmpty()) return current
+        val loaded = syncPrefs.getString("shell_mode", null) ?: "shizuku"
+        _shellModeState.value = loaded
+        return loaded
+    }
+
+    val shellMode: StateFlow<String>
+        get() {
+            if (_shellModeState.value.isEmpty()) {
+                _shellModeState.value = syncPrefs.getString("shell_mode", null) ?: "shizuku"
+            }
+            return _shellModeState.asStateFlow()
+        }
+
+    suspend fun setShellMode(mode: String) {
+        _shellModeState.value = mode
+        syncPrefs.edit().putString("shell_mode", mode).commit()
+        context.dataStore.edit { it[SHELL_MODE] = mode }
+        ShellBridge.refreshNow()
+    }
+
+    fun getAdbHostSync(): String = syncPrefs.getString("adb_host", "127.0.0.1") ?: "127.0.0.1"
+    fun getAdbPortSync(): Int = syncPrefs.getInt("adb_port", 0)
+
+    val adbHost: Flow<String> = preferences.map { it[ADB_HOST] ?: getAdbHostSync() }
+    suspend fun setAdbHost(host: String) {
+        syncPrefs.edit().putString("adb_host", host).commit()
+        AdbManager.lastHost = host
+        context.dataStore.edit { it[ADB_HOST] = host }
+    }
+
+    val adbPort: Flow<Int> = preferences.map { it[ADB_PORT] ?: getAdbPortSync() }
+    suspend fun setAdbPort(port: Int) {
+        syncPrefs.edit().putInt("adb_port", port).commit()
+        AdbManager.lastPort = port
+        context.dataStore.edit { it[ADB_PORT] = port }
+    }
+
+    val adbPairingPort: Flow<Int> = preferences.map { it[ADB_PAIRING_PORT] ?: 0 }
+    suspend fun setAdbPairingPort(port: Int) { context.dataStore.edit { it[ADB_PAIRING_PORT] = port } }
+
+    fun getSwiftSenseAutoStartSync(): Boolean = syncPrefs.getBoolean("swiftsense_auto_start", false)
+
+    val swiftSenseAutoStart: Flow<Boolean> = preferences.map { it[SWIFTSENSE_AUTO_START] ?: getSwiftSenseAutoStartSync() }
+    suspend fun setSwiftSenseAutoStart(enabled: Boolean) {
+        syncPrefs.edit().putBoolean("swiftsense_auto_start", enabled).commit()
+        context.dataStore.edit { it[SWIFTSENSE_AUTO_START] = enabled }
+    }
+
+    fun hasPairedAdbSync(): Boolean {
+        val keyFile = File(context.filesDir, "adbkey")
+        return syncPrefs.getBoolean("swiftsense_has_paired", false) || keyFile.exists()
+    }
+
+    val hasPairedAdb: Flow<Boolean> = preferences.map { it[SWIFTSENSE_HAS_PAIRED] ?: hasPairedAdbSync() }
+    suspend fun setHasPairedAdb(hasPaired: Boolean) {
+        syncPrefs.edit().putBoolean("swiftsense_has_paired", hasPaired).commit()
+        context.dataStore.edit { it[SWIFTSENSE_HAS_PAIRED] = hasPaired }
+    }
+
     val selectedMode: Flow<String?> = preferences.map { it[SELECTED_MODE] }
     suspend fun setSelectedMode(mode: String) { context.dataStore.edit { it[SELECTED_MODE] = mode } }
 
@@ -212,11 +216,18 @@ class PreferenceManager(private val context: Context) {
     val shizukuSensorBoost: Flow<Boolean> = preferences.map { it[SHIZUKU_SENSOR_BOOST] ?: false }
     suspend fun setShizukuSensorBoost(enabled: Boolean) { context.dataStore.edit { it[SHIZUKU_SENSOR_BOOST] = enabled } }
 
-    val disabledApps: Flow<Set<String>> = preferences.map { it[DISABLED_APPS] ?: emptySet() }
+    val sensorSpeed: Flow<String> = preferences.map { it[SENSOR_SPEED] ?: "max" }
+    suspend fun setSensorSpeed(speed: String) { context.dataStore.edit { it[SENSOR_SPEED] = speed } }
 
-    suspend fun setDisabledApps(apps: Set<String>) {
-        context.dataStore.edit { it[DISABLED_APPS] = apps }
+    fun getSensorState(sensorType: Int): Flow<Boolean> = preferences.map {
+        it[booleanPreferencesKey(SENSOR_STATES_PREFIX + sensorType)] ?: false
     }
+    suspend fun setSensorState(sensorType: Int, enabled: Boolean) {
+        context.dataStore.edit { it[booleanPreferencesKey(SENSOR_STATES_PREFIX + sensorType)] = enabled }
+    }
+
+    val disabledApps: Flow<Set<String>> = preferences.map { it[DISABLED_APPS] ?: emptySet() }
+    suspend fun setDisabledApps(apps: Set<String>) { context.dataStore.edit { it[DISABLED_APPS] = apps } }
 
     suspend fun toggleAppInList(packageName: String) {
         context.dataStore.edit { prefs ->
@@ -229,18 +240,11 @@ class PreferenceManager(private val context: Context) {
         }
     }
 
-    val appManagerWarningDismissed: Flow<Boolean> =
-        preferences.map { it[APP_MANAGER_WARNING_DISMISSED] ?: false }
+    val appManagerWarningDismissed: Flow<Boolean> = preferences.map { it[APP_MANAGER_WARNING_DISMISSED] ?: false }
+    suspend fun setAppManagerWarningDismissed(dismissed: Boolean) { context.dataStore.edit { it[APP_MANAGER_WARNING_DISMISSED] = dismissed } }
 
-    suspend fun setAppManagerWarningDismissed(dismissed: Boolean) {
-        context.dataStore.edit { it[APP_MANAGER_WARNING_DISMISSED] = dismissed }
-    }
-
-    val appManagerCustomListsJson: Flow<Set<String>> =
-        preferences.map { it[APP_MANAGER_CUSTOM_LISTS] ?: emptySet() }
-
-    val appManagerActiveListId: Flow<String?> =
-        preferences.map { it[APP_MANAGER_ACTIVE_LIST_ID] }
+    val appManagerCustomListsJson: Flow<Set<String>> = preferences.map { it[APP_MANAGER_CUSTOM_LISTS] ?: emptySet() }
+    val appManagerActiveListId: Flow<String?> = preferences.map { it[APP_MANAGER_ACTIVE_LIST_ID] }
 
     suspend fun saveAppManagerCustomLists(lists: Set<String>, activeId: String?) {
         context.dataStore.edit { prefs ->
@@ -251,22 +255,15 @@ class PreferenceManager(private val context: Context) {
         }
     }
 
-    suspend fun setAppManagerActiveListId(id: String) {
-        context.dataStore.edit { it[APP_MANAGER_ACTIVE_LIST_ID] = id }
-    }
+    suspend fun setAppManagerActiveListId(id: String) { context.dataStore.edit { it[APP_MANAGER_ACTIVE_LIST_ID] = id } }
 
-    val appManagerTargetUserId: Flow<Int> =
-        preferences.map { it[APP_MANAGER_TARGET_USER_ID] ?: (android.os.Process.myUid() / 100000) }
-
-    suspend fun setAppManagerTargetUserId(userId: Int) {
-        context.dataStore.edit { it[APP_MANAGER_TARGET_USER_ID] = userId }
+    val appManagerTargetUserId: Flow<Int> = preferences.map {
+        it[APP_MANAGER_TARGET_USER_ID] ?: (android.os.Process.myUid() / 100000)
     }
+    suspend fun setAppManagerTargetUserId(userId: Int) { context.dataStore.edit { it[APP_MANAGER_TARGET_USER_ID] = userId } }
 
     val stopperApps: Flow<Set<String>> = preferences.map { it[STOPPER_APPS] ?: emptySet() }
-
-    suspend fun setStopperApps(apps: Set<String>) {
-        context.dataStore.edit { it[STOPPER_APPS] = apps }
-    }
+    suspend fun setStopperApps(apps: Set<String>) { context.dataStore.edit { it[STOPPER_APPS] = apps } }
 
     suspend fun toggleStopperApp(packageName: String) {
         context.dataStore.edit { prefs ->
@@ -279,34 +276,21 @@ class PreferenceManager(private val context: Context) {
         }
     }
 
-    val isStopperServiceRunning: Flow<Boolean> =
-        preferences.map { it[IS_STOPPER_SERVICE_RUNNING] ?: false }
-
-    suspend fun setStopperServiceRunning(running: Boolean) {
-        context.dataStore.edit { it[IS_STOPPER_SERVICE_RUNNING] = running }
-    }
+    val isStopperServiceRunning: Flow<Boolean> = preferences.map { it[IS_STOPPER_SERVICE_RUNNING] ?: false }
+    suspend fun setStopperServiceRunning(running: Boolean) { context.dataStore.edit { it[IS_STOPPER_SERVICE_RUNNING] = running } }
 
     val stopperInterval: Flow<Int> = preferences.map { it[STOPPER_INTERVAL] ?: 10 }
-
-    suspend fun setStopperInterval(interval: Int) {
-        context.dataStore.edit { it[STOPPER_INTERVAL] = interval }
-    }
+    suspend fun setStopperInterval(interval: Int) { context.dataStore.edit { it[STOPPER_INTERVAL] = interval } }
 
     val stopperMode: Flow<String> = preferences.map { it[STOPPER_MODE] ?: "FORCE" }
+    suspend fun setStopperMode(mode: String) { context.dataStore.edit { it[STOPPER_MODE] = mode } }
 
-    suspend fun setStopperMode(mode: String) {
-        context.dataStore.edit { it[STOPPER_MODE] = mode }
+    val stopperTargetUserId: Flow<Int> = preferences.map {
+        it[STOPPER_TARGET_USER_ID] ?: (android.os.Process.myUid() / 100000)
     }
-
-    val stopperTargetUserId: Flow<Int> =
-        preferences.map { it[STOPPER_TARGET_USER_ID] ?: (android.os.Process.myUid() / 100000) }
-
-    suspend fun setStopperTargetUserId(userId: Int) {
-        context.dataStore.edit { it[STOPPER_TARGET_USER_ID] = userId }
-    }
+    suspend fun setStopperTargetUserId(userId: Int) { context.dataStore.edit { it[STOPPER_TARGET_USER_ID] = userId } }
 
     val systemMacros: Flow<Set<String>> = preferences.map { it[SYSTEM_MACROS] ?: emptySet() }
-
     suspend fun addSystemMacro(macroJson: String) {
         context.dataStore.edit { prefs ->
             val current = prefs[SYSTEM_MACROS] ?: emptySet()
@@ -328,8 +312,24 @@ class PreferenceManager(private val context: Context) {
         }
     }
 
-    val resolutionPlans: Flow<Set<String>> = preferences.map { it[RESOLUTION_PLANS] ?: emptySet() }
+    val autoApplyMacroJson: Flow<String?> = preferences.map { it[AUTO_APPLY_MACRO_JSON] }
+    suspend fun setAutoApplyMacroJson(json: String?) {
+        context.dataStore.edit { prefs ->
+            if (json == null) {
+                prefs.remove(AUTO_APPLY_MACRO_JSON)
+            } else {
+                prefs[AUTO_APPLY_MACRO_JSON] = json
+            }
+        }
+    }
 
+    val autoApplyMacroInterval: Flow<Int> = preferences.map { it[AUTO_APPLY_MACRO_INTERVAL] ?: 30 }
+    suspend fun setAutoApplyMacroInterval(seconds: Int) { context.dataStore.edit { it[AUTO_APPLY_MACRO_INTERVAL] = seconds } }
+
+    val isMacroServiceRunning: Flow<Boolean> = preferences.map { it[IS_MACRO_SERVICE_RUNNING] ?: false }
+    suspend fun setMacroServiceRunning(running: Boolean) { context.dataStore.edit { it[IS_MACRO_SERVICE_RUNNING] = running } }
+
+    val resolutionPlans: Flow<Set<String>> = preferences.map { it[RESOLUTION_PLANS] ?: emptySet() }
     suspend fun addResolutionPlan(planJson: String) {
         context.dataStore.edit { prefs ->
             val current = prefs[RESOLUTION_PLANS] ?: emptySet()
@@ -344,107 +344,56 @@ class PreferenceManager(private val context: Context) {
         }
     }
 
-    fun getSensorState(sensorType: Int): Flow<Boolean> = preferences.map {
-        it[booleanPreferencesKey(SENSOR_STATES_PREFIX + sensorType)] ?: false
-    }
-    suspend fun setSensorState(sensorType: Int, enabled: Boolean) {
-        context.dataStore.edit { it[booleanPreferencesKey(SENSOR_STATES_PREFIX + sensorType)] = enabled }
-    }
-
     val amoledIntensity: Flow<Float> = preferences.map { it[AMOLED_INTENSITY] ?: 1.0f }
-    suspend fun setAmoledIntensity(intensity: Float) {
-        context.dataStore.edit { it[AMOLED_INTENSITY] = intensity }
-    }
+    suspend fun setAmoledIntensity(intensity: Float) { context.dataStore.edit { it[AMOLED_INTENSITY] = intensity } }
 
-    val amoledFilterType: Flow<String> =
-        preferences.map { it[AMOLED_FILTER_TYPE] ?: "checker_grid" }
-
-    suspend fun setAmoledFilterType(type: String) {
-        context.dataStore.edit { it[AMOLED_FILTER_TYPE] = type }
-    }
+    val amoledFilterType: Flow<String> = preferences.map { it[AMOLED_FILTER_TYPE] ?: "checker_grid" }
+    suspend fun setAmoledFilterType(type: String) { context.dataStore.edit { it[AMOLED_FILTER_TYPE] = type } }
 
     val amoledShiftSpeed: Flow<Int> = preferences.map { it[AMOLED_SHIFT_SPEED] ?: 30 }
-    suspend fun setAmoledShiftSpeed(speed: Int) {
-        context.dataStore.edit { it[AMOLED_SHIFT_SPEED] = speed }
-    }
+    suspend fun setAmoledShiftSpeed(speed: Int) { context.dataStore.edit { it[AMOLED_SHIFT_SPEED] = speed } }
 
     val amoledOpacity: Flow<Float> = preferences.map { it[AMOLED_OPACITY] ?: 1.0f }
-    suspend fun setAmoledOpacity(opacity: Float) {
-        context.dataStore.edit { it[AMOLED_OPACITY] = opacity }
-    }
+    suspend fun setAmoledOpacity(opacity: Float) { context.dataStore.edit { it[AMOLED_OPACITY] = opacity } }
 
     val amoledRefreshMode: Flow<String> = preferences.map { it[AMOLED_REFRESH_MODE] ?: "jump" }
-    suspend fun setAmoledRefreshMode(mode: String) {
-        context.dataStore.edit { it[AMOLED_REFRESH_MODE] = mode }
-    }
+    suspend fun setAmoledRefreshMode(mode: String) { context.dataStore.edit { it[AMOLED_REFRESH_MODE] = mode } }
 
-    val amoledWarningDismissed: Flow<Boolean> =
-        preferences.map { it[AMOLED_WARNING_DISMISSED] ?: false }
+    val amoledWarningDismissed: Flow<Boolean> = preferences.map { it[AMOLED_WARNING_DISMISSED] ?: false }
+    suspend fun setAmoledWarningDismissed(dismissed: Boolean) { context.dataStore.edit { it[AMOLED_WARNING_DISMISSED] = dismissed } }
 
-    suspend fun setAmoledWarningDismissed(dismissed: Boolean) {
-        context.dataStore.edit { it[AMOLED_WARNING_DISMISSED] = dismissed }
-    }
+    val amoledRegions: Flow<Set<String>> = preferences.map { it[AMOLED_REGIONS] ?: setOf("full_screen") }
+    suspend fun setAmoledRegions(regions: Set<String>) { context.dataStore.edit { it[AMOLED_REGIONS] = regions } }
 
-    val amoledRegions: Flow<Set<String>> =
-        preferences.map { it[AMOLED_REGIONS] ?: setOf("full_screen") }
+    val amoledCustomGapHeight: Flow<Float> = preferences.map { it[AMOLED_CUSTOM_GAP_HEIGHT] ?: 0.40f }
+    suspend fun setAmoledCustomGapHeight(height: Float) { context.dataStore.edit { it[AMOLED_CUSTOM_GAP_HEIGHT] = height } }
 
-    suspend fun setAmoledRegions(regions: Set<String>) {
-        context.dataStore.edit { it[AMOLED_REGIONS] = regions }
-    }
-
-    val amoledCustomGapHeight: Flow<Float> =
-        preferences.map { it[AMOLED_CUSTOM_GAP_HEIGHT] ?: 0.40f }
-
-    suspend fun setAmoledCustomGapHeight(height: Float) {
-        context.dataStore.edit { it[AMOLED_CUSTOM_GAP_HEIGHT] = height }
-    }
-
-    val amoledCustomPosition: Flow<Float> =
-        preferences.map { it[AMOLED_CUSTOM_POSITION] ?: 0.50f }
-
-    suspend fun setAmoledCustomPosition(position: Float) {
-        context.dataStore.edit { it[AMOLED_CUSTOM_POSITION] = position }
-    }
+    val amoledCustomPosition: Flow<Float> = preferences.map { it[AMOLED_CUSTOM_POSITION] ?: 0.50f }
+    suspend fun setAmoledCustomPosition(position: Float) { context.dataStore.edit { it[AMOLED_CUSTOM_POSITION] = position } }
 
     val amoledTintEnabled: Flow<Boolean> = preferences.map { it[AMOLED_TINT_ENABLED] ?: false }
-    suspend fun setAmoledTintEnabled(enabled: Boolean) {
-        context.dataStore.edit { it[AMOLED_TINT_ENABLED] = enabled }
-    }
+    suspend fun setAmoledTintEnabled(enabled: Boolean) { context.dataStore.edit { it[AMOLED_TINT_ENABLED] = enabled } }
 
     val amoledTintColor: Flow<String> = preferences.map { it[AMOLED_TINT_COLOR] ?: "amber" }
-    suspend fun setAmoledTintColor(color: String) {
-        context.dataStore.edit { it[AMOLED_TINT_COLOR] = color }
-    }
+    suspend fun setAmoledTintColor(color: String) { context.dataStore.edit { it[AMOLED_TINT_COLOR] = color } }
 
     val amoledTintCustomHex: Flow<String> = preferences.map { it[AMOLED_TINT_CUSTOM_HEX] ?: "#FFA500" }
-    suspend fun setAmoledTintCustomHex(hex: String) {
-        context.dataStore.edit { it[AMOLED_TINT_CUSTOM_HEX] = hex }
-    }
+    suspend fun setAmoledTintCustomHex(hex: String) { context.dataStore.edit { it[AMOLED_TINT_CUSTOM_HEX] = hex } }
 
     val amoledTintIntensity: Flow<Float> = preferences.map { it[AMOLED_TINT_INTENSITY] ?: 0.35f }
-    suspend fun setAmoledTintIntensity(intensity: Float) {
-        context.dataStore.edit { it[AMOLED_TINT_INTENSITY] = intensity }
-    }
+    suspend fun setAmoledTintIntensity(intensity: Float) { context.dataStore.edit { it[AMOLED_TINT_INTENSITY] = intensity } }
 
     val gyroSimEnabled: Flow<Boolean> = preferences.map { it[GYRO_SIM_ENABLED] ?: false }
-    suspend fun setGyroSimEnabled(enabled: Boolean) {
-        context.dataStore.edit { it[GYRO_SIM_ENABLED] = enabled }
-    }
+    suspend fun setGyroSimEnabled(enabled: Boolean) { context.dataStore.edit { it[GYRO_SIM_ENABLED] = enabled } }
 
     val gyroSimSensitivity: Flow<Float> = preferences.map { it[GYRO_SIM_SENSITIVITY] ?: 1.0f }
-    suspend fun setGyroSimSensitivity(sensitivity: Float) {
-        context.dataStore.edit { it[GYRO_SIM_SENSITIVITY] = sensitivity }
-    }
+    suspend fun setGyroSimSensitivity(sensitivity: Float) { context.dataStore.edit { it[GYRO_SIM_SENSITIVITY] = sensitivity } }
 
     val gyroSimInvertX: Flow<Boolean> = preferences.map { it[GYRO_SIM_INVERT_X] ?: false }
-    suspend fun setGyroSimInvertX(invert: Boolean) {
-        context.dataStore.edit { it[GYRO_SIM_INVERT_X] = invert }
-    }
+    suspend fun setGyroSimInvertX(invert: Boolean) { context.dataStore.edit { it[GYRO_SIM_INVERT_X] = invert } }
 
     val gyroSimInvertY: Flow<Boolean> = preferences.map { it[GYRO_SIM_INVERT_Y] ?: false }
-    suspend fun setGyroSimInvertY(invert: Boolean) {
-        context.dataStore.edit { it[GYRO_SIM_INVERT_Y] = invert }
-    }
+    suspend fun setGyroSimInvertY(invert: Boolean) { context.dataStore.edit { it[GYRO_SIM_INVERT_Y] = invert } }
 
     val gyroSimControlX: Flow<Int> = preferences.map { it[GYRO_SIM_CONTROL_X] ?: 100 }
     val gyroSimControlY: Flow<Int> = preferences.map { it[GYRO_SIM_CONTROL_Y] ?: 100 }
@@ -474,37 +423,7 @@ class PreferenceManager(private val context: Context) {
     }
 
     val gyroSimLocked: Flow<Boolean> = preferences.map { it[GYRO_SIM_LOCKED] ?: false }
-    suspend fun setGyroSimLocked(locked: Boolean) {
-        context.dataStore.edit { it[GYRO_SIM_LOCKED] = locked }
-    }
-
-    val sensorSpeed: Flow<String> = preferences.map { it[SENSOR_SPEED] ?: "max" }
-    suspend fun setSensorSpeed(speed: String) {
-        context.dataStore.edit { it[SENSOR_SPEED] = speed }
-    }
-
-    val autoApplyMacroJson: Flow<String?> = preferences.map { it[AUTO_APPLY_MACRO_JSON] }
-    suspend fun setAutoApplyMacroJson(json: String?) {
-        context.dataStore.edit { prefs ->
-            if (json == null) {
-                prefs.remove(AUTO_APPLY_MACRO_JSON)
-            } else {
-                prefs[AUTO_APPLY_MACRO_JSON] = json
-            }
-        }
-    }
-
-    val autoApplyMacroInterval: Flow<Int> = preferences.map { it[AUTO_APPLY_MACRO_INTERVAL] ?: 30 }
-    suspend fun setAutoApplyMacroInterval(seconds: Int) {
-        context.dataStore.edit { it[AUTO_APPLY_MACRO_INTERVAL] = seconds }
-    }
-
-    val isMacroServiceRunning: Flow<Boolean> =
-        preferences.map { it[IS_MACRO_SERVICE_RUNNING] ?: false }
-
-    suspend fun setMacroServiceRunning(running: Boolean) {
-        context.dataStore.edit { it[IS_MACRO_SERVICE_RUNNING] = running }
-    }
+    suspend fun setGyroSimLocked(locked: Boolean) { context.dataStore.edit { it[GYRO_SIM_LOCKED] = locked } }
 
     val aodEnabled: Flow<Boolean> = preferences.map { it[AOD_ENABLED] ?: false }
     suspend fun setAodEnabled(enabled: Boolean) { context.dataStore.edit { it[AOD_ENABLED] = enabled } }
@@ -533,7 +452,7 @@ class PreferenceManager(private val context: Context) {
     val aodActivateOnLock: Flow<Boolean> = preferences.map { it[AOD_ACTIVATE_ON_LOCK] ?: true }
     suspend fun setAodActivateOnLock(activate: Boolean) { context.dataStore.edit { it[AOD_ACTIVATE_ON_LOCK] = activate } }
 
-    val aodTimeoutSeconds: Flow<Int> = preferences.map { it[AOD_TIMEOUT_SECONDS] ?: 0 } // 0 means never
+    val aodTimeoutSeconds: Flow<Int> = preferences.map { it[AOD_TIMEOUT_SECONDS] ?: 0 }
     suspend fun setAodTimeoutSeconds(seconds: Int) { context.dataStore.edit { it[AOD_TIMEOUT_SECONDS] = seconds } }
 
     val aodWarningDismissed: Flow<Boolean> = preferences.map { it[AOD_WARNING_DISMISSED] ?: false }
