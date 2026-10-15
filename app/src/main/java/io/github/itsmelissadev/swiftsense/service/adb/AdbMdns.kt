@@ -61,6 +61,7 @@ class AdbMdns(
         }
     }
 
+    @Suppress("DEPRECATION")
     private fun resolveService(serviceInfo: NsdServiceInfo) {
         val nsd = nsdManager ?: return
         try {

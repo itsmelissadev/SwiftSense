@@ -25,6 +25,7 @@ class SwiftSenseServer {
         private var serverSocketInstance: ServerSocket? = null
 
         @JvmStatic
+        @Suppress("DEPRECATION")
         fun main(args: Array<String>) {
             try {
                 Looper.prepareMainLooper()

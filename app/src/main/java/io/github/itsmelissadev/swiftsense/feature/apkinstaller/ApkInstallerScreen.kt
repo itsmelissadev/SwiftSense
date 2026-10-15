@@ -32,7 +32,7 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Launch
+import androidx.compose.material.icons.automirrored.filled.Launch
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Refresh
@@ -471,7 +471,6 @@ fun ApkInstallerScreen(
                         is ApkInstallState.Installing -> state.details
                         is ApkInstallState.Success -> state.details
                         is ApkInstallState.Error -> state.details
-                        else -> null
                     }
 
                     if (details != null) {
@@ -987,7 +986,7 @@ fun ApkInstallerScreen(
                                                         }
                                                     },
                                                     modifier = Modifier.weight(1f),
-                                                    icon = Icons.Default.Launch
+                                                    icon = Icons.AutoMirrored.Filled.Launch
                                                 )
                                             }
 
@@ -1063,16 +1062,14 @@ fun ApkInstallerScreen(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                                         ) {
-                                            if (details != null) {
-                                                ExpressiveButton(
-                                                    text = stringResource(R.string.apk_action_retry),
-                                                    onClick = {
-                                                        installState = ApkInstallState.Ready(details)
-                                                    },
-                                                    modifier = Modifier.weight(1f),
-                                                    icon = Icons.Default.Refresh
-                                                )
-                                            }
+                                            ExpressiveButton(
+                                                text = stringResource(R.string.apk_action_retry),
+                                                onClick = {
+                                                    installState = ApkInstallState.Ready(details)
+                                                },
+                                                modifier = Modifier.weight(1f),
+                                                icon = Icons.Default.Refresh
+                                            )
 
                                             ExpressiveOutlinedButton(
                                                 text = stringResource(R.string.apk_action_install_another),
@@ -1081,7 +1078,7 @@ fun ApkInstallerScreen(
                                                     batchQueue = emptyList()
                                                     installState = ApkInstallState.Idle
                                                 },
-                                                modifier = if (details != null) Modifier.weight(1f) else Modifier.fillMaxWidth()
+                                                modifier = Modifier.weight(1f)
                                             )
                                         }
                                     }

@@ -21,7 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.NotificationsActive
-import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -156,7 +156,7 @@ fun AdbConnectionDialog(
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        icon = Icons.Default.OpenInNew
+                        icon = Icons.AutoMirrored.Filled.OpenInNew
                     )
 
                     ExpressiveOutlinedButton(
