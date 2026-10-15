@@ -2,7 +2,6 @@ package io.github.itsmelissadev.swiftsense.feature.downloader.engine
 
 import android.content.Context
 import android.os.Environment
-import android.webkit.MimeTypeMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,7 +15,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.InputStream
+import java.io.FileOutputStream
 import java.io.RandomAccessFile
 import java.net.HttpURLConnection
 import java.net.URL
@@ -34,47 +33,130 @@ object TurboDownloadEngine {
     val tasks: StateFlow<List<DownloadTask>> = _tasks.asStateFlow()
 
     fun getDownloadDir(context: Context): File {
-        val publicDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        val dir = File(publicDir, "SwiftSense")
-        if (!dir.exists()) {
-            dir.mkdirs()
+        return try {
+            val publicDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            val dir = File(publicDir, "SwiftSense")
+            if (!dir.exists()) {
+                dir.mkdirs()
+            }
+            if (dir.exists() && dir.canWrite()) {
+                val testFile = File(dir, ".probe_${System.currentTimeMillis()}")
+                if (testFile.createNewFile()) {
+                    testFile.delete()
+                    dir
+                } else {
+                    context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir
+                }
+            } else {
+                context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir
+            }
+        } catch (_: Exception) {
+            context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir
         }
-        return if (dir.exists() && dir.canWrite()) dir else context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir
+    }
+
+    fun openReliableConnection(
+        rawUrl: String,
+        method: String = "GET",
+        headers: Map<String, String> = emptyMap(),
+        maxRedirects: Int = 10
+    ): Pair<HttpURLConnection, String> {
+        var currentUrl = rawUrl
+        var redirects = 0
+        var cookies: String? = null
+
+        while (redirects < maxRedirects) {
+            val url = URL(currentUrl)
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = method
+                connectTimeout = 15000
+                readTimeout = 15000
+                instanceFollowRedirects = false
+                setRequestProperty(
+                    "User-Agent",
+                    "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
+                )
+                setRequestProperty("Accept", "*/*")
+                setRequestProperty("Accept-Language", "en-US,en;q=0.9,tr;q=0.8")
+                setRequestProperty("Accept-Encoding", "identity")
+                if (!cookies.isNullOrBlank()) {
+                    setRequestProperty("Cookie", cookies)
+                }
+                headers.forEach { (k, v) -> setRequestProperty(k, v) }
+            }
+
+            val setCookie = conn.getHeaderField("Set-Cookie")
+            if (!setCookie.isNullOrBlank()) {
+                val cookiePart = setCookie.substringBefore(";")
+                cookies = if (cookies == null) cookiePart else "$cookies; $cookiePart"
+            }
+
+            val code = conn.responseCode
+            if (code in listOf(301, 302, 303, 307, 308)) {
+                val location = conn.getHeaderField("Location")
+                conn.disconnect()
+                if (!location.isNullOrBlank()) {
+                    currentUrl = if (location.startsWith("http://", ignoreCase = true) || location.startsWith("https://", ignoreCase = true)) {
+                        location
+                    } else {
+                        URL(url, location).toString()
+                    }
+                    redirects++
+                    continue
+                }
+            }
+            return Pair(conn, currentUrl)
+        }
+        throw Exception("Too many redirects ($maxRedirects)")
     }
 
     suspend fun probeUrl(rawUrl: String): Result<Pair<String, Long>> = withContext(Dispatchers.IO) {
         try {
-            val url = URL(rawUrl)
-            val conn = (url.openConnection() as HttpURLConnection).apply {
-                requestMethod = "HEAD"
-                connectTimeout = 12000
-                readTimeout = 12000
-                setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile; rv:120.0) Gecko/120.0 Firefox/120.0")
-                instanceFollowRedirects = true
-            }
+            var resolvedUrl = rawUrl
+            var size = -1L
+            var disposition: String? = null
 
-            var size = conn.contentLengthLong
-            var disposition = conn.getHeaderField("Content-Disposition")
-            var resolvedUrl = conn.url.toString()
-            conn.disconnect()
+            try {
+                val (headConn, finalUrl) = openReliableConnection(rawUrl, "HEAD")
+                resolvedUrl = finalUrl
+                val code = headConn.responseCode
+                if (code in 200..299) {
+                    size = headConn.contentLengthLong
+                    disposition = headConn.getHeaderField("Content-Disposition")
+                }
+                headConn.disconnect()
+            } catch (_: Exception) {}
 
             if (size <= 0) {
-                val getConn = (URL(resolvedUrl).openConnection() as HttpURLConnection).apply {
-                    setRequestProperty("Range", "bytes=0-0")
-                    connectTimeout = 12000
-                    readTimeout = 12000
-                    setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile; rv:120.0) Gecko/120.0 Firefox/120.0")
-                }
-                val contentRange = getConn.getHeaderField("Content-Range")
-                if (contentRange != null && contentRange.contains("/")) {
-                    size = contentRange.substringAfter("/").toLongOrNull() ?: -1L
-                }
-                if (disposition == null) disposition = getConn.getHeaderField("Content-Disposition")
-                getConn.disconnect()
+                try {
+                    val (getConn, finalUrl) = openReliableConnection(
+                        resolvedUrl,
+                        "GET",
+                        mapOf("Range" to "bytes=0-0")
+                    )
+                    resolvedUrl = finalUrl
+                    val code = getConn.responseCode
+                    if (code == HttpURLConnection.HTTP_PARTIAL || code == HttpURLConnection.HTTP_OK) {
+                        val contentRange = getConn.getHeaderField("Content-Range")
+                        if (contentRange != null && contentRange.contains("/")) {
+                            size = contentRange.substringAfter("/").trim().toLongOrNull() ?: -1L
+                        }
+                        if (size <= 0) {
+                            size = getConn.contentLengthLong
+                        }
+                        if (disposition.isNullOrBlank()) {
+                            disposition = getConn.getHeaderField("Content-Disposition")
+                        }
+                    }
+                    getConn.disconnect()
+                } catch (_: Exception) {}
             }
 
             var fileName = extractFileName(disposition, resolvedUrl)
-            if (fileName.isBlank()) fileName = "download_" + System.currentTimeMillis()
+            if (fileName.isBlank()) {
+                fileName = "download_" + System.currentTimeMillis()
+            }
+            fileName = sanitizeFileName(fileName)
 
             Result.success(Pair(fileName, size))
         } catch (e: Exception) {
@@ -91,10 +173,12 @@ object TurboDownloadEngine {
         val id = UUID.randomUUID().toString()
         val initialCategory = detectCategory(suggestedName ?: url)
         val fallbackName = extractFileName(null, url).ifBlank { "download_${System.currentTimeMillis()}" }
+        val sanitizedFallback = sanitizeFileName(fallbackName)
+
         val initialTask = DownloadTask(
             id = id,
             url = url,
-            fileName = suggestedName ?: fallbackName,
+            fileName = suggestedName ?: sanitizedFallback,
             fileSize = 0L,
             downloadedBytes = 0L,
             status = DownloadStatus.CONNECTING,
@@ -136,7 +220,9 @@ object TurboDownloadEngine {
         job?.cancel()
         val current = _tasks.value.find { it.id == id }
         if (current?.filePath != null) {
-            try { File(current.filePath).delete() } catch (_: Exception) {}
+            try {
+                File(current.filePath).delete()
+            } catch (_: Exception) {}
         }
         _tasks.value = _tasks.value.filter { it.id != id }
     }
@@ -152,7 +238,8 @@ object TurboDownloadEngine {
         updateTask(task.copy(status = DownloadStatus.CONNECTING))
 
         val probe = probeUrl(rawUrl).getOrNull()
-        val finalFileName = customName?.takeIf { it.isNotBlank() } ?: probe?.first ?: ("file_" + System.currentTimeMillis())
+        val candidateName = customName?.takeIf { it.isNotBlank() } ?: probe?.first ?: ("file_" + System.currentTimeMillis())
+        val finalFileName = sanitizeFileName(candidateName)
         val fileSize = probe?.second ?: -1L
         val downloadDir = getDownloadDir(context)
         val destinationFile = File(downloadDir, finalFileName)
@@ -208,6 +295,8 @@ object TurboDownloadEngine {
             }
         }
 
+        var segmentFailureOccurred = false
+
         try {
             RandomAccessFile(destinationFile, "rw").use { raf ->
                 raf.setLength(fileSize)
@@ -218,15 +307,16 @@ object TurboDownloadEngine {
                     val remainingStart = segment.startByte + segment.downloadedBytes
                     if (remainingStart > segment.endByte) return@launch
 
-                    val conn = (URL(rawUrl).openConnection() as HttpURLConnection).apply {
-                        setRequestProperty("Range", "bytes=$remainingStart-${segment.endByte}")
-                        connectTimeout = 15000
-                        readTimeout = 15000
-                        setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile; rv:120.0) Gecko/120.0 Firefox/120.0")
-                    }
+                    val (conn, _) = openReliableConnection(
+                        rawUrl = rawUrl,
+                        method = "GET",
+                        headers = mapOf("Range" to "bytes=$remainingStart-${segment.endByte}")
+                    )
 
                     val code = conn.responseCode
                     if (code != HttpURLConnection.HTTP_PARTIAL && code != HttpURLConnection.HTTP_OK) {
+                        conn.disconnect()
+                        segmentFailureOccurred = true
                         throw Exception("Segment HTTP $code")
                     }
 
@@ -265,11 +355,13 @@ object TurboDownloadEngine {
             speedTrackerJob.cancel()
             if (e is CancellationException) {
                 updateTask(task.copy(status = DownloadStatus.PAUSED, speedBytesPerSec = 0L))
+            } else if (segmentFailureOccurred) {
+                downloadSingleStream(taskId, rawUrl, destinationFile, category, finalFileName, fileSize)
             } else {
                 updateTask(
                     task.copy(
                         status = DownloadStatus.FAILED,
-                        errorMessage = e.message ?: "Download failed",
+                        errorMessage = e.message,
                         speedBytesPerSec = 0L
                     )
                 )
@@ -318,20 +410,20 @@ object TurboDownloadEngine {
         }
 
         try {
-            val conn = (URL(rawUrl).openConnection() as HttpURLConnection).apply {
-                if (totalDownloaded.get() > 0) {
-                    setRequestProperty("Range", "bytes=${totalDownloaded.get()}-")
-                }
-                connectTimeout = 15000
-                readTimeout = 15000
-                setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile; rv:120.0) Gecko/120.0 Firefox/120.0")
+            destinationFile.parentFile?.mkdirs()
+
+            val headers = mutableMapOf<String, String>()
+            if (totalDownloaded.get() > 0) {
+                headers["Range"] = "bytes=${totalDownloaded.get()}-"
             }
+
+            val (conn, _) = openReliableConnection(rawUrl, "GET", headers)
 
             val append = totalDownloaded.get() > 0 && conn.responseCode == HttpURLConnection.HTTP_PARTIAL
             val actualSize = if (knownSize > 0) knownSize else conn.contentLengthLong
 
             conn.inputStream.use { input ->
-                val fos = java.io.FileOutputStream(destinationFile, append)
+                val fos = FileOutputStream(destinationFile, append)
                 fos.use { output ->
                     val buffer = ByteArray(16384)
                     var read: Int
@@ -361,7 +453,7 @@ object TurboDownloadEngine {
                 updateTask(
                     task.copy(
                         status = DownloadStatus.FAILED,
-                        errorMessage = e.message ?: "Single-stream download failed",
+                        errorMessage = e.message,
                         speedBytesPerSec = 0L
                     )
                 )
@@ -371,12 +463,11 @@ object TurboDownloadEngine {
 
     private fun checkRangeSupport(rawUrl: String): Boolean {
         return try {
-            val conn = (URL(rawUrl).openConnection() as HttpURLConnection).apply {
-                setRequestProperty("Range", "bytes=0-0")
-                connectTimeout = 8000
-                readTimeout = 8000
-                setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile; rv:120.0) Gecko/120.0 Firefox/120.0")
-            }
+            val (conn, _) = openReliableConnection(
+                rawUrl = rawUrl,
+                method = "GET",
+                headers = mapOf("Range" to "bytes=0-0")
+            )
             val code = conn.responseCode
             conn.disconnect()
             code == HttpURLConnection.HTTP_PARTIAL
@@ -407,20 +498,35 @@ object TurboDownloadEngine {
         _tasks.value = currentList
     }
 
+    fun sanitizeFileName(name: String): String {
+        var clean = name.replace("[\\\\/:*?\"<>|]".toRegex(), "_").trim()
+        clean = clean.substringBefore("?")
+        if (clean.length > 180) {
+            val ext = clean.substringAfterLast(".", "")
+            val base = clean.substringBeforeLast(".")
+            clean = if (ext.isNotEmpty()) "${base.take(170)}.$ext" else base.take(180)
+        }
+        return clean.ifBlank { "download_${System.currentTimeMillis()}" }
+    }
+
     private fun extractFileName(disposition: String?, urlString: String): String {
         if (!disposition.isNullOrBlank()) {
-            val match = Regex("filename\\*?=['\"]?(?:UTF-8'')?([^;'\"]+)", RegexOption.IGNORE_CASE).find(disposition)
+            val matchUtf = Regex("filename\\*=(?:UTF-8'')?([^;'\"]+)", RegexOption.IGNORE_CASE).find(disposition)
+            if (matchUtf != null) {
+                try {
+                    return URLDecoder.decode(matchUtf.groupValues[1].trim(), "UTF-8")
+                } catch (_: Exception) {}
+            }
+            val match = Regex("filename=['\"]?([^;'\"]+)", RegexOption.IGNORE_CASE).find(disposition)
             if (match != null) {
-                return try {
-                    URLDecoder.decode(match.groupValues[1].trim(), "UTF-8")
-                } catch (_: Exception) {
-                    match.groupValues[1].trim()
-                }
+                try {
+                    return URLDecoder.decode(match.groupValues[1].trim(), "UTF-8")
+                } catch (_: Exception) {}
             }
         }
         return try {
             val path = URL(urlString).path
-            val raw = path.substringAfterLast("/")
+            val raw = path.substringAfterLast("/").substringBefore("?")
             if (raw.isNotBlank()) URLDecoder.decode(raw, "UTF-8") else ""
         } catch (_: Exception) {
             ""
@@ -428,7 +534,7 @@ object TurboDownloadEngine {
     }
 
     fun detectCategory(fileNameOrUrl: String): FileCategory {
-        val ext = fileNameOrUrl.substringAfterLast(".", "").lowercase()
+        val ext = fileNameOrUrl.substringBefore("?").substringAfterLast(".", "").lowercase()
         return when (ext) {
             "mp4", "mkv", "webm", "avi", "mov", "flv", "wmv", "3gp" -> FileCategory.VIDEO
             "mp3", "m4a", "aac", "flac", "wav", "ogg", "opus" -> FileCategory.AUDIO
