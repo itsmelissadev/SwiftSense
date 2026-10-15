@@ -7,6 +7,7 @@ import io.github.itsmelissadev.swiftsense.service.adb.AdbManager
 import io.github.itsmelissadev.swiftsense.service.adb.SwiftSenseDaemonBridge
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +39,12 @@ object ShellBridge {
     val status: StateFlow<BackendStatus> = _status.asStateFlow()
 
     @Volatile
-    private var isStarted = false
+    private var isAppForeground = true
+
+    private var monitoringJob: Job? = null
+
+    @Volatile
+    private var lastAutoStartAttempt = 0L
 
     fun init(context: Context) {
         appContext = context.applicationContext
@@ -46,15 +52,30 @@ object ShellBridge {
         tryAutoStartSwiftSense()
     }
 
+    fun onAppForegroundChanged(isForeground: Boolean) {
+        isAppForeground = isForeground
+        if (isForeground) {
+            refreshNow()
+            startMonitoring()
+            tryAutoStartSwiftSense()
+        } else {
+            stopMonitoring()
+        }
+    }
+
     private fun startMonitoring() {
-        if (isStarted) return
-        isStarted = true
-        scope.launch {
-            while (true) {
+        monitoringJob?.cancel()
+        monitoringJob = scope.launch {
+            while (isAppForeground) {
                 checkAndUpdate()
-                delay(1500)
+                delay(4000)
             }
         }
+    }
+
+    private fun stopMonitoring() {
+        monitoringJob?.cancel()
+        monitoringJob = null
     }
 
     fun refreshNow() {
@@ -106,6 +127,11 @@ object ShellBridge {
 
     private fun tryAutoStartSwiftSense() {
         val context = appContext ?: return
+        val now = System.currentTimeMillis()
+        if (now - lastAutoStartAttempt < 30000L) {
+            return
+        }
+        lastAutoStartAttempt = now
         scope.launch {
             val pref = PreferenceManager(context)
             if (!pref.getSwiftSenseAutoStartSync()) {
@@ -206,14 +232,27 @@ object ShellBridge {
 
     fun run(command: String, timeoutMs: Int = 15000): Result<String> {
         val backend = getBackend()
-        return if (backend is SwiftSenseBackend) {
+        val result = if (backend is SwiftSenseBackend) {
             backend.run(command, timeoutMs)
         } else {
             backend.run(command)
         }
+        if (result.isFailure && backend is SwiftSenseBackend) {
+            tryAutoStartSwiftSense()
+        }
+        return result
     }
 
     suspend fun runAsync(command: String, timeoutMs: Int = 15000): Result<String> = withContext(Dispatchers.IO) {
-        run(command, timeoutMs)
+        val backend = getBackend()
+        val result = if (backend is SwiftSenseBackend) {
+            SwiftSenseDaemonBridge.executeDaemonCommand(command, timeoutMs)
+        } else {
+            backend.run(command)
+        }
+        if (result.isFailure && backend is SwiftSenseBackend) {
+            tryAutoStartSwiftSense()
+        }
+        result
     }
 }

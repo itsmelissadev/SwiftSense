@@ -99,11 +99,10 @@ class SystemMacroService : Service() {
     }
 
     private suspend fun applyMacro(macro: SystemMacro) {
+        if (macro.settings.isEmpty()) return
         withContext(Dispatchers.IO) {
-            macro.settings.forEach { setting ->
-                val cmd = "settings put ${setting.table.key} ${setting.key} ${setting.targetValue}"
-                ShellBridge.run(cmd)
-            }
+            val cmd = macro.settings.joinToString("; ") { "settings put ${it.table.key} ${it.key} ${it.targetValue}" }
+            ShellBridge.runAsync(cmd)
         }
     }
 

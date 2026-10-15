@@ -15,28 +15,46 @@ object SwiftSenseDaemonBridge {
     private const val TAG = "SwiftSenseDaemon"
     const val DAEMON_PORT = SwiftSenseServer.PORT
 
-    fun isDaemonAlive(): Boolean {
-        return try {
+    @Volatile
+    private var lastAliveCheckTime = 0L
+
+    @Volatile
+    private var lastAliveResult = false
+
+    fun isDaemonAlive(forceCheck: Boolean = false): Boolean {
+        val now = System.currentTimeMillis()
+        if (!forceCheck && (now - lastAliveCheckTime) < 3000L) {
+            return lastAliveResult
+        }
+
+        val alive = try {
             Socket().use { socket ->
-                socket.connect(java.net.InetSocketAddress("127.0.0.1", DAEMON_PORT), 800)
-                socket.soTimeout = 800
+                socket.tcpNoDelay = true
+                socket.setSoLinger(true, 0)
+                socket.connect(java.net.InetSocketAddress("127.0.0.1", DAEMON_PORT), 600)
+                socket.soTimeout = 600
                 val writer = PrintWriter(socket.getOutputStream(), true)
                 val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
                 writer.println(SwiftSenseServer.PING_CMD)
                 val response = reader.readLine()
-                val alive = response != null && response.startsWith(SwiftSenseServer.PONG_RESP_PREFIX)
-                Log.d(TAG, "isDaemonAlive ping response: $response -> alive=$alive")
-                alive
+                val isPong = response != null && response.startsWith(SwiftSenseServer.PONG_RESP_PREFIX)
+                Log.d(TAG, "isDaemonAlive ping response: $response -> alive=$isPong")
+                isPong
             }
         } catch (e: Exception) {
             Log.d(TAG, "isDaemonAlive connect failed: ${e.message}")
             false
         }
+        lastAliveCheckTime = now
+        lastAliveResult = alive
+        return alive
     }
 
     fun getDaemonVersion(): Int {
         return try {
             Socket().use { socket ->
+                socket.tcpNoDelay = true
+                socket.setSoLinger(true, 0)
                 socket.connect(java.net.InetSocketAddress("127.0.0.1", DAEMON_PORT), 800)
                 socket.soTimeout = 800
                 val writer = PrintWriter(socket.getOutputStream(), true)
@@ -56,9 +74,13 @@ object SwiftSenseDaemonBridge {
     }
 
     suspend fun stopDaemon(): Result<Unit> = withContext(Dispatchers.IO) {
+        lastAliveCheckTime = 0L
+        lastAliveResult = false
         Log.i(TAG, "stopDaemon requested. Attempting Step 1: Send STOP_CMD via socket...")
         val socketStopped = try {
             Socket().use { socket ->
+                socket.tcpNoDelay = true
+                socket.setSoLinger(true, 0)
                 socket.connect(java.net.InetSocketAddress("127.0.0.1", DAEMON_PORT), 1000)
                 socket.soTimeout = 1000
                 val writer = PrintWriter(socket.getOutputStream(), true)
@@ -74,7 +96,7 @@ object SwiftSenseDaemonBridge {
         }
 
         kotlinx.coroutines.delay(300)
-        if (!isDaemonAlive()) {
+        if (!isDaemonAlive(forceCheck = true)) {
             Log.i(TAG, "Daemon stopped successfully at Step 1.")
             return@withContext Result.success(Unit)
         }
@@ -89,7 +111,7 @@ object SwiftSenseDaemonBridge {
         }
 
         kotlinx.coroutines.delay(400)
-        if (!isDaemonAlive()) {
+        if (!isDaemonAlive(forceCheck = true)) {
             Log.i(TAG, "Daemon stopped successfully at Step 2.")
             return@withContext Result.success(Unit)
         }
@@ -103,7 +125,7 @@ object SwiftSenseDaemonBridge {
         }
 
         kotlinx.coroutines.delay(300)
-        if (!isDaemonAlive()) {
+        if (!isDaemonAlive(forceCheck = true)) {
             Log.i(TAG, "Daemon stopped successfully at Step 3.")
             Result.success(Unit)
         } else {
@@ -115,14 +137,17 @@ object SwiftSenseDaemonBridge {
 
     suspend fun executeDaemonCommand(command: String, timeoutMs: Int = 15000): Result<String> = withContext(Dispatchers.IO) {
         try {
-            Socket("127.0.0.1", DAEMON_PORT).use { socket ->
+            Socket().use { socket ->
+                socket.tcpNoDelay = true
+                socket.setSoLinger(true, 0)
+                socket.connect(java.net.InetSocketAddress("127.0.0.1", DAEMON_PORT), 1500)
                 socket.soTimeout = timeoutMs
                 val writer = PrintWriter(socket.getOutputStream(), true)
                 val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
 
                 writer.println(command)
 
-                val response = StringBuilder()
+                val response = StringBuilder(256)
                 var line: String?
                 var exitCode = 0
                 while (reader.readLine().also { line = it } != null) {
@@ -136,6 +161,9 @@ object SwiftSenseDaemonBridge {
                     }
                 }
 
+                lastAliveCheckTime = System.currentTimeMillis()
+                lastAliveResult = true
+
                 if (exitCode == 0) {
                     Result.success(response.toString().trim())
                 } else {
@@ -143,6 +171,7 @@ object SwiftSenseDaemonBridge {
                 }
             }
         } catch (e: Exception) {
+            lastAliveResult = false
             Result.failure(e)
         }
     }
