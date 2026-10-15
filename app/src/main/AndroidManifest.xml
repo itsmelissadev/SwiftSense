@@ -31,6 +31,7 @@
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="PackageVisibilityPolicy,QueryAllPackagesPermission" />
     <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:name=".SwiftSenseApp"
@@ -71,6 +72,17 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".feature.apkinstaller.PackageInstallerDialogActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.SwiftSense.Dialog"
+            android:finishOnCloseSystemDialogs="true"
+            android:launchMode="singleTask"
+            android:documentLaunchMode="always"
+            android:label="@string/feature_apk_installer">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -86,13 +98,14 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.INSTALL_PACKAGE" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="content" />
                 <data android:host="*" />
                 <data android:pathPattern=".*\\.xapk" />
                 <data android:pathPattern=".*\\.apks" />
                 <data android:pathPattern=".*\\.apkm" />
+                <data android:pathPattern=".*\\.apk" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -102,6 +115,7 @@
                 <data android:pathPattern=".*\\.xapk" />
                 <data android:pathPattern=".*\\.apks" />
                 <data android:pathPattern=".*\\.apkm" />
+                <data android:pathPattern=".*\\.apk" />
             </intent-filter>
         </activity>
 

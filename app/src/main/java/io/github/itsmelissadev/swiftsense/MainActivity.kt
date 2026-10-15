@@ -15,7 +15,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalConfiguration
@@ -49,13 +48,20 @@ import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     private lateinit var preferenceManager: PreferenceManager
-    private val incomingApkUriState = mutableStateOf<Uri?>(null)
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        if (intent.action == Intent.ACTION_VIEW) {
-            incomingApkUriState.value = intent.data
+        if (intent.action == Intent.ACTION_VIEW || intent.action == "android.intent.action.INSTALL_PACKAGE") {
+            val targetUri = intent.data ?: intent.clipData?.getItemAt(0)?.uri
+            if (targetUri != null) {
+                val dialogIntent = Intent(this, io.github.itsmelissadev.swiftsense.feature.apkinstaller.PackageInstallerDialogActivity::class.java).apply {
+                    data = targetUri
+                    action = intent.action
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+                }
+                startActivity(dialogIntent)
+            }
         }
     }
 
@@ -63,8 +69,18 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        if (intent?.action == Intent.ACTION_VIEW) {
-            incomingApkUriState.value = intent.data
+        if (intent?.action == Intent.ACTION_VIEW || intent?.action == "android.intent.action.INSTALL_PACKAGE") {
+            val targetUri = intent?.data ?: intent?.clipData?.getItemAt(0)?.uri
+            if (targetUri != null) {
+                val dialogIntent = Intent(this, io.github.itsmelissadev.swiftsense.feature.apkinstaller.PackageInstallerDialogActivity::class.java).apply {
+                    data = targetUri
+                    action = intent.action
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+                }
+                startActivity(dialogIntent)
+                finish()
+                return
+            }
         }
 
         preferenceManager = PreferenceManager(this)
@@ -104,13 +120,6 @@ class MainActivity : ComponentActivity() {
             val scope = rememberCoroutineScope()
             val navController = rememberNavController()
             val context = LocalContext.current
-
-            val incomingApkUri by incomingApkUriState
-            LaunchedEffect(incomingApkUri) {
-                if (incomingApkUri != null) {
-                    navController.navigate("apk_installer")
-                }
-            }
 
             val configuration = LocalConfiguration.current
             val localizedConfiguration = remember(language, configuration) {
@@ -222,19 +231,20 @@ class MainActivity : ComponentActivity() {
                             }
                             composable("apk_installer") {
                                 ApkInstallerScreen(
-                                    initialUri = incomingApkUri,
-                                    onNavigateBack = {
-                                        incomingApkUriState.value = null
-                                        navController.popBackStack()
-                                    }
+                                    initialUri = null,
+                                    onNavigateBack = { navController.popBackStack() }
                                 )
                             }
                             composable("turbo_downloader") {
                                 io.github.itsmelissadev.swiftsense.feature.downloader.TurboDownloaderScreen(
                                     onNavigateBack = { navController.popBackStack() },
                                     onNavigateToApkInstaller = { uri ->
-                                        incomingApkUriState.value = uri
-                                        navController.navigate("apk_installer")
+                                        val dialogIntent = Intent(context, io.github.itsmelissadev.swiftsense.feature.apkinstaller.PackageInstallerDialogActivity::class.java).apply {
+                                            data = uri
+                                            action = Intent.ACTION_VIEW
+                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                        }
+                                        context.startActivity(dialogIntent)
                                     }
                                 )
                             }
