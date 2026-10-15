@@ -190,23 +190,19 @@ fun MainScreen(
                 }
             }
 
-            val matchesTools = listOf(
+            val matchesDisplay = listOf(
+                screenResTitle to screenResDesc,
                 amoledTitle to amoledDesc,
                 aodTitle to aodDesc,
-                appManagerTitle to appManagerDesc,
-                apkInstallerTitle to apkInstallerDesc,
-                turboDownloaderTitle to turboDownloaderDesc,
-                screenResTitle to screenResDesc,
-                screenRecorderTitle to screenRecorderDesc,
-                systemTablesTitle to systemTablesDesc
+                screenRecorderTitle to screenRecorderDesc
             ).any { (title, desc) ->
                 searchQuery.isEmpty() || title.contains(searchQuery, ignoreCase = true) || desc.contains(searchQuery, ignoreCase = true)
             }
 
-            if (matchesTools) {
+            if (matchesDisplay) {
                 item {
                     Text(
-                        text = stringResource(R.string.category_tools),
+                        text = stringResource(R.string.category_display),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -214,6 +210,18 @@ fun MainScreen(
                     )
 
                     ExpressiveCardGroup {
+                        if (searchQuery.isEmpty() || screenResTitle.contains(searchQuery, ignoreCase = true) || screenResDesc.contains(searchQuery, ignoreCase = true)) {
+                            item {
+                                ExpressivePreferenceItem(
+                                    title = screenResTitle,
+                                    description = screenResDesc,
+                                    icon = Icons.Default.AspectRatio,
+                                    badgeColors = ExpressivePalette.TealLight,
+                                    onClick = onNavigateToScreenResolution
+                                )
+                            }
+                        }
+
                         if (searchQuery.isEmpty() || amoledTitle.contains(searchQuery, ignoreCase = true) || amoledDesc.contains(searchQuery, ignoreCase = true)) {
                             item {
                                 ExpressivePreferenceItem(
@@ -238,6 +246,40 @@ fun MainScreen(
                             }
                         }
 
+                        if (searchQuery.isEmpty() || screenRecorderTitle.contains(searchQuery, ignoreCase = true) || screenRecorderDesc.contains(searchQuery, ignoreCase = true)) {
+                            item {
+                                ExpressivePreferenceItem(
+                                    title = screenRecorderTitle,
+                                    description = screenRecorderDesc,
+                                    icon = Icons.Default.Videocam,
+                                    badgeColors = ExpressivePalette.RedLight,
+                                    onClick = onNavigateToScreenRecorder
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            val matchesApps = listOf(
+                appManagerTitle to appManagerDesc,
+                apkInstallerTitle to apkInstallerDesc,
+                turboDownloaderTitle to turboDownloaderDesc
+            ).any { (title, desc) ->
+                searchQuery.isEmpty() || title.contains(searchQuery, ignoreCase = true) || desc.contains(searchQuery, ignoreCase = true)
+            }
+
+            if (matchesApps) {
+                item {
+                    Text(
+                        text = stringResource(R.string.category_apps_packages),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 12.dp, bottom = 8.dp)
+                    )
+
+                    ExpressiveCardGroup {
                         if (searchQuery.isEmpty() || appManagerTitle.contains(searchQuery, ignoreCase = true) || appManagerDesc.contains(searchQuery, ignoreCase = true)) {
                             item {
                                 ExpressivePreferenceItem(
@@ -273,31 +315,27 @@ fun MainScreen(
                                 )
                             }
                         }
+                    }
+                }
+            }
 
-                        if (searchQuery.isEmpty() || screenResTitle.contains(searchQuery, ignoreCase = true) || screenResDesc.contains(searchQuery, ignoreCase = true)) {
-                            item {
-                                ExpressivePreferenceItem(
-                                    title = screenResTitle,
-                                    description = screenResDesc,
-                                    icon = Icons.Default.AspectRatio,
-                                    badgeColors = ExpressivePalette.TealLight,
-                                    onClick = onNavigateToScreenResolution
-                                )
-                            }
-                        }
+            val matchesSystem = listOf(
+                systemTablesTitle to systemTablesDesc
+            ).any { (title, desc) ->
+                searchQuery.isEmpty() || title.contains(searchQuery, ignoreCase = true) || desc.contains(searchQuery, ignoreCase = true)
+            }
 
-                        if (searchQuery.isEmpty() || screenRecorderTitle.contains(searchQuery, ignoreCase = true) || screenRecorderDesc.contains(searchQuery, ignoreCase = true)) {
-                            item {
-                                ExpressivePreferenceItem(
-                                    title = screenRecorderTitle,
-                                    description = screenRecorderDesc,
-                                    icon = Icons.Default.Videocam,
-                                    badgeColors = ExpressivePalette.RedLight,
-                                    onClick = onNavigateToScreenRecorder
-                                )
-                            }
-                        }
+            if (matchesSystem) {
+                item {
+                    Text(
+                        text = stringResource(R.string.category_system_tweaks),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 12.dp, bottom = 8.dp)
+                    )
 
+                    ExpressiveCardGroup {
                         if (searchQuery.isEmpty() || systemTablesTitle.contains(searchQuery, ignoreCase = true) || systemTablesDesc.contains(searchQuery, ignoreCase = true)) {
                             item {
                                 ExpressivePreferenceItem(

@@ -70,7 +70,10 @@
     <string name="sensor_linear_acceleration">Doğrusal İvme</string>
     <string name="sensor_unknown">Bilinmeyen Sensör</string>
 
-    <string name="category_performance">Performans</string>
+    <string name="category_performance">Performans ve Optimizasyon</string>
+    <string name="category_display">Ekran ve Görüntü</string>
+    <string name="category_apps_packages">Uygulama ve Paket Yönetimi</string>
+    <string name="category_system_tweaks">Sistem ve Otomasyon</string>
     <string name="feature_boost_sensors">Sensör Optimizasyonu</string>
     <string name="feature_boost_sensors_desc">Sensör verilerini en yüksek hızda işleyerek hassasiyeti artırır.</string>
     <string name="sensor_speed">Optimizasyon Hızı</string>
