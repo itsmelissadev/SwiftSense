@@ -48,7 +48,7 @@ class SystemMacroService : Service() {
         preferenceManager = PreferenceManager(this)
 
         createNotificationChannel()
-        startForeground(NOTIFICATION_ID, createNotification("", 30))
+        startForeground(NOTIFICATION_ID, createNotification("", 1))
         observeConfigChanges()
     }
 

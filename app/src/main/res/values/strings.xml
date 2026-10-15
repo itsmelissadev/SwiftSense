@@ -261,6 +261,11 @@
     <string name="copy_to_clipboard">Copy to Clipboard</string>
     <string name="toast_copied">Copied to clipboard.</string>
     <string name="toast_import_invalid">Invalid JSON format.</string>
+    <string name="delete_macro_title">Delete Macro</string>
+    <string name="delete_macro_confirm">Are you sure you want to delete \"%1$s\"?</string>
+    <string name="duplicate_macro">Duplicate</string>
+    <string name="macro_copy_suffix">%1$s (Copy)</string>
+    <string name="toast_macro_duplicated">Macro duplicated.</string>
     <string name="macro_settings_count">%1$d Settings</string>
     <string name="macro_setting_format">%1$s: %2$s \u2192 %3$s</string>
 

@@ -324,7 +324,7 @@ class PreferenceManager(private val context: Context) {
         }
     }
 
-    val autoApplyMacroInterval: Flow<Int> = preferences.map { it[AUTO_APPLY_MACRO_INTERVAL] ?: 30 }
+    val autoApplyMacroInterval: Flow<Int> = preferences.map { it[AUTO_APPLY_MACRO_INTERVAL] ?: 1 }
     suspend fun setAutoApplyMacroInterval(seconds: Int) { context.dataStore.edit { it[AUTO_APPLY_MACRO_INTERVAL] = seconds } }
 
     val isMacroServiceRunning: Flow<Boolean> = preferences.map { it[IS_MACRO_SERVICE_RUNNING] ?: false }

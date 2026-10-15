@@ -259,6 +259,11 @@
     <string name="copy_to_clipboard">Panoya Kopyala</string>
     <string name="toast_copied">Panoya kopyalandı.</string>
     <string name="toast_import_invalid">Geçersiz JSON formatı.</string>
+    <string name="delete_macro_title">Makroyu Sil</string>
+    <string name="delete_macro_confirm">\"%1$s\" makrosunu silmek istediğinize emin misiniz?</string>
+    <string name="duplicate_macro">Çoğalt</string>
+    <string name="macro_copy_suffix">%1$s (Kopya)</string>
+    <string name="toast_macro_duplicated">Makro çoğaltıldı.</string>
     <string name="macro_settings_count">%1$d Ayar</string>
     <string name="macro_setting_format">%1$s: %2$s \u2192 %3$s</string>
 

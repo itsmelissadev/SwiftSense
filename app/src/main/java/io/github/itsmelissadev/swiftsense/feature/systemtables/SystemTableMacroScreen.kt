@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FileDownload
@@ -64,6 +65,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.itsmelissadev.swiftsense.R
@@ -184,8 +186,9 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
 
     val isMacroServiceRunning by SystemMacroService.isRunning.collectAsState()
     val autoApplyJson by preferenceManager.autoApplyMacroJson.collectAsState(initial = null)
-    val autoApplyInterval by preferenceManager.autoApplyMacroInterval.collectAsState(initial = 30)
+    val autoApplyInterval by preferenceManager.autoApplyMacroInterval.collectAsState(initial = 1)
 
+    var macroToDelete by remember { mutableStateOf<SystemMacro?>(null) }
     var showAutoApplyMacroDialog by remember { mutableStateOf(false) }
     var showAutoApplyIntervalDialog by remember { mutableStateOf(false) }
 
@@ -526,17 +529,25 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                                     }
                                                 }
                                             },
+                                            onDuplicate = {
+                                                val copyName = context.getString(R.string.macro_copy_suffix, macro.name)
+                                                val cloned = macro.copy(name = copyName)
+                                                scope.launch {
+                                                    preferenceManager.addSystemMacro(cloned.toJson())
+                                                    Toast.makeText(
+                                                        context,
+                                                        R.string.toast_macro_duplicated,
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
+                                            },
                                             onEdit = {
                                                 macroToEdit = macro
                                                 originalMacroJson = macro.toJson()
                                                 showEditor = true
                                             },
                                             onDelete = {
-                                                scope.launch {
-                                                    preferenceManager.removeSystemMacro(
-                                                        macro.toJson()
-                                                    )
-                                                }
+                                                macroToDelete = macro
                                             }
                                         )
                                     }
@@ -631,25 +642,19 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
                                                 shape = RoundedCornerShape(16.dp),
                                                 color = MaterialTheme.colorScheme.surfaceContainer
                                             ) {
-                                                Row(
+                                                Column(
                                                     modifier = Modifier.padding(
                                                         horizontal = 16.dp,
                                                         vertical = 12.dp
                                                     ),
-                                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                                    verticalAlignment = Alignment.CenterVertically
+                                                    verticalArrangement = Arrangement.spacedBy(6.dp)
                                                 ) {
-                                                    Column(
-                                                        modifier = Modifier.weight(1f)
-                                                            .padding(end = 16.dp)
-                                                    ) {
-                                                        Text(
-                                                            text = key,
-                                                            style = MaterialTheme.typography.bodyMedium,
-                                                            fontWeight = FontWeight.SemiBold,
-                                                            color = MaterialTheme.colorScheme.onSurface
-                                                        )
-                                                    }
+                                                    Text(
+                                                        text = key,
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        color = MaterialTheme.colorScheme.onSurface
+                                                    )
                                                     Surface(
                                                         color = MaterialTheme.colorScheme.primaryContainer,
                                                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -885,6 +890,38 @@ fun SystemTableMacroScreen(onNavigateBack: () -> Unit) {
             onDismissRequest = { showAutoApplyIntervalDialog = false }
         )
     }
+
+    macroToDelete?.let { targetMacro ->
+        ExpressiveDialog(
+            onDismissRequest = { macroToDelete = null },
+            title = stringResource(R.string.delete_macro_title),
+            content = {
+                Text(
+                    text = stringResource(R.string.delete_macro_confirm, targetMacro.name),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            confirmButton = {
+                ExpressiveDialogButton(
+                    text = stringResource(R.string.action_delete),
+                    onClick = {
+                        scope.launch {
+                            preferenceManager.removeSystemMacro(targetMacro.toJson())
+                        }
+                        macroToDelete = null
+                    }
+                )
+            },
+            dismissButton = {
+                ExpressiveDialogButton(
+                    text = stringResource(R.string.action_cancel),
+                    isPrimary = false,
+                    onClick = { macroToDelete = null }
+                )
+            }
+        )
+    }
 }
 
 @Composable
@@ -892,6 +929,7 @@ fun MacroItem(
     macro: SystemMacro,
     onApply: () -> Unit,
     onRevert: () -> Unit,
+    onDuplicate: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -924,6 +962,14 @@ fun MacroItem(
                     )
                 }
                 Row {
+                    IconButton(onClick = onDuplicate) {
+                        Icon(
+                            Icons.Default.ContentCopy,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     IconButton(onClick = onEdit) {
                         Icon(
                             Icons.Default.Edit,
@@ -1053,6 +1099,33 @@ fun MacroEditorPage(
     var currentKey by remember { mutableStateOf("") }
     var currentDefaultValue by remember { mutableStateOf("") }
     var currentTargetValue by remember { mutableStateOf("") }
+
+    var cachedTableMap by remember { mutableStateOf<Map<SystemTable, List<Pair<String, String>>>>(emptyMap()) }
+
+    LaunchedEffect(currentTable) {
+        if (!cachedTableMap.containsKey(currentTable)) {
+            val res = withContext(Dispatchers.IO) {
+                ShellBridge.run("settings list ${currentTable.key}")
+            }
+            if (res.isSuccess) {
+                val list = (res.getOrNull() ?: "").lines()
+                    .filter { it.contains("=") }
+                    .map {
+                        val parts = it.split("=", limit = 2)
+                        parts[0].trim() to parts[1].trim()
+                    }
+                cachedTableMap = cachedTableMap + (currentTable to list)
+            }
+        }
+    }
+
+    val currentSuggestions = remember(currentKey, currentTable, cachedTableMap) {
+        val trimmed = currentKey.trim()
+        if (trimmed.length < 2) emptyList()
+        else cachedTableMap[currentTable]?.filter {
+            it.first.contains(trimmed, ignoreCase = true) && !it.first.equals(trimmed, ignoreCase = true)
+        }?.take(5) ?: emptyList()
+    }
 
     Scaffold(
         topBar = {
@@ -1251,6 +1324,54 @@ fun MacroEditorPage(
                             onValueChange = { currentKey = it },
                             label = stringResource(R.string.setting_key)
                         )
+
+                        if (currentSuggestions.isNotEmpty()) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.7f),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                                    currentSuggestions.forEach { (sugKey, sugVal) ->
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    currentKey = sugKey
+                                                    currentDefaultValue = sugVal
+                                                    currentTargetValue = sugVal
+                                                }
+                                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = sugKey,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Medium,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                modifier = Modifier.weight(1f).padding(end = 8.dp),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Surface(
+                                                color = MaterialTheme.colorScheme.primaryContainer,
+                                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                shape = RoundedCornerShape(6.dp)
+                                            ) {
+                                                Text(
+                                                    text = sugVal,
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         ExpressiveTextField(
                             value = currentDefaultValue,
                             onValueChange = { currentDefaultValue = it },
@@ -1297,6 +1418,31 @@ fun MacroEditorPage(
         var editKey by remember { mutableStateOf(setting.key) }
         var editDefaultValue by remember { mutableStateOf(setting.defaultValue) }
         var editTargetValue by remember { mutableStateOf(setting.targetValue) }
+
+        LaunchedEffect(editTable) {
+            if (!cachedTableMap.containsKey(editTable)) {
+                val res = withContext(Dispatchers.IO) {
+                    ShellBridge.run("settings list ${editTable.key}")
+                }
+                if (res.isSuccess) {
+                    val list = (res.getOrNull() ?: "").lines()
+                        .filter { it.contains("=") }
+                        .map {
+                            val parts = it.split("=", limit = 2)
+                            parts[0].trim() to parts[1].trim()
+                        }
+                    cachedTableMap = cachedTableMap + (editTable to list)
+                }
+            }
+        }
+
+        val editSuggestions = remember(editKey, editTable, cachedTableMap) {
+            val trimmed = editKey.trim()
+            if (trimmed.length < 2) emptyList()
+            else cachedTableMap[editTable]?.filter {
+                it.first.contains(trimmed, ignoreCase = true) && !it.first.equals(trimmed, ignoreCase = true)
+            }?.take(5) ?: emptyList()
+        }
 
         ExpressiveDialog(
             onDismissRequest = { editingSetting = null },
@@ -1349,6 +1495,54 @@ fun MacroEditorPage(
                         onValueChange = { editKey = it },
                         label = stringResource(R.string.setting_key)
                     )
+
+                    if (editSuggestions.isNotEmpty()) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.7f),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                                editSuggestions.forEach { (sugKey, sugVal) ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                editKey = sugKey
+                                                editDefaultValue = sugVal
+                                                editTargetValue = sugVal
+                                            }
+                                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = sugKey,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            modifier = Modifier.weight(1f).padding(end = 8.dp),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Surface(
+                                            color = MaterialTheme.colorScheme.primaryContainer,
+                                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            shape = RoundedCornerShape(6.dp)
+                                        ) {
+                                            Text(
+                                                text = sugVal,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
 
                     ExpressiveTextField(
                         value = editDefaultValue,
